@@ -95,8 +95,14 @@ export function getPaceDeltaBadge(netTimeMs: number, targetTimeSec: number): Pac
 }
 
 export function buildResultsClipboardText(results: SwimResult[] = [], setName: string = 'Set'): string {
+  const first = results[0];
+  const sName = first?.sessionName || setName;
+  const sDate = first?.sessionDate || '';
+  const sTime = first?.sessionTime || '';
+  const dateSub = [sDate, sTime].filter(Boolean).join(' @ ');
+
   const lines: string[] = [
-    `🏊 AquaPace Pro — ${setName}`,
+    `🏊 AquaPace Pro — ${sName}${dateSub ? ` (${dateSub})` : ''}`,
     `Total Swims: ${results.length}`,
     '----------------------------------------'
   ];
@@ -113,6 +119,9 @@ export function buildResultsClipboardText(results: SwimResult[] = [], setName: s
 export function buildResultsCsv(results: SwimResult[] = []): string {
   const headers = [
     'Order',
+    'Session Name',
+    'Session Date',
+    'Session Time',
     'Set Name',
     'Lane',
     'Wave',
@@ -129,6 +138,9 @@ export function buildResultsCsv(results: SwimResult[] = []): string {
   results.slice().reverse().forEach((r, idx) => {
     rows.push([
       idx + 1,
+      csvEscape(r.sessionName || ''),
+      csvEscape(r.sessionDate || ''),
+      csvEscape(r.sessionTime || ''),
       csvEscape(r.setName),
       r.lane,
       r.wave,

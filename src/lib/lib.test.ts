@@ -217,6 +217,9 @@ describe('results calculations and exports', () => {
     {
       id: 'r2',
       timestamp: '10:02:00',
+      sessionName: 'Morning Training Session',
+      sessionDate: '2026-10-24',
+      sessionTime: '06:30',
       setName: '10x100m',
       lane: 2,
       swimmer: 'Taylor Brooks',
@@ -229,6 +232,9 @@ describe('results calculations and exports', () => {
     {
       id: 'r1',
       timestamp: '10:01:00',
+      sessionName: 'Morning Training Session',
+      sessionDate: '2026-10-24',
+      sessionTime: '06:30',
       setName: '10x100m',
       lane: 1,
       swimmer: 'Alex Rivera',
@@ -266,12 +272,13 @@ describe('results calculations and exports', () => {
   });
 
   it('builds clipboard summary and CSV export', () => {
-    const clip = buildResultsClipboardText(sampleResults, '10x100m');
-    expect(clip).toContain('AquaPace Pro — 10x100m');
+    const clip = buildResultsClipboardText(sampleResults, 'Morning Training Session');
+    expect(clip).toContain('AquaPace Pro — Morning Training Session');
     expect(clip).toContain('Alex Rivera');
 
     const csv = buildResultsCsv(sampleResults);
-    expect(csv).toContain('Order,Set Name,Lane,Wave,Swimmer');
+    expect(csv).toContain('Session Name,Session Date,Session Time,Set Name');
+    expect(csv).toContain('Morning Training Session');
     expect(csv).toContain('Alex Rivera');
   });
 });

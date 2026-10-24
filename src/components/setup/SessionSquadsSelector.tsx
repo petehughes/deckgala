@@ -15,7 +15,7 @@ export function SessionSquadsSelector() {
     clearAllLanesSwimmers
   } = useApp();
 
-  const poolSwimmers = getSessionPoolSwimmers(club, config.selectedGroupIds);
+  const poolSwimmers = getSessionPoolSwimmers(club, config.selectedGroupIds, config.presentSwimmerIds);
 
   return (
     <div className="session-groups-section">
@@ -40,6 +40,14 @@ export function SessionSquadsSelector() {
             onClick={clearSessionGroups}
           >
             Clear Selection
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={() => setCurrentView('attendance')}
+          >
+            <Icon name="attendance" size={14} />
+            Check Attendance
           </button>
           <button
             type="button"
@@ -99,7 +107,7 @@ export function SessionSquadsSelector() {
       <div className="session-pool-summary">
         <div className="session-pool-meta">
           <span className="session-pool-badge">{poolSwimmers.length}</span>
-          <span>swimmers available in selected session squads</span>
+          <span>present swimmers available in selected session squads</span>
         </div>
         <div className="session-pool-actions">
           <button

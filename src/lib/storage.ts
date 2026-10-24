@@ -4,7 +4,15 @@ import { createDefaultLanes } from './lanes';
 import type { AppConfig, PersistedState, ViewName } from '../types';
 
 export function getDefaultConfig(): AppConfig {
+  const today = new Date();
+  const dateStr = today.toISOString().slice(0, 10);
+  const timeStr = today.toTimeString().slice(0, 5);
+
   return {
+    sessionName: 'Morning Training Session',
+    sessionDate: dateStr,
+    sessionTime: timeStr,
+    presentSwimmerIds: [],
     laneCount: 6,
     setName: '10 x 100m Freestyle',
     targetTime: 75,
@@ -19,8 +27,14 @@ export function getInitialState(): PersistedState {
   const defaultClub = createDefaultClub();
   const defaultConfig = getDefaultConfig();
 
+  // Initially mark swimmers in the default selected squads as present
+  const defaultPresent = defaultClub.groups
+    .filter(g => defaultConfig.selectedGroupIds.includes(g.id))
+    .flatMap(g => g.swimmers.map(s => s.id));
+  defaultConfig.presentSwimmerIds = defaultPresent;
+
   return {
-    currentView: 'setup',
+    currentView: 'attendance',
     config: defaultConfig,
     results: [],
     club: defaultClub,
@@ -39,6 +53,10 @@ export function loadPersistedState(): PersistedState {
     const config: AppConfig = { ...initial.config };
 
     if (data.config) {
+      config.sessionName = typeof data.config.sessionName === 'string' ? data.config.sessionName : initial.config.sessionName;
+      config.sessionDate = typeof data.config.sessionDate === 'string' ? data.config.sessionDate : initial.config.sessionDate;
+      config.sessionTime = typeof data.config.sessionTime === 'string' ? data.config.sessionTime : initial.config.sessionTime;
+      config.presentSwimmerIds = Array.isArray(data.config.presentSwimmerIds) ? data.config.presentSwimmerIds : initial.config.presentSwimmerIds;
       config.laneCount = Math.min(10, Math.max(1, parseInt(String(data.config.laneCount), 10) || 6));
       config.setName = data.config.setName ?? '10 x 100m Freestyle';
       config.targetTime = parseFloat(String(data.config.targetTime)) || 0;
@@ -56,7 +74,23 @@ export function loadPersistedState(): PersistedState {
       }
     }
 
-    const results = Array.isArray(data.results) ? data.results : [];
+    const results = Array.isArray(data.results)
+      ? data.results.map((r: Record<string, unknown>) => ({
+          id: String(r.id || `res-${Date.now()}`),
+          timestamp: String(r.timestamp || ''),
+          sessionName: String(r.sessionName || config.sessionName),
+          sessionDate: String(r.sessionDate || config.sessionDate),
+          sessionTime: String(r.sessionTime || config.sessionTime),
+          setName: String(r.setName || config.setName),
+          lane: Number(r.lane) || 1,
+          swimmer: String(r.swimmer || 'Swimmer'),
+          wave: Number(r.wave) || 1,
+          rep: Number(r.rep) || 1,
+          netTimeMs: Number(r.netTimeMs) || 0,
+          finishWallMs: Number(r.finishWallMs) || 0,
+          targetTimeSec: Number(r.targetTimeSec) || 0
+        }))
+      : [];
     let club = initial.club;
     if (data.club && Array.isArray(data.club.groups)) {
       club = {
@@ -87,8 +121,8 @@ export function loadPersistedState(): PersistedState {
       activeGroupId = club.groups[0]?.id || null;
     }
 
-    const validViews: ViewName[] = ['setup', 'swimmers', 'deck', 'results'];
-    const currentView: ViewName = validViews.includes(data.currentView) ? data.currentView : 'setup';
+    const validViews: ViewName[] = ['attendance', 'setup', 'swimmers', 'deck', 'results'];
+    const currentView: ViewName = validViews.includes(data.currentView) ? data.currentView : 'attendance';
 
     return {
       currentView,

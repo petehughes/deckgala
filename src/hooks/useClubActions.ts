@@ -141,6 +141,7 @@ export function useClubActions({ club, activeGroupId, config, setPersisted, show
     setPersisted(prev => {
       let nextGroups = prev.club.groups.map(g => ({ ...g, swimmers: [...g.swimmers] }));
 
+      let nextPresent = prev.config.presentSwimmerIds || [];
       if (editingSwimmerId) {
         let currentGrp = nextGroups.find(g => g.swimmers.some(s => s.id === editingSwimmerId));
         if (!currentGrp) currentGrp = nextGroups.find(g => g.id === prev.activeGroupId);
@@ -159,13 +160,19 @@ export function useClubActions({ club, activeGroupId, config, setPersisted, show
       } else {
         const destGrp = nextGroups.find(g => g.id === groupId);
         if (destGrp) {
-          destGrp.swimmers.push({ id: uid('sw'), ...payload });
+          const newId = uid('sw');
+          destGrp.swimmers.push({ id: newId, ...payload });
+          nextPresent = [...nextPresent, newId];
         }
       }
 
       return {
         ...prev,
         activeGroupId: groupId,
+        config: {
+          ...prev.config,
+          presentSwimmerIds: nextPresent
+        },
         club: { ...prev.club, groups: nextGroups }
       };
     });
@@ -207,8 +214,13 @@ export function useClubActions({ club, activeGroupId, config, setPersisted, show
     const grp = club.groups.find(g => g.id === groupId);
     if (!grp) return false;
 
+    const newIds = parsed.map(s => s.id);
     setPersisted(prev => ({
       ...prev,
+      config: {
+        ...prev.config,
+        presentSwimmerIds: [...(prev.config.presentSwimmerIds || []), ...newIds]
+      },
       club: {
         ...prev.club,
         groups: prev.club.groups.map(g =>
@@ -285,9 +297,9 @@ export function useClubActions({ club, activeGroupId, config, setPersisted, show
   }, [setPersisted, showToast]);
 
   const autoDistributeSwimmers = useCallback(() => {
-    const pool = getSessionPoolSwimmers(club, config.selectedGroupIds);
+    const pool = getSessionPoolSwimmers(club, config.selectedGroupIds, config.presentSwimmerIds);
     if (pool.length === 0) {
-      showToast('Select at least one squad with swimmers first', 'warning');
+      showToast('No present swimmers in selected squads (check Attendance)', 'warning');
       return;
     }
 
@@ -299,8 +311,8 @@ export function useClubActions({ club, activeGroupId, config, setPersisted, show
       }
     }));
 
-    showToast(`Distributed ${pool.length} swimmers across ${config.laneCount} lanes`, 'success');
-  }, [club, config.laneCount, config.selectedGroupIds, setPersisted, showToast]);
+    showToast(`Distributed ${pool.length} present swimmers across ${config.laneCount} lanes`, 'success');
+  }, [club, config.laneCount, config.selectedGroupIds, config.presentSwimmerIds, setPersisted, showToast]);
 
   const clearAllLanesSwimmers = useCallback(() => {
     setPersisted(prev => ({
@@ -382,6 +394,64 @@ export function useClubActions({ club, activeGroupId, config, setPersisted, show
     });
   }, [setPersisted]);
 
+  const toggleSwimmerAttendance = useCallback((swimmerId: string) => {
+    setPersisted(prev => {
+      const current = prev.config.presentSwimmerIds || [];
+      const next = current.includes(swimmerId)
+        ? current.filter(id => id !== swimmerId)
+        : [...current, swimmerId];
+      return {
+        ...prev,
+        config: { ...prev.config, presentSwimmerIds: next }
+      };
+    });
+  }, [setPersisted]);
+
+  const markAllSwimmersPresent = useCallback((swimmerIds: string[]) => {
+    setPersisted(prev => {
+      const merged = Array.from(new Set([...(prev.config.presentSwimmerIds || []), ...swimmerIds]));
+      return {
+        ...prev,
+        config: { ...prev.config, presentSwimmerIds: merged }
+      };
+    });
+    showToast(`Marked ${swimmerIds.length} swimmers present`, 'success');
+  }, [setPersisted, showToast]);
+
+  const clearSwimmersAttendance = useCallback((swimmerIds?: string[]) => {
+    setPersisted(prev => {
+      let next: string[] = [];
+      if (swimmerIds && swimmerIds.length > 0) {
+        const toRemove = new Set(swimmerIds);
+        next = (prev.config.presentSwimmerIds || []).filter(id => !toRemove.has(id));
+      }
+      return {
+        ...prev,
+        config: { ...prev.config, presentSwimmerIds: next }
+      };
+    });
+    showToast('Cleared attendance', 'info');
+  }, [setPersisted, showToast]);
+
+  const updateSessionDetails = useCallback((details: {
+    sessionName?: string;
+    sessionDate?: string;
+    sessionTime?: string;
+    selectedGroupIds?: string[];
+  }) => {
+    setPersisted(prev => ({
+      ...prev,
+      config: {
+        ...prev.config,
+        sessionName: details.sessionName !== undefined ? details.sessionName : prev.config.sessionName,
+        sessionDate: details.sessionDate !== undefined ? details.sessionDate : prev.config.sessionDate,
+        sessionTime: details.sessionTime !== undefined ? details.sessionTime : prev.config.sessionTime,
+        selectedGroupIds: details.selectedGroupIds !== undefined ? details.selectedGroupIds : prev.config.selectedGroupIds
+      }
+    }));
+    showToast('Updated session details', 'success');
+  }, [setPersisted, showToast]);
+
   return {
     setClubName,
     saveGroup,
@@ -399,7 +469,11 @@ export function useClubActions({ club, activeGroupId, config, setPersisted, show
     removeSwimmerFromLane,
     moveSwimmerInLane,
     setLaneInterval,
-    setLaneSwimmersText
+    setLaneSwimmersText,
+    toggleSwimmerAttendance,
+    markAllSwimmersPresent,
+    clearSwimmersAttendance,
+    updateSessionDetails
   };
 }
 

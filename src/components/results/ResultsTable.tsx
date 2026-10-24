@@ -22,7 +22,7 @@ export function ResultsTable({ results, onDeleteResult }: ResultsTableProps) {
             <th>Net Split Time</th>
             <th>vs Target</th>
             <th>Wall Finish</th>
-            <th>Set</th>
+            <th>Session / Set</th>
             <th aria-label="Actions" />
           </tr>
         </thead>
@@ -43,7 +43,12 @@ export function ResultsTable({ results, onDeleteResult }: ResultsTableProps) {
                 <PaceBadge netTimeMs={r.netTimeMs} targetTimeSec={r.targetTimeSec} />
               </td>
               <td className="td-wall">{formatMs(r.finishWallMs)}</td>
-              <td className="td-wall">{r.setName}</td>
+              <td className="td-wall">
+                <div style={{ fontWeight: 600 }}>{r.sessionName || 'Session'}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                  {r.setName} {r.sessionDate ? `· ${r.sessionDate}` : ''}
+                </div>
+              </td>
               <td>
                 <button
                   type="button"

@@ -2,7 +2,7 @@ export type GroupColor = 'cyan' | 'teal' | 'amber' | 'rose' | 'violet' | 'emeral
 export type Gender = '' | 'F' | 'M' | 'X';
 export type StopwatchMode = 'interval' | 'manual' | 'mass';
 export type PoolCourse = '25m' | '50m' | '25y';
-export type ViewName = 'setup' | 'swimmers' | 'deck' | 'results';
+export type ViewName = 'attendance' | 'setup' | 'swimmers' | 'deck' | 'results';
 
 export interface Swimmer {
   id: string;
@@ -35,6 +35,10 @@ export interface LaneConfig {
 }
 
 export interface AppConfig {
+  sessionName: string;
+  sessionDate: string;
+  sessionTime: string;
+  presentSwimmerIds: string[];
   laneCount: number;
   setName: string;
   targetTime: number;
@@ -56,6 +60,9 @@ export interface ActiveSwimmer {
 export interface SwimResult {
   id: string;
   timestamp: string;
+  sessionName: string;
+  sessionDate: string;
+  sessionTime: string;
   setName: string;
   lane: number;
   swimmer: string;

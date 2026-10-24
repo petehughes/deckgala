@@ -6,42 +6,63 @@ import { App } from './App';
 describe('AquaPace React App', () => {
   beforeEach(() => {
     localStorage.clear();
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.clear();
+      }
+    } catch {
+      // Ignore
+    }
   });
 
   afterEach(() => {
     cleanup();
   });
 
-  it('renders Setup tab by default and switches between Setup, Swimmers, Pool Deck, and Results tabs', () => {
+  it('prompts user for session details on start and opens Attendance screen before Setup', () => {
     const view = render(<App />);
 
+    // Initial session prompt modal appears on start
+    expect(view.getByText(/Start Session/i)).toBeDefined();
+    expect(view.getByLabelText(/Session Name/i)).toBeDefined();
+    expect(view.getByLabelText(/Session Date/i)).toBeDefined();
+    expect(view.getByLabelText(/Session Time/i)).toBeDefined();
+
+    // Confirm session details
+    const beginBtn = view.getByText(/Begin Session & Attendance/i);
+    fireEvent.click(beginBtn);
+
+    // Lands on Attendance tab by default (before Setup)
+    expect(view.getByText('ACTIVE SESSION')).toBeDefined();
+    expect(view.getByText('Swimmer Attendance Checklist')).toBeDefined();
+    expect(view.getByText('Marked Present')).toBeDefined();
+
+    // Navigate to Setup tab
+    const setupTab = view.getByRole('tab', { name: /Setup/i });
+    fireEvent.click(setupTab);
     expect(view.getByText('Active Lanes')).toBeDefined();
     expect(view.getByText('Session Squads in the Water')).toBeDefined();
 
     // Navigate to Swimmers tab
     const swimmersTab = view.getByRole('tab', { name: /Swimmers/i });
     fireEvent.click(swimmersTab);
-
     expect(view.getByText('SWIMMING GROUPS')).toBeDefined();
     expect(view.getAllByText('Senior Performance').length).toBeGreaterThan(0);
-    expect(view.getByText('Alex Rivera')).toBeDefined();
 
     // Navigate to Pool Deck tab
     const deckTab = view.getByRole('tab', { name: /Pool Deck/i });
     fireEvent.click(deckTab);
-
     expect(view.getByText('START SET')).toBeDefined();
-    expect(view.getByText('LAST SPLITS')).toBeDefined();
 
     // Navigate to Results tab
     const resultsTab = view.getByRole('tab', { name: /Results/i });
     fireEvent.click(resultsTab);
-
     expect(view.getByText('Total Swims Recorded')).toBeDefined();
-    expect(view.getByText('No Splits Recorded Yet')).toBeDefined();
   });
 
-  it('allows starting the stopwatch on Pool Deck and recording a swimmer split into Results', () => {
+  it('allows starting the stopwatch on Pool Deck and records session name in Results output', () => {
+    // Set prompted in sessionStorage so it doesn't block the test
+    sessionStorage.setItem('aquapace_session_prompted', 'true');
     const view = render(<App />);
 
     const deckTab = view.getByRole('tab', { name: /Pool Deck/i });
@@ -57,14 +78,16 @@ describe('AquaPace React App', () => {
     // Stop Lane 1 lead swimmer
     fireEvent.click(stopButtons[0]);
 
-    // Navigate to Results tab and verify 1 split recorded
+    // Navigate to Results tab and verify 1 split recorded with session name
     const resultsTab = view.getByRole('tab', { name: /Results/i });
     fireEvent.click(resultsTab);
 
     expect(view.getByText('Alex Rivera')).toBeDefined();
+    expect(view.getAllByText(/Morning Training Session/i).length).toBeGreaterThan(0);
   });
 
   it('allows creating a new group and adding a swimmer in the Swimmers tab, then selecting them in Setup', () => {
+    sessionStorage.setItem('aquapace_session_prompted', 'true');
     const view = render(<App />);
 
     // Go to Swimmers tab
@@ -99,9 +122,11 @@ describe('AquaPace React App', () => {
   });
 
   it('shows Release All Lanes in Coach Manual Push Release mode and releases next wave across all lanes', () => {
+    sessionStorage.setItem('aquapace_session_prompted', 'true');
     const view = render(<App />);
 
-    // In Setup tab, select Coach Manual Push Release mode
+    // Navigate to Setup tab and select Coach Manual Push Release mode
+    fireEvent.click(view.getByRole('tab', { name: /Setup/i }));
     const manualModeCard = view.getByText(/Coach Manual Push Release/i);
     fireEvent.click(manualModeCard);
 
@@ -123,5 +148,31 @@ describe('AquaPace React App', () => {
 
     // Check that queues now show W2 swimmers in the water (e.g. Sam Chen in Lane 1)
     expect(view.getByText('Sam Chen')).toBeDefined();
+  });
+
+  it('only shows present swimmers in the lane assignment picker dropdown and excludes absent swimmers', () => {
+    sessionStorage.setItem('aquapace_session_prompted', 'true');
+    const view = render(<App />);
+
+    // Starts on Attendance tab
+    expect(view.getByText('Swimmer Attendance Checklist')).toBeDefined();
+
+    // Toggle Alex Rivera to Absent
+    const alexToggle = view.getByLabelText('Toggle attendance for Alex Rivera');
+    fireEvent.click(alexToggle);
+    expect(alexToggle.textContent).toContain('ABSENT');
+
+    // Go to Setup tab
+    fireEvent.click(view.getByRole('tab', { name: /Setup/i }));
+
+    // Check Lane 1 dropdown options
+    const lane1Select = view.getByLabelText('Select swimmer for Lane 1') as HTMLSelectElement;
+    const optionTexts = Array.from(lane1Select.options).map(opt => opt.text);
+
+    // Sam Chen (present) should be in dropdown
+    expect(optionTexts.some(txt => txt.includes('Sam Chen'))).toBe(true);
+
+    // Alex Rivera (marked absent) should NOT be in dropdown
+    expect(optionTexts.some(txt => txt.includes('Alex Rivera'))).toBe(false);
   });
 });

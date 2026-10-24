@@ -5,10 +5,12 @@ import { Icon } from '../common/Icon';
 import type { ViewName } from '../../types';
 
 export function TabBar() {
-  const { currentView, setCurrentView, results, club } = useApp();
+  const { currentView, setCurrentView, results, club, config } = useApp();
   const totalSwimmers = getTotalClubSwimmersCount(club);
+  const presentCount = (config.presentSwimmerIds || []).length;
 
   const tabs: { id: ViewName; label: string; icon: string; badge?: number }[] = [
+    { id: 'attendance', label: 'Attendance', icon: 'attendance', badge: presentCount },
     { id: 'setup', label: 'Setup', icon: 'setup' },
     { id: 'swimmers', label: 'Swimmers', icon: 'users', badge: totalSwimmers },
     { id: 'deck', label: 'Pool Deck', icon: 'stopwatch' },

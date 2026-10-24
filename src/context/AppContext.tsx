@@ -54,6 +54,15 @@ export interface AppContextValue {
   moveSwimmerInLane: (laneIndex: number, waveIdx: number, direction: number) => void;
   setLaneInterval: (laneIndex: number, intervalSec: number) => void;
   setLaneSwimmersText: (laneIndex: number, text: string) => void;
+  toggleSwimmerAttendance: (swimmerId: string) => void;
+  markAllSwimmersPresent: (swimmerIds: string[]) => void;
+  clearSwimmersAttendance: (swimmerIds?: string[]) => void;
+  updateSessionDetails: (details: {
+    sessionName?: string;
+    sessionDate?: string;
+    sessionTime?: string;
+    selectedGroupIds?: string[];
+  }) => void;
 }
 
 export interface StopwatchContextValue {

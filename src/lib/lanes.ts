@@ -42,19 +42,26 @@ export interface SessionSwimmerItem extends Swimmer {
   groupColor: string;
 }
 
-export function getSessionPoolSwimmers(club: ClubData | null | undefined, selectedGroupIds: string[] = []): SessionSwimmerItem[] {
+export function getSessionPoolSwimmers(
+  club: ClubData | null | undefined,
+  selectedGroupIds: string[] = [],
+  presentSwimmerIds?: string[]
+): SessionSwimmerItem[] {
   if (!club || !Array.isArray(club.groups)) return [];
   const selectedIds = new Set(selectedGroupIds);
+  const presentSet = Array.isArray(presentSwimmerIds) ? new Set(presentSwimmerIds) : null;
   const list: SessionSwimmerItem[] = [];
   club.groups.forEach(g => {
     if (selectedIds.has(g.id)) {
       g.swimmers.forEach(s => {
-        list.push({
-          ...s,
-          groupId: g.id,
-          groupName: g.name,
-          groupColor: g.color
-        });
+        if (!presentSet || presentSet.has(s.id)) {
+          list.push({
+            ...s,
+            groupId: g.id,
+            groupName: g.name,
+            groupColor: g.color
+          });
+        }
       });
     }
   });

@@ -292,6 +292,9 @@ export function recordSwimmerStop(
   const result: SwimResult = {
     id: `res-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    sessionName: config.sessionName || 'Training Session',
+    sessionDate: config.sessionDate || new Date().toISOString().slice(0, 10),
+    sessionTime: config.sessionTime || new Date().toTimeString().slice(0, 5),
     setName: config.setName || 'Unlabeled Set',
     lane: laneNum,
     swimmer: swimmerObj.name,

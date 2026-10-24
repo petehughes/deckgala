@@ -29,6 +29,12 @@ export function LaneAssignmentCard({ laneConfig, laneIndex, showTextMode }: Lane
   const selectedGroups = club.groups.filter(g => config.selectedGroupIds.includes(g.id));
   const intervalDisabled = config.stopwatchMode === 'mass';
 
+  const presentSet = new Set(config.presentSwimmerIds || []);
+  const totalPresentInSelected = selectedGroups.reduce(
+    (acc, g) => acc + g.swimmers.filter(sw => presentSet.has(sw.id)).length,
+    0
+  );
+
   // Lookup swimmer metadata from club
   const swimmerMetaMap = new Map<string, { pb50m: string; pb100m: string; groupName: string }>();
   club.groups.forEach(g => {
@@ -142,33 +148,41 @@ export function LaneAssignmentCard({ laneConfig, laneIndex, showTextMode }: Lane
                 }
               }}
             >
-              <option value="">+ Pick swimmer from session squads...</option>
-              {selectedGroups.map(grp => (
-                <optgroup key={grp.id} label={`${grp.name} (${grp.swimmers.length})`}>
-                  {grp.swimmers.map(sw => {
-                    const inThisLane = names.some(
-                      n => n.toLowerCase() === sw.name.toLowerCase()
-                    );
-                    const inOtherLane =
-                      !inThisLane && assignedNamesLower.has(sw.name.toLowerCase());
-                    const statusSuffix = inThisLane
-                      ? ' ✓ (In this lane)'
-                      : inOtherLane
-                        ? ' • (In another lane)'
-                        : '';
-                    return (
-                      <option
-                        key={sw.id}
-                        value={sw.name}
-                        disabled={inThisLane}
-                      >
-                        {sw.name}
-                        {statusSuffix}
-                      </option>
-                    );
-                  })}
-                </optgroup>
-              ))}
+              <option value="">
+                {totalPresentInSelected > 0
+                  ? '+ Pick present swimmer from session squads...'
+                  : 'No swimmers marked present in session squads'}
+              </option>
+              {selectedGroups.map(grp => {
+                const presentInGroup = grp.swimmers.filter(sw => presentSet.has(sw.id));
+                if (presentInGroup.length === 0) return null;
+                return (
+                  <optgroup key={grp.id} label={`${grp.name} (${presentInGroup.length} present)`}>
+                    {presentInGroup.map(sw => {
+                      const inThisLane = names.some(
+                        n => n.toLowerCase() === sw.name.toLowerCase()
+                      );
+                      const inOtherLane =
+                        !inThisLane && assignedNamesLower.has(sw.name.toLowerCase());
+                      const statusSuffix = inThisLane
+                        ? ' ✓ (In this lane)'
+                        : inOtherLane
+                          ? ' • (In another lane)'
+                          : '';
+                      return (
+                        <option
+                          key={sw.id}
+                          value={sw.name}
+                          disabled={inThisLane}
+                        >
+                          {sw.name}
+                          {statusSuffix}
+                        </option>
+                      );
+                    })}
+                  </optgroup>
+                );
+              })}
             </select>
           </div>
         ) : (
@@ -177,9 +191,22 @@ export function LaneAssignmentCard({ laneConfig, laneIndex, showTextMode }: Lane
             <button
               type="button"
               className="btn-link"
-              onClick={() => setCurrentView('swimmers')}
+              onClick={() => setCurrentView('attendance')}
             >
-              Manage Swimmers
+              Select Squads & Attendance
+            </button>
+          </div>
+        )}
+
+        {selectedGroups.length > 0 && totalPresentInSelected === 0 && (
+          <div className="lane-no-squad-note" style={{ marginTop: '0.35rem' }}>
+            All squad swimmers are marked absent.{' '}
+            <button
+              type="button"
+              className="btn-link"
+              onClick={() => setCurrentView('attendance')}
+            >
+              Mark Present in Attendance
             </button>
           </div>
         )}

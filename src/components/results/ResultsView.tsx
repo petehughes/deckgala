@@ -7,6 +7,7 @@ import {
   buildResultsCsv
 } from '../../lib/results';
 import { downloadFile } from '../../lib/files';
+import { sanitizeFilename } from '../../lib/format';
 import { Icon } from '../common/Icon';
 import { ConfirmModal } from '../common/ConfirmModal';
 import { ResultsTable } from './ResultsTable';
@@ -41,7 +42,7 @@ export function ResultsView() {
       showToast('No results to copy', 'warning');
       return;
     }
-    const text = buildResultsClipboardText(results, config.setName);
+    const text = buildResultsClipboardText(results, config.sessionName || config.setName);
     try {
       await navigator.clipboard.writeText(text);
       showToast('Results summary copied to clipboard!', 'success');
@@ -56,7 +57,8 @@ export function ResultsView() {
       return;
     }
     const csvContent = buildResultsCsv(results);
-    const filename = `aquapace-results-${new Date().toISOString().slice(0, 10)}.csv`;
+    const slug = sanitizeFilename(config.sessionName || 'session');
+    const filename = `aquapace-${slug}-${config.sessionDate || new Date().toISOString().slice(0, 10)}.csv`;
     downloadFile(csvContent, filename, 'text/csv;charset=utf-8;');
     showToast('Exported CSV file!', 'success');
   };
