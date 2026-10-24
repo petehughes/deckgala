@@ -1,19 +1,31 @@
 {
-  "name": "aquapace",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "aquapace-pro",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "bun --hot ./src/index.html",
+    "build": "bun build ./src/index.html --outdir dist --minify",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "sync": "bun run build && npx cap sync",
+    "android": "bun run build && npx cap sync android && npx cap open android"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "@capacitor-community/keep-awake": "^8.0.1",
-    "@capacitor/android": "^8.5.3",
-    "@capacitor/cli": "^8.5.3",
-    "@capacitor/core": "^8.5.3"
+    "@capacitor/android": "^8.3.0",
+    "@capacitor/cli": "^8.3.0",
+    "@capacitor/core": "^8.3.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@happy-dom/global-registrator": "^20.9.0",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/bun": "^1.4.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^7.0.2"
   }
 }
