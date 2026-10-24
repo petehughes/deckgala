@@ -1,0 +1,1764 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AquaPace — Club Swimming Wave & Lane Timer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+                    },
+                    colors: {
+                        pool: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e',
+                            950: '#082f49',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap');
+
+        /* Prevent double-tap zoom on wet pool deck screens */
+        * {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
+
+        @keyframes pulse-flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.35; }
+        }
+
+        .flash-go {
+            animation: pulse-flash 0.35s ease-in-out 2;
+        }
+
+        /* Custom scrollbar for lane queues */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 9999px;
+        }
+    </style>
+    <script>
+        import { KeepAwake } from '@capacitor-community/keep-awake';
+        await KeepAwake.keepAwake();
+    </script>
+</head>
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex flex-col font-sans select-none transition-colors duration-200">
+
+    <!-- Top Navigation Bar -->
+    <header class="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800 px-3 sm:px-6 py-2.5">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+            <!-- Brand & Active Set Badge -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-md shadow-cyan-500/20">
+                    <!-- Stopwatch / Pool Wave SVG -->
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-extrabold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-cyan-600 to-blue-600 dark:from-cyan-400 dark:to-blue-400 bg-clip-text text-transparent">AquaPace</h1>
+                        <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">Offline Deck Pro</span>
+                    </div>
+                    <p id="headerSetSubtitle" class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate max-w-[200px] sm:max-w-xs">4 Lanes • Go Every 5s</p>
+                </div>
+            </div>
+
+            <!-- View Switcher Tabs -->
+            <div class="flex items-center bg-slate-200/80 dark:bg-slate-800 p-1 rounded-xl border border-slate-300/60 dark:border-slate-700">
+                <button id="tabBtnSetup" onclick="switchView('setup')" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <span>Setup</span>
+                </button>
+                <button id="tabBtnDeck" onclick="switchView('deck')" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <span>Pool Deck</span>
+                    <span id="activeSwimmersBadge" class="hidden ml-1 px-1.5 py-0.2 bg-cyan-500 text-slate-950 rounded-full text-[11px] font-extrabold">0</span>
+                </button>
+                <button id="tabBtnResults" onclick="switchView('results')" class="px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <span>Results</span>
+                    <span id="resultsCountBadge" class="ml-0.5 px-1.5 py-0.2 bg-slate-300 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-full text-[11px] font-bold">0</span>
+                </button>
+            </div>
+
+            <!-- Quick Utility Controls (Sound + Theme) -->
+            <div class="flex items-center gap-1.5">
+                <button id="soundToggleBtn" onclick="toggleSound()" title="Toggle Starting Beeps & Horn" class="p-2.5 rounded-xl bg-slate-200/80 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition">
+                    <svg id="soundOnIcon" class="w-5 h-5 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                    <svg id="soundOffIcon" class="w-5 h-5 text-rose-500 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/><path stroke-linecap="round" stroke-linejoin="round" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/></svg>
+                </button>
+                <button onclick="toggleTheme()" title="Switch High-Contrast Daylight / Night Mode" class="p-2.5 rounded-xl bg-slate-200/80 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition">
+                    <svg id="sunIcon" class="w-5 h-5 text-amber-400 hidden dark:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    <svg id="moonIcon" class="w-5 h-5 text-slate-700 block dark:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 flex flex-col">
+
+        <!-- ==========================================
+             VIEW 1: SETUP & TRAINING CONFIGURATION
+             ========================================== -->
+        <section id="viewSetup" class="space-y-6">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200 dark:border-slate-800">
+                    <div>
+                        <span class="text-xs font-extrabold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">Step 1 • Set & Send-Off Configuration</span>
+                        <h2 class="text-2xl font-extrabold mt-0.5">Configure Pool Lanes & Stopwatch Type</h2>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Set up your active lanes, wave departure interval (e.g., Go every 5 seconds), and optional swimmer names.</p>
+                    </div>
+                    <button onclick="saveSetupAndGoToDeck()" class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold text-base shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 transition transform active:scale-95">
+                        <span>Open Pool Deck Timer</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                    </button>
+                </div>
+
+                <!-- Grid of Core Settings -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-6">
+                    
+                    <!-- Left Column: Number of Lanes & Set Details (5 cols) -->
+                    <div class="lg:col-span-5 space-y-5">
+                        <!-- Number of Lanes -->
+                        <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70">
+                            <div class="flex items-center justify-between mb-3">
+                                <label class="text-sm font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">Number of Active Lanes</label>
+                                <span id="laneCountDisplay" class="px-3 py-1 rounded-lg bg-cyan-500/20 text-cyan-600 dark:text-cyan-300 font-mono font-extrabold text-lg">4 Lanes</span>
+                            </div>
+                            <!-- Quick Number Pills (1 to 10) -->
+                            <div class="grid grid-cols-5 gap-2">
+                                <button type="button" onclick="setLaneCount(1)" class="lane-count-btn py-2.5 rounded-xl font-mono font-bold text-sm border transition">1</button>
+                                <button type="button" onclick="setLaneCount(2)" class="lane-count-btn py-2.5 rounded-xl font-mono font-bold text-sm border transition">2</button>
+                                <button type="button" onclick="setLaneCount(3)" class="lane-count-btn py-2.5 rounded-xl font-mono font-bold text-sm border transition">3</button>
+                                <button type="button" onclick="setLaneCount(4)" class="lane-count-btn py-2.5 rounded-xl font-mono font-bold text-sm border transition">4</button>
+                                <button type="button" onclick="setLaneCount(5)" class="lane-count-btn py-2.5 rounded-xl font-mono font-bold text-sm border transition">5</button>
+                                <button type="button" onclick="setLaneCount(6)" class="lane-count-btn py-2.5 rounded-xl font-mono font-bold text-sm border transition">6</button>
+                                <button type="button" onclick="setLaneCount(7)" class="lane-count-btn py-2.5 rounded-xl font-mono font-bold text-sm border transition">7</button>
+                                <button type="button" onclick="setLaneCount(8)" class="lane-count-btn py-2.5 rounded-xl font-mono font-bold text-sm border transition">8</button>
+                                <button type="button" onclick="setLaneCount(9)" class="lane-count-btn py-2.5 rounded-xl font-mono font-bold text-sm border transition">9</button>
+                                <button type="button" onclick="setLaneCount(10)" class="lane-count-btn py-2.5 rounded-xl font-mono font-bold text-sm border transition">10</button>
+                            </div>
+                        </div>
+
+                        <!-- Set Name & Target Pace -->
+                        <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70 space-y-4">
+                            <div>
+                                <label for="setNameInput" class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Training Set Name / Distance & Stroke</label>
+                                <input id="setNameInput" type="text" placeholder="e.g., 10 x 100m Freestyle @ Threshold" oninput="updateConfigFromInputs()" class="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                                <!-- Quick Set Presets -->
+                                <div class="flex flex-wrap gap-1.5 mt-2">
+                                    <button type="button" onclick="applySetPreset('10 x 100m Free')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-cyan-500/20 font-medium transition">10x100m Free</button>
+                                    <button type="button" onclick="applySetPreset('16 x 50m Sprint')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-cyan-500/20 font-medium transition">16x50m Sprint</button>
+                                    <button type="button" onclick="applySetPreset('8 x 200m IM')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-cyan-500/20 font-medium transition">8x200m IM</button>
+                                    <button type="button" onclick="applySetPreset('20 x 25m Dive Underwaters')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-cyan-500/20 font-medium transition">20x25m Dive</button>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label for="targetTimeInput" class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Target Time (Sec, Optional)</label>
+                                    <input id="targetTimeInput" type="number" step="0.1" min="0" placeholder="e.g. 65.0" oninput="updateConfigFromInputs()" class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-mono font-bold text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                                </div>
+                                <div>
+                                    <label for="poolLengthSelect" class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">Pool Course</label>
+                                    <select id="poolLengthSelect" onchange="updateConfigFromInputs()" class="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                                        <option value="25m SCM">25m Short Course</option>
+                                        <option value="50m LCM">50m Long Course</option>
+                                        <option value="25y SCY">25y Yards</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Stopwatch / Send-Off Mode (7 cols) -->
+                    <div class="lg:col-span-7 space-y-5">
+                        <div class="p-4 sm:p-5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/70 space-y-4">
+                            <label class="block text-sm font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">Stopwatch & Wave Send-Off Mode</label>
+                            
+                            <!-- 3 Mode Cards -->
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <!-- Mode 1: Interval Wave Mode -->
+                                <button type="button" onclick="setStopwatchMode('interval')" id="modeCardInterval" class="mode-card text-left p-3.5 rounded-xl border-2 transition flex flex-col justify-between">
+                                    <div>
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs font-extrabold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">Interval Waves</span>
+                                            <span class="w-2.5 h-2.5 rounded-full bg-cyan-500"></span>
+                                        </div>
+                                        <h3 class="font-extrabold text-base mt-1">Go Every X Sec</h3>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Launches wave after wave automatically (e.g. every 5s or 10s) with 3-2-1 audio beeps.</p>
+                                    </div>
+                                </button>
+
+                                <!-- Mode 2: Manual Wave Mode -->
+                                <button type="button" onclick="setStopwatchMode('manual')" id="modeCardManual" class="mode-card text-left p-3.5 rounded-xl border-2 transition flex flex-col justify-between">
+                                    <div>
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs font-extrabold uppercase tracking-wider text-amber-500">Manual Push</span>
+                                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                                        </div>
+                                        <h3 class="font-extrabold text-base mt-1">Coach Cue Waves</h3>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Tap "Launch Next Wave" whenever ready while earlier waves are still swimming.</p>
+                                    </div>
+                                </button>
+
+                                <!-- Mode 3: Mass / Single Start -->
+                                <button type="button" onclick="setStopwatchMode('mass')" id="modeCardMass" class="mode-card text-left p-3.5 rounded-xl border-2 transition flex flex-col justify-between">
+                                    <div>
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-500">Time Trial</span>
+                                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                                        </div>
+                                        <h3 class="font-extrabold text-base mt-1">Simultaneous Start</h3>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">All lanes start on the horn together; tap extra waves anytime if needed.</p>
+                                    </div>
+                                </button>
+                            </div>
+
+                            <!-- Interval Wave Seconds Selector (Highlighted when 'interval' mode is active) -->
+                            <div id="intervalConfigPanel" class="pt-3 border-t border-slate-200 dark:border-slate-700/80 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Wave Send-Off Gap ("Go Every...")</span>
+                                    <span id="intervalValueBadge" class="font-mono font-extrabold text-sm text-cyan-600 dark:text-cyan-400">Every 5 Seconds</span>
+                                </div>
+
+                                <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                                    <button type="button" onclick="setIntervalSeconds(5)" class="interval-preset-btn py-2.5 px-3 rounded-xl font-mono font-extrabold text-sm border transition">5s</button>
+                                    <button type="button" onclick="setIntervalSeconds(10)" class="interval-preset-btn py-2.5 px-3 rounded-xl font-mono font-extrabold text-sm border transition">10s</button>
+                                    <button type="button" onclick="setIntervalSeconds(15)" class="interval-preset-btn py-2.5 px-3 rounded-xl font-mono font-extrabold text-sm border transition">15s</button>
+                                    <button type="button" onclick="setIntervalSeconds(30)" class="interval-preset-btn py-2.5 px-3 rounded-xl font-mono font-extrabold text-sm border transition">30s</button>
+                                    <button type="button" onclick="setIntervalSeconds(45)" class="interval-preset-btn py-2.5 px-3 rounded-xl font-mono font-extrabold text-sm border transition">45s</button>
+                                    <button type="button" onclick="setIntervalSeconds(60)" class="interval-preset-btn py-2.5 px-3 rounded-xl font-mono font-extrabold text-sm border transition">60s</button>
+                                </div>
+
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+                                    <div class="flex items-center gap-2">
+                                        <label for="customIntervalInput" class="text-xs font-bold text-slate-600 dark:text-slate-400">Custom Seconds:</label>
+                                        <input id="customIntervalInput" type="number" min="2" max="600" value="5" onchange="setIntervalSeconds(this.value)" class="w-24 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-mono font-bold text-sm">
+                                    </div>
+                                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                                        <input id="autoLaunchToggle" type="checkbox" checked onchange="updateConfigFromInputs()" class="w-4 h-4 rounded text-cyan-500 focus:ring-cyan-500">
+                                        <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">Auto-launch new wave at 0.0s countdown</span>
+                                    </label>
+                                </div>
+
+                                <!-- Max Waves Limit (Optional) -->
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-slate-200/60 dark:border-slate-700/50">
+                                    <div>
+                                        <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Auto-Wave Cap per Rep (0 = Unlimited Waves)</span>
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Example: Set to 4 if each lane has 4 swimmers leaving 5s apart, or 0 for continuous waves.</p>
+                                    </div>
+                                    <input id="maxAutoWavesInput" type="number" min="0" max="99" value="0" onchange="updateConfigFromInputs()" class="w-24 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 font-mono font-bold text-sm">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custom Lane Names & Optional Swimmer Roster per Wave -->
+                <div class="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                        <div>
+                            <h3 class="text-base font-extrabold">Lane Labels & Optional Swimmer Wave Order</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Customize lane numbers or enter comma-separated swimmer names (e.g., <code class="text-cyan-600 dark:text-cyan-400 font-mono">Alex, Sam, Jordan</code>) to auto-label Wave 1, Wave 2, Wave 3 in that lane.</p>
+                        </div>
+                        <button type="button" onclick="populateSampleSwimmers()" class="self-start sm:self-auto text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-cyan-500/20 text-slate-700 dark:text-slate-300 transition">
+                            Fill Demo Club Roster
+                        </button>
+                    </div>
+
+                    <div id="laneSetupGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <!-- Dynamically populated lane config cards -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             VIEW 2: ACTIVE POOL DECK WAVE TIMER
+             ========================================== -->
+        <section id="viewDeck" class="hidden flex-1 flex flex-col space-y-4">
+            
+            <!-- Top Master Console: Master Clock + Next Wave Countdown + Wave Launch Actions -->
+            <div id="masterDeckBanner" class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border-2 border-slate-200 dark:border-slate-800 shadow-md transition-colors">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                    
+                    <!-- Master Elapsed Clock (4 cols) -->
+                    <div class="lg:col-span-4 flex flex-col items-center lg:items-start justify-center border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 pb-3 lg:pb-0 lg:pr-4">
+                        <div class="flex items-center gap-2">
+                            <span id="clockStatusDot" class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+                            <span class="text-xs font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400">Master Deck Clock</span>
+                            <span id="totalWavesLaunchedPill" class="px-2 py-0.5 text-[11px] font-mono font-extrabold rounded-md bg-cyan-500/15 text-cyan-600 dark:text-cyan-400">0 Waves Sent</span>
+                        </div>
+                        <div id="masterClockDisplay" class="font-mono font-extrabold text-5xl sm:text-6xl tracking-tight tabular-nums mt-1 text-slate-900 dark:text-white">
+                            00:00.0
+                        </div>
+                    </div>
+
+                    <!-- Next Wave Send-Off Countdown & Visual Cue (4 cols) -->
+                    <div class="lg:col-span-4 flex flex-col items-center justify-center border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 pb-3 lg:pb-0 px-2">
+                        <div class="flex items-center justify-between w-full max-w-xs mb-1">
+                            <span id="countdownModeLabel" class="text-xs font-extrabold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">Next Wave (Go Every 5s)</span>
+                            <button onclick="toggleAutoWavePause()" id="pauseAutoWaveBtn" class="text-[11px] font-bold px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 transition">
+                                Auto: ON
+                            </button>
+                        </div>
+
+                        <div class="flex items-baseline gap-3">
+                            <div id="nextWaveCountdownDisplay" class="font-mono font-extrabold text-4xl sm:text-5xl tabular-nums text-cyan-600 dark:text-cyan-400">
+                                05.0s
+                            </div>
+                            <span id="nextWaveNumberHint" class="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                                Wave #1 Ready
+                            </span>
+                        </div>
+
+                        <!-- Progress Bar for Interval Send-off -->
+                        <div class="w-full max-w-xs h-2.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden mt-2">
+                            <div id="intervalProgressBar" class="h-full bg-gradient-to-r from-cyan-500 to-blue-500 w-full transition-none"></div>
+                        </div>
+                    </div>
+
+                    <!-- Primary Coach Action Buttons (4 cols) -->
+                    <div class="lg:col-span-4 flex flex-wrap sm:flex-nowrap items-center justify-center lg:justify-end gap-2.5">
+                        <!-- Main Start / Launch Wave Button -->
+                        <button id="primaryWaveActionBtn" onclick="handlePrimaryWaveButton()" class="flex-1 sm:flex-initial min-w-[175px] py-4 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 active:scale-95 text-slate-950 font-extrabold text-base sm:text-lg shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2 transition">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg>
+                            <span id="primaryWaveActionText">START & LAUNCH W1</span>
+                        </button>
+
+                        <!-- Force Launch Extra Wave Right Now -->
+                        <button id="manualWaveBoostBtn" onclick="launchWaveNow('manual')" disabled class="py-4 px-4 rounded-2xl bg-cyan-500/15 hover:bg-cyan-500/25 disabled:opacity-40 disabled:pointer-events-none border border-cyan-500/40 text-cyan-700 dark:text-cyan-300 font-extrabold text-xs sm:text-sm flex flex-col items-center justify-center transition active:scale-95" title="Immediately launch another wave across all lanes">
+                            <span>+ LAUNCH</span>
+                            <span class="text-[10px] font-mono opacity-80">WAVE NOW</span>
+                        </button>
+
+                        <!-- Pause / Reset Clock Menu -->
+                        <div class="flex flex-col gap-1.5">
+                            <button id="pauseMasterBtn" onclick="toggleMasterPause()" disabled class="px-3 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 disabled:opacity-40 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-bold text-xs transition">
+                                Pause
+                            </button>
+                            <button onclick="openResetModal()" class="px-3 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-600 dark:text-rose-400 font-bold text-xs transition">
+                                Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Undo Last Stop & Recent Split Ticker Bar -->
+                <div class="mt-3 pt-2.5 border-t border-slate-200/80 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div class="flex items-center gap-2 overflow-x-auto py-0.5">
+                        <span class="font-bold uppercase tracking-wider text-slate-400 shrink-0">Latest Finishes:</span>
+                        <div id="recentSplitsTicker" class="flex items-center gap-1.5">
+                            <span class="text-slate-400 italic">No swimmers stopped yet — launch Wave 1 to begin.</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 ml-auto">
+                        <button id="undoLastStopBtn" onclick="undoLastAction()" disabled class="px-3 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 disabled:opacity-40 disabled:pointer-events-none font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 transition">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                            <span>Undo Last Stop</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Lanes Grid: Large Poolside Touch Cards -->
+            <div id="lanesDeckGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 flex-1">
+                <!-- Dynamically rendered lane cards -->
+            </div>
+
+        </section>
+
+        <!-- ==========================================
+             VIEW 3: RECORDED RESULTS & WAVE ANALYSIS
+             ========================================== -->
+        <section id="viewResults" class="hidden space-y-5">
+            <!-- Summary KPIs -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Recorded Swims</span>
+                    <div id="statTotalSwims" class="text-2xl sm:text-3xl font-mono font-extrabold mt-1">0</div>
+                </div>
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Fastest Net Time</span>
+                    <div id="statFastestSwim" class="text-2xl sm:text-3xl font-mono font-extrabold text-emerald-500 mt-1">--</div>
+                </div>
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Set Average Time</span>
+                    <div id="statAverageSwim" class="text-2xl sm:text-3xl font-mono font-extrabold text-cyan-500 mt-1">--</div>
+                </div>
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Waves Launched</span>
+                    <div id="statTotalWaves" class="text-2xl sm:text-3xl font-mono font-extrabold text-amber-500 mt-1">0</div>
+                </div>
+            </div>
+
+            <!-- Filter, Grouping & Export Bar -->
+            <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400 mr-1">Filter:</span>
+                        <select id="filterLaneSelect" onchange="renderResultsView()" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-bold">
+                            <option value="all">All Lanes</option>
+                        </select>
+                        <select id="filterWaveSelect" onchange="renderResultsView()" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-bold">
+                            <option value="all">All Waves</option>
+                        </select>
+                        <select id="sortResultsSelect" onchange="renderResultsView()" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs font-bold">
+                            <option value="recent">Newest First</option>
+                            <option value="wave">By Wave #</option>
+                            <option value="lane">By Lane #</option>
+                            <option value="fastest">Fastest Net Time</option>
+                        </select>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="copyResultsToClipboard()" class="px-3.5 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-xs font-bold flex items-center gap-1.5 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                            <span>Copy Summary</span>
+                        </button>
+                        <button onclick="exportResultsCSV()" class="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            <span>Export CSV</span>
+                        </button>
+                        <button onclick="openClearResultsModal()" class="px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-600 dark:text-rose-400 text-xs font-bold transition">
+                            Clear Log
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Results Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-200 dark:border-slate-800 text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
+                                <th class="py-3 px-3">Wave</th>
+                                <th class="py-3 px-3">Lane</th>
+                                <th class="py-3 px-3">Swimmer</th>
+                                <th class="py-3 px-3">Net Swim Time</th>
+                                <th class="py-3 px-3">vs Target</th>
+                                <th class="py-3 px-3">Wave Departed</th>
+                                <th class="py-3 px-3">Wall Touch (Master)</th>
+                                <th class="py-3 px-3 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsTableBody" class="divide-y divide-slate-200/60 dark:divide-slate-800/80 text-sm">
+                            <!-- Dynamically populated rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Custom Modal for Reset / Clear Confirmation (Zero alert/confirm calls) -->
+    <div id="customModalOverlay" class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <h3 id="modalTitle" class="text-lg font-extrabold">Reset Active Stopwatch?</h3>
+            <p id="modalDescription" class="text-sm text-slate-500 dark:text-slate-400">This will stop the master clock and clear currently swimming waves on deck. Recorded results in your log will be preserved unless you choose to clear them.</p>
+            <div id="modalButtons" class="flex flex-wrap items-center justify-end gap-2.5 pt-2">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Non-intrusive Toast Notification -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50 pointer-events-none flex flex-col gap-2"></div>
+
+    <script>
+        /********************************************************************
+         * AQUAPACE — OFFLINE CLUB SWIMMING WAVE & LANE STOPWATCH ENGINE
+         ********************************************************************/
+        const STORAGE_KEY = 'aquapace_club_swim_v1';
+
+        // Application State
+        let state = {
+            currentView: 'setup', // 'setup' | 'deck' | 'results'
+            soundEnabled: true,
+            config: {
+                laneCount: 4,
+                mode: 'interval', // 'interval' | 'manual' | 'mass'
+                intervalSeconds: 5,
+                autoLaunchWaves: true,
+                maxAutoWaves: 0, // 0 = unlimited
+                setName: '10 x 100m Freestyle',
+                targetTime: 65.0,
+                poolCourse: '25m SCM',
+                lanes: [
+                    { id: 1, name: 'Lane 1', swimmersText: 'Alex, Sam, Jordan, Taylor' },
+                    { id: 2, name: 'Lane 2', swimmersText: 'Morgan, Casey, Riley, Jamie' },
+                    { id: 3, name: 'Lane 3', swimmersText: 'Cameron, Drew, Devin, Quinn' },
+                    { id: 4, name: 'Lane 4', swimmersText: 'Avery, Parker, Reese, Blake' },
+                    { id: 5, name: 'Lane 5', swimmersText: '' },
+                    { id: 6, name: 'Lane 6', swimmersText: '' },
+                    { id: 7, name: 'Lane 7', swimmersText: '' },
+                    { id: 8, name: 'Lane 8', swimmersText: '' },
+                    { id: 9, name: 'Lane 9', swimmersText: '' },
+                    { id: 10, name: 'Lane 10', swimmersText: '' }
+                ]
+            },
+            // Runtime Stopwatch State (High-precision timestamps)
+            runtime: {
+                isRunning: false,
+                isPaused: false,
+                masterStartPerf: 0,        // performance.now() when master started
+                accumulatedPauseMs: 0,     // total ms spent paused
+                pauseStartedPerf: 0,
+                wavesLaunched: 0,
+                nextAutoWaveAtMs: 5000,    // master elapsed ms for next automatic wave
+                autoWavePaused: false,
+                lastBeepSecond: null,
+                // Active swimmers currently in the water:
+                // Each entry: { uid, waveNum, laneId, laneName, swimmerName, waveStartMs }
+                activeSwimmers: [],
+                // Stack for undoing accidental stops or skips
+                undoStack: []
+            },
+            // Completed & Recorded Swim Splits
+            // Each entry: { id, setName, poolCourse, waveNum, laneId, laneName, swimmerName, waveStartMs, finishMasterMs, netTimeMs, targetTimeSec, timestampISO }
+            results: []
+        };
+
+        let rafId = null;
+        let audioCtx = null;
+
+        /********************************************************************
+         * WEB AUDIO API — SYNTHESIZED POOLSIDE BEEPS & STARTING HORN
+         ********************************************************************/
+        function ensureAudioContext() {
+            if (!state.soundEnabled) return null;
+            try {
+                if (!audioCtx) {
+                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                    audioCtx = new AudioContextClass();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                return audioCtx;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // Countdown pips ("3, 2, 1")
+        function playCountdownPip() {
+            const ctx = ensureAudioContext();
+            if (!ctx) return;
+            try {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, ctx.currentTime); // A5 crisp beep
+                gain.gain.setValueAtTime(0.18, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.09);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.095);
+            } catch (e) {}
+        }
+
+        // Wave Departure Horn ("GO!")
+        function playWaveLaunchHorn() {
+            const ctx = ensureAudioContext();
+            if (!ctx) return;
+            try {
+                const now = ctx.currentTime;
+                const osc1 = ctx.createOscillator();
+                const osc2 = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc1.type = 'triangle';
+                osc2.type = 'sawtooth';
+                osc1.frequency.setValueAtTime(1318.5, now); // E6 energetic start tone
+                osc2.frequency.setValueAtTime(659.25, now); // E5 undertone
+
+                gain.gain.setValueAtTime(0.28, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+
+                osc1.connect(gain);
+                osc2.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc1.start(now);
+                osc2.start(now);
+                osc1.stop(now + 0.34);
+                osc2.stop(now + 0.34);
+            } catch (e) {}
+        }
+
+        // Tactile Split Stop Click
+        function playStopSplitClick() {
+            const ctx = ensureAudioContext();
+            if (!ctx) return;
+            try {
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1567.98, now); // G6 crisp confirmation
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.065);
+            } catch (e) {}
+        }
+
+        /********************************************************************
+         * PERSISTENCE (OFFLINE LOCALSTORAGE)
+         ********************************************************************/
+        function saveToStorage() {
+            try {
+                const payload = {
+                    soundEnabled: state.soundEnabled,
+                    config: state.config,
+                    results: state.results
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+            } catch (err) {
+                console.warn('Could not save state to localStorage:', err);
+            }
+        }
+
+        function loadFromStorage() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return;
+                const parsed = JSON.parse(raw);
+                if (typeof parsed.soundEnabled === 'boolean') state.soundEnabled = parsed.soundEnabled;
+                if (parsed.config) {
+                    state.config = { ...state.config, ...parsed.config };
+                    // Ensure all 10 lane objects exist
+                    if (!Array.isArray(state.config.lanes) || state.config.lanes.length < 10) {
+                        for (let i = 1; i <= 10; i++) {
+                            if (!state.config.lanes[i - 1]) {
+                                state.config.lanes[i - 1] = { id: i, name: `Lane ${i}`, swimmersText: '' };
+                            }
+                        }
+                    }
+                }
+                if (Array.isArray(parsed.results)) {
+                    state.results = parsed.results;
+                }
+            } catch (err) {
+                console.warn('Could not load saved state:', err);
+            }
+        }
+
+        /********************************************************************
+         * TIME FORMATTING HELPERS
+         ********************************************************************/
+        // Format ms as MM:SS.d or SS.dd
+        function formatClockMs(ms, decimals = 1) {
+            if (ms < 0 || isNaN(ms)) ms = 0;
+            const totalSeconds = ms / 1000;
+            const mins = Math.floor(totalSeconds / 60);
+            const secs = totalSeconds % 60;
+
+            const minStr = String(mins).padStart(2, '0');
+            const secFormat = secs.toFixed(decimals).padStart(decimals === 2 ? 5 : 4, '0');
+            return `${minStr}:${secFormat}`;
+        }
+
+        // Format net swim time cleanly (under 1 min shows SS.dd, 1 min+ shows M:SS.dd)
+        function formatNetSwimMs(ms) {
+            if (ms < 0 || isNaN(ms)) ms = 0;
+            const totalSeconds = ms / 1000;
+            const mins = Math.floor(totalSeconds / 60);
+            const secs = totalSeconds % 60;
+            if (mins > 0) {
+                return `${mins}:${secs.toFixed(2).padStart(5, '0')}`;
+            }
+            return `${secs.toFixed(2)}s`;
+        }
+
+        /********************************************************************
+         * VIEW & SETUP MANAGEMENT
+         ********************************************************************/
+        function switchView(viewName) {
+            state.currentView = viewName;
+
+            const views = {
+                setup: document.getElementById('viewSetup'),
+                deck: document.getElementById('viewDeck'),
+                results: document.getElementById('viewResults')
+            };
+            const tabs = {
+                setup: document.getElementById('tabBtnSetup'),
+                deck: document.getElementById('tabBtnDeck'),
+                results: document.getElementById('tabBtnResults')
+            };
+
+            Object.keys(views).forEach(k => {
+                if (k === viewName) {
+                    views[k].classList.remove('hidden');
+                    tabs[k].className = 'px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-extrabold transition-all flex items-center gap-1.5 bg-white dark:bg-slate-900 text-cyan-600 dark:text-cyan-400 shadow-sm';
+                } else {
+                    views[k].classList.add('hidden');
+                    tabs[k].className = 'px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white';
+                }
+            });
+
+            if (viewName === 'setup') {
+                renderSetupView();
+            } else if (viewName === 'deck') {
+                renderDeckLanes();
+                updateDeckHeaderUI();
+            } else if (viewName === 'results') {
+                populateResultsFilterDropdowns();
+                renderResultsView();
+            }
+        }
+
+        function setLaneCount(count) {
+            state.config.laneCount = Math.max(1, Math.min(10, parseInt(count, 10) || 4));
+            saveToStorage();
+            renderSetupView();
+            updateHeaderSummary();
+        }
+
+        function setStopwatchMode(mode) {
+            state.config.mode = mode;
+            saveToStorage();
+            renderSetupView();
+            updateHeaderSummary();
+        }
+
+        function setIntervalSeconds(sec) {
+            const parsed = Math.max(2, Math.min(600, parseInt(sec, 10) || 5));
+            state.config.intervalSeconds = parsed;
+            document.getElementById('customIntervalInput').value = parsed;
+            saveToStorage();
+            renderSetupView();
+            updateHeaderSummary();
+        }
+
+        function applySetPreset(presetText) {
+            document.getElementById('setNameInput').value = presetText;
+            updateConfigFromInputs();
+        }
+
+        function updateConfigFromInputs() {
+            state.config.setName = document.getElementById('setNameInput').value.trim() || 'Club Training Set';
+            const tVal = parseFloat(document.getElementById('targetTimeInput').value);
+            state.config.targetTime = isNaN(tVal) || tVal <= 0 ? 0 : tVal;
+            state.config.poolCourse = document.getElementById('poolLengthSelect').value;
+            state.config.autoLaunchWaves = document.getElementById('autoLaunchToggle').checked;
+            state.config.maxAutoWaves = Math.max(0, parseInt(document.getElementById('maxAutoWavesInput').value, 10) || 0);
+            saveToStorage();
+            updateHeaderSummary();
+        }
+
+        function updateLaneConfig(index, field, value) {
+            if (!state.config.lanes[index]) return;
+            state.config.lanes[index][field] = value;
+            saveToStorage();
+        }
+
+        function populateSampleSwimmers() {
+            const sampleRosters = [
+                'Alex, Sam, Jordan, Taylor',
+                'Morgan, Casey, Riley, Jamie',
+                'Cameron, Drew, Devin, Quinn',
+                'Avery, Parker, Reese, Blake',
+                'Skyler, Frankie, Hayden, Rowen',
+                'Emerson, Finley, Dakota, Sage',
+                'Peyton, Kendall, Harley, Ellis',
+                'River, Phoenix, Rory, Tatum',
+                'Charlie, Oakley,Lennox, Milan',
+                'Zion, Kai, Luca, Nico'
+            ];
+            for (let i = 0; i < 10; i++) {
+                state.config.lanes[i].swimmersText = sampleRosters[i] || '';
+            }
+            saveToStorage();
+            renderSetupView();
+            showToast('Loaded sample club swimmer wave rosters');
+        }
+
+        function renderSetupView() {
+            // Sync inputs
+            document.getElementById('setNameInput').value = state.config.setName;
+            document.getElementById('targetTimeInput').value = state.config.targetTime || '';
+            document.getElementById('poolLengthSelect').value = state.config.poolCourse;
+            document.getElementById('customIntervalInput').value = state.config.intervalSeconds;
+            document.getElementById('autoLaunchToggle').checked = state.config.autoLaunchWaves;
+            document.getElementById('maxAutoWavesInput').value = state.config.maxAutoWaves || 0;
+            document.getElementById('laneCountDisplay').textContent = `${state.config.laneCount} ${state.config.laneCount === 1 ? 'Lane' : 'Lanes'}`;
+            document.getElementById('intervalValueBadge').textContent = `Every ${state.config.intervalSeconds} Seconds`;
+
+            // Highlight active lane count pill
+            const laneBtns = document.querySelectorAll('.lane-count-btn');
+            laneBtns.forEach((btn, idx) => {
+                const count = idx + 1;
+                if (count === state.config.laneCount) {
+                    btn.className = 'lane-count-btn py-2.5 rounded-xl font-mono font-extrabold text-sm border-2 border-cyan-500 bg-cyan-500 text-slate-950 shadow-sm transition';
+                } else {
+                    btn.className = 'lane-count-btn py-2.5 rounded-xl font-mono font-bold text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-cyan-500/50 transition';
+                }
+            });
+
+            // Highlight active mode card
+            const modes = {
+                interval: document.getElementById('modeCardInterval'),
+                manual: document.getElementById('modeCardManual'),
+                mass: document.getElementById('modeCardMass')
+            };
+            Object.keys(modes).forEach(k => {
+                if (k === state.config.mode) {
+                    modes[k].className = 'mode-card text-left p-3.5 rounded-xl border-2 border-cyan-500 bg-cyan-500/10 dark:bg-cyan-500/10 shadow-sm transition flex flex-col justify-between';
+                } else {
+                    modes[k].className = 'mode-card text-left p-3.5 rounded-xl border-2 border-slate-200 dark:border-slate-700/80 bg-white dark:bg-slate-900 hover:border-slate-400 transition flex flex-col justify-between opacity-80';
+                }
+            });
+
+            // Interval Config visibility
+            const intervalPanel = document.getElementById('intervalConfigPanel');
+            if (state.config.mode === 'interval') {
+                intervalPanel.classList.remove('opacity-50');
+            } else {
+                intervalPanel.classList.add('opacity-50');
+            }
+
+            // Highlight preset interval seconds
+            const presetSecs = [5, 10, 15, 30, 45, 60];
+            const intervalBtns = document.querySelectorAll('.interval-preset-btn');
+            intervalBtns.forEach((btn, idx) => {
+                if (presetSecs[idx] === state.config.intervalSeconds) {
+                    btn.className = 'interval-preset-btn py-2.5 px-3 rounded-xl font-mono font-extrabold text-sm border-2 border-cyan-500 bg-cyan-500 text-slate-950 transition';
+                } else {
+                    btn.className = 'interval-preset-btn py-2.5 px-3 rounded-xl font-mono font-bold text-sm border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-cyan-500/50 transition';
+                }
+            });
+
+            // Render Lane Setup Cards for active lane count
+            const grid = document.getElementById('laneSetupGrid');
+            grid.innerHTML = '';
+            for (let i = 0; i < state.config.laneCount; i++) {
+                const lane = state.config.lanes[i];
+                const card = document.createElement('div');
+                card.className = 'p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-2.5';
+                card.innerHTML = `
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="px-2 py-0.5 rounded-md bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 font-mono font-extrabold text-xs">LANE #${i + 1}</span>
+                        <input type="text" value="${escapeHtml(lane.name)}" oninput="updateLaneConfig(${i}, 'name', this.value)"
+                            class="w-32 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-right focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                            placeholder="Lane ${i + 1}">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1">Swimmers by Wave (W1, W2, W3...)</label>
+                        <input type="text" value="${escapeHtml(lane.swimmersText)}" oninput="updateLaneConfig(${i}, 'swimmersText', this.value)"
+                            placeholder="e.g. Swimmer A, Swimmer B, Swimmer C"
+                            class="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-cyan-500">
+                    </div>
+                `;
+                grid.appendChild(card);
+            }
+        }
+
+        function saveSetupAndGoToDeck() {
+            updateConfigFromInputs();
+            ensureAudioContext();
+            switchView('deck');
+        }
+
+        function updateHeaderSummary() {
+            const modeText = state.config.mode === 'interval'
+                ? `Go Every ${state.config.intervalSeconds}s`
+                : state.config.mode === 'manual'
+                    ? 'Manual Wave Launch'
+                    : 'Mass Start';
+            document.getElementById('headerSetSubtitle').textContent =
+                `${state.config.laneCount} ${state.config.laneCount === 1 ? 'Lane' : 'Lanes'} • ${modeText} • ${state.config.setName}`;
+
+            // Badges
+            const activeCount = state.runtime.activeSwimmers.length;
+            const activeBadge = document.getElementById('activeSwimmersBadge');
+            if (activeCount > 0) {
+                activeBadge.textContent = activeCount;
+                activeBadge.classList.remove('hidden');
+            } else {
+                activeBadge.classList.add('hidden');
+            }
+
+            document.getElementById('resultsCountBadge').textContent = state.results.length;
+        }
+
+        /********************************************************************
+         * STOPWATCH TIMING ENGINE & WAVE MANAGER
+         ********************************************************************/
+        function getMasterElapsedMs() {
+            if (!state.runtime.isRunning) return 0;
+            if (state.runtime.isPaused) {
+                return state.runtime.pauseStartedPerf - state.runtime.masterStartPerf - state.runtime.accumulatedPauseMs;
+            }
+            return performance.now() - state.runtime.masterStartPerf - state.runtime.accumulatedPauseMs;
+        }
+
+        function getSwimmerLabelForWave(laneIndex, waveNumber) {
+            const lane = state.config.lanes[laneIndex];
+            if (!lane || !lane.swimmersText.trim()) {
+                return `Wave ${waveNumber}`;
+            }
+            const names = lane.swimmersText.split(',').map(s => s.trim()).filter(Boolean);
+            if (names.length === 0) return `Wave ${waveNumber}`;
+            // Cycle through roster if more waves are launched than names listed (e.g., multiple reps)
+            const chosenName = names[(waveNumber - 1) % names.length];
+            const repCycle = Math.floor((waveNumber - 1) / names.length) + 1;
+            return repCycle > 1 ? `${chosenName} (R${repCycle})` : chosenName;
+        }
+
+        // Primary Green Action Button Handler
+        function handlePrimaryWaveButton() {
+            ensureAudioContext();
+
+            if (!state.runtime.isRunning) {
+                // Start Master Clock and immediately launch Wave #1 at 00:00.00
+                state.runtime.isRunning = true;
+                state.runtime.isPaused = false;
+                state.runtime.masterStartPerf = performance.now();
+                state.runtime.accumulatedPauseMs = 0;
+                state.runtime.wavesLaunched = 0;
+                state.runtime.lastBeepSecond = null;
+                state.runtime.autoWavePaused = false;
+
+                launchWaveAtExactMs(0);
+                state.runtime.nextAutoWaveAtMs = state.config.intervalSeconds * 1000;
+
+                startAnimationLoop();
+                updateDeckHeaderUI();
+                return;
+            }
+
+            if (state.runtime.isPaused) {
+                toggleMasterPause();
+                return;
+            }
+
+            // If already running, pressing primary button launches the next wave immediately
+            launchWaveNow('manual');
+        }
+
+        // Launch a wave right now across all active lanes
+        function launchWaveNow(source = 'manual') {
+            if (!state.runtime.isRunning) {
+                handlePrimaryWaveButton();
+                return;
+            }
+            const currentMs = getMasterElapsedMs();
+            launchWaveAtExactMs(currentMs);
+
+            // If launched manually during interval mode, schedule the next interval from this wave
+            if (state.config.mode === 'interval') {
+                state.runtime.nextAutoWaveAtMs = currentMs + (state.config.intervalSeconds * 1000);
+                state.runtime.lastBeepSecond = null;
+            }
+        }
+
+        // Launch a new swimmer only for a single specific lane
+        function launchSingleLaneSwimmer(laneIndex) {
+            if (!state.runtime.isRunning) {
+                handlePrimaryWaveButton();
+                return;
+            }
+            const currentMs = getMasterElapsedMs();
+            const lane = state.config.lanes[laneIndex];
+            const waveNum = state.runtime.wavesLaunched || 1;
+            const swimmerName = getSwimmerLabelForWave(laneIndex, waveNum);
+
+            state.runtime.activeSwimmers.push({
+                uid: `sw_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+                waveNum: waveNum,
+                laneId: lane.id,
+                laneIndex: laneIndex,
+                laneName: lane.name || `Lane ${lane.id}`,
+                swimmerName: swimmerName,
+                waveStartMs: currentMs
+            });
+
+            playCountdownPip();
+            renderDeckLanes();
+            updateHeaderSummary();
+        }
+
+        function launchWaveAtExactMs(exactStartMs) {
+            state.runtime.wavesLaunched += 1;
+            const waveNum = state.runtime.wavesLaunched;
+
+            for (let i = 0; i < state.config.laneCount; i++) {
+                const lane = state.config.lanes[i];
+                const swimmerName = getSwimmerLabelForWave(i, waveNum);
+                state.runtime.activeSwimmers.push({
+                    uid: `sw_${waveNum}_${i}_${Date.now()}`,
+                    waveNum: waveNum,
+                    laneId: lane.id,
+                    laneIndex: i,
+                    laneName: lane.name || `Lane ${lane.id}`,
+                    swimmerName: swimmerName,
+                    waveStartMs: exactStartMs
+                });
+            }
+
+            // Audio & Visual Flash on Wave Launch
+            playWaveLaunchHorn();
+            const banner = document.getElementById('masterDeckBanner');
+            banner.classList.remove('flash-go');
+            void banner.offsetWidth; // trigger reflow
+            banner.classList.add('flash-go');
+
+            renderDeckLanes();
+            updateDeckHeaderUI();
+            updateHeaderSummary();
+        }
+
+        function startAnimationLoop() {
+            if (rafId) cancelAnimationFrame(rafId);
+
+            function tick() {
+                if (!state.runtime.isRunning) return;
+
+                const elapsedMs = getMasterElapsedMs();
+
+                // 1. Update Master Clock Display
+                document.getElementById('masterClockDisplay').textContent = formatClockMs(elapsedMs, 1);
+
+                // 2. Handle Interval Wave Countdown & Auto-Launch
+                if (state.config.mode === 'interval' && !state.runtime.isPaused) {
+                    const maxCapReached = state.config.maxAutoWaves > 0 && state.runtime.wavesLaunched >= state.config.maxAutoWaves;
+
+                    if (!state.runtime.autoWavePaused && !maxCapReached) {
+                        const remainingMs = state.runtime.nextAutoWaveAtMs - elapsedMs;
+
+                        // Play 3, 2, 1 countdown beeps when interval >= 4 seconds
+                        if (state.config.intervalSeconds >= 4 && remainingMs > 0 && remainingMs <= 3050) {
+                            const secCeil = Math.ceil(remainingMs / 1000);
+                            if (secCeil >= 1 && secCeil <= 3 && state.runtime.lastBeepSecond !== secCeil) {
+                                state.runtime.lastBeepSecond = secCeil;
+                                playCountdownPip();
+                            }
+                        }
+
+                        if (remainingMs <= 0) {
+                            if (state.config.autoLaunchWaves) {
+                                // Launch Wave at exact scheduled timestamp so there is zero drift
+                                const scheduledMs = state.runtime.nextAutoWaveAtMs;
+                                launchWaveAtExactMs(scheduledMs);
+                                state.runtime.nextAutoWaveAtMs = scheduledMs + (state.config.intervalSeconds * 1000);
+                                state.runtime.lastBeepSecond = null;
+                            } else {
+                                // Roll over countdown cue even if coach chooses manual button tap
+                                state.runtime.nextAutoWaveAtMs += (state.config.intervalSeconds * 1000);
+                                state.runtime.lastBeepSecond = null;
+                            }
+                        }
+
+                        const updatedRemMs = Math.max(0, state.runtime.nextAutoWaveAtMs - elapsedMs);
+                        document.getElementById('nextWaveCountdownDisplay').textContent = `${(updatedRemMs / 1000).toFixed(1)}s`;
+
+                        const pct = Math.max(0, Math.min(100, (updatedRemMs / (state.config.intervalSeconds * 1000)) * 100));
+                        document.getElementById('intervalProgressBar').style.width = `${pct}%`;
+                    } else if (maxCapReached) {
+                        document.getElementById('nextWaveCountdownDisplay').textContent = 'CAP DONE';
+                        document.getElementById('intervalProgressBar').style.width = '0%';
+                    }
+                }
+
+                // 3. Live-update each active swimmer's individual net elapsed time on their lane card
+                const liveTimers = document.querySelectorAll('[data-swimmer-start-ms]');
+                liveTimers.forEach(el => {
+                    const startMs = parseFloat(el.getAttribute('data-swimmer-start-ms')) || 0;
+                    const netMs = Math.max(0, elapsedMs - startMs);
+                    el.textContent = formatNetSwimMs(netMs);
+                });
+
+                rafId = requestAnimationFrame(tick);
+            }
+
+            rafId = requestAnimationFrame(tick);
+        }
+
+        function toggleMasterPause() {
+            if (!state.runtime.isRunning) return;
+            if (!state.runtime.isPaused) {
+                state.runtime.isPaused = true;
+                state.runtime.pauseStartedPerf = performance.now();
+                showToast('Master Clock Paused');
+            } else {
+                state.runtime.accumulatedPauseMs += (performance.now() - state.runtime.pauseStartedPerf);
+                state.runtime.isPaused = false;
+                showToast('Master Clock Resumed');
+            }
+            updateDeckHeaderUI();
+        }
+
+        function toggleAutoWavePause() {
+            state.runtime.autoWavePaused = !state.runtime.autoWavePaused;
+            if (!state.runtime.autoWavePaused && state.runtime.isRunning) {
+                // Re-sync next auto wave relative to current master clock
+                state.runtime.nextAutoWaveAtMs = getMasterElapsedMs() + (state.config.intervalSeconds * 1000);
+            }
+            updateDeckHeaderUI();
+        }
+
+        /********************************************************************
+         * STOPPING INDIVIDUAL SWIMMERS & RECORDING SPLITS
+         ********************************************************************/
+        function stopSwimmerByUid(uid) {
+            const idx = state.runtime.activeSwimmers.findIndex(s => s.uid === uid);
+            if (idx === -1) return;
+
+            const finishMasterMs = getMasterElapsedMs();
+            const swimmer = state.runtime.activeSwimmers[idx];
+            const netTimeMs = Math.max(0, finishMasterMs - swimmer.waveStartMs);
+
+            // Remove from active pool queue
+            state.runtime.activeSwimmers.splice(idx, 1);
+
+            const record = {
+                id: `rec_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+                setName: state.config.setName,
+                poolCourse: state.config.poolCourse,
+                waveNum: swimmer.waveNum,
+                laneId: swimmer.laneId,
+                laneIndex: swimmer.laneIndex,
+                laneName: swimmer.laneName,
+                swimmerName: swimmer.swimmerName,
+                waveStartMs: swimmer.waveStartMs,
+                finishMasterMs: finishMasterMs,
+                netTimeMs: netTimeMs,
+                targetTimeSec: state.config.targetTime || 0,
+                timestampISO: new Date().toISOString()
+            };
+
+            state.results.unshift(record);
+
+            // Push to Undo Stack
+            state.runtime.undoStack.push({
+                type: 'stop',
+                swimmer: swimmer,
+                recordId: record.id
+            });
+
+            playStopSplitClick();
+            saveToStorage();
+            renderDeckLanes();
+            updateDeckHeaderUI();
+            updateHeaderSummary();
+        }
+
+        // Skip / Scratch a swimmer if they didn't push off or pulled out of the lane
+        function scratchSwimmerByUid(uid, event) {
+            if (event) event.stopPropagation();
+            const idx = state.runtime.activeSwimmers.findIndex(s => s.uid === uid);
+            if (idx === -1) return;
+            const removed = state.runtime.activeSwimmers.splice(idx, 1)[0];
+
+            state.runtime.undoStack.push({
+                type: 'scratch',
+                swimmer: removed
+            });
+
+            renderDeckLanes();
+            updateDeckHeaderUI();
+            updateHeaderSummary();
+            showToast(`Scratched ${removed.swimmerName} (${removed.laneName})`);
+        }
+
+        function undoLastAction() {
+            if (state.runtime.undoStack.length === 0) return;
+            const last = state.runtime.undoStack.pop();
+
+            if (last.type === 'stop') {
+                // Remove from recorded results
+                state.results = state.results.filter(r => r.id !== last.recordId);
+                // Put swimmer back into active water queue sorted by waveStartMs
+                state.runtime.activeSwimmers.push(last.swimmer);
+                state.runtime.activeSwimmers.sort((a, b) => a.waveStartMs - b.waveStartMs);
+                showToast(`Restored ${last.swimmer.swimmerName} (${last.swimmer.laneName}) to active swim`);
+            } else if (last.type === 'scratch') {
+                state.runtime.activeSwimmers.push(last.swimmer);
+                state.runtime.activeSwimmers.sort((a, b) => a.waveStartMs - b.waveStartMs);
+                showToast(`Restored scratched swimmer ${last.swimmer.swimmerName}`);
+            }
+
+            saveToStorage();
+            renderDeckLanes();
+            updateDeckHeaderUI();
+            updateHeaderSummary();
+        }
+
+        /********************************************************************
+         * RENDER POOL DECK UI & LANE CARDS
+         ********************************************************************/
+        function updateDeckHeaderUI() {
+            const dot = document.getElementById('clockStatusDot');
+            const primaryText = document.getElementById('primaryWaveActionText');
+            const manualBoostBtn = document.getElementById('manualWaveBoostBtn');
+            const pauseMasterBtn = document.getElementById('pauseMasterBtn');
+            const undoBtn = document.getElementById('undoLastStopBtn');
+            const wavesPill = document.getElementById('totalWavesLaunchedPill');
+            const nextWaveHint = document.getElementById('nextWaveNumberHint');
+            const pauseAutoBtn = document.getElementById('pauseAutoWaveBtn');
+            const countdownLabel = document.getElementById('countdownModeLabel');
+            const countdownDisplay = document.getElementById('nextWaveCountdownDisplay');
+
+            wavesPill.textContent = `${state.runtime.wavesLaunched} ${state.runtime.wavesLaunched === 1 ? 'Wave' : 'Waves'} Sent`;
+            nextWaveHint.textContent = `Next: Wave #${state.runtime.wavesLaunched + 1}`;
+            undoBtn.disabled = state.runtime.undoStack.length === 0;
+
+            if (state.config.mode === 'interval') {
+                countdownLabel.textContent = `Next Wave (Go Every ${state.config.intervalSeconds}s)`;
+                pauseAutoBtn.classList.remove('hidden');
+                pauseAutoBtn.textContent = state.runtime.autoWavePaused ? 'Auto: PAUSED' : 'Auto: ON';
+                pauseAutoBtn.className = state.runtime.autoWavePaused
+                    ? 'text-[11px] font-extrabold px-2 py-0.5 rounded bg-amber-500/20 text-amber-500 transition'
+                    : 'text-[11px] font-extrabold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-500 transition';
+                if (!state.runtime.isRunning) {
+                    countdownDisplay.textContent = `${state.config.intervalSeconds.toFixed(1)}s`;
+                    document.getElementById('intervalProgressBar').style.width = '100%';
+                }
+            } else if (state.config.mode === 'manual') {
+                countdownLabel.textContent = 'Manual Wave Send-Off Mode';
+                pauseAutoBtn.classList.add('hidden');
+                countdownDisplay.textContent = 'ON CUE';
+                document.getElementById('intervalProgressBar').style.width = '100%';
+            } else {
+                countdownLabel.textContent = 'Simultaneous / Mass Start Mode';
+                pauseAutoBtn.classList.add('hidden');
+                countdownDisplay.textContent = 'MASS';
+                document.getElementById('intervalProgressBar').style.width = '100%';
+            }
+
+            if (!state.runtime.isRunning) {
+                dot.className = 'w-2.5 h-2.5 rounded-full bg-slate-400';
+                primaryText.textContent = 'START & LAUNCH W1';
+                manualBoostBtn.disabled = true;
+                pauseMasterBtn.disabled = true;
+                pauseMasterBtn.textContent = 'Pause';
+            } else if (state.runtime.isPaused) {
+                dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping';
+                primaryText.textContent = 'RESUME CLOCK';
+                manualBoostBtn.disabled = true;
+                pauseMasterBtn.disabled = false;
+                pauseMasterBtn.textContent = 'Resume';
+            } else {
+                dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse';
+                primaryText.textContent = `LAUNCH WAVE #${state.runtime.wavesLaunched + 1}`;
+                manualBoostBtn.disabled = false;
+                pauseMasterBtn.disabled = false;
+                pauseMasterBtn.textContent = 'Pause';
+            }
+
+            // Update Recent Splits Ticker (last 4 finishes)
+            const ticker = document.getElementById('recentSplitsTicker');
+            if (state.results.length === 0) {
+                ticker.innerHTML = `<span class="text-slate-400 italic">No swimmers stopped yet — tap any lane card as swimmers touch the wall.</span>`;
+            } else {
+                ticker.innerHTML = state.results.slice(0, 5).map(r => `
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-medium shrink-0">
+                        <span class="font-bold text-cyan-600 dark:text-cyan-400">${escapeHtml(r.laneName)}</span>
+                        <span class="text-slate-500 dark:text-slate-400">W${r.waveNum} (${escapeHtml(r.swimmerName)}):</span>
+                        <span class="font-mono font-extrabold text-emerald-600 dark:text-emerald-400">${formatNetSwimMs(r.netTimeMs)}</span>
+                    </span>
+                `).join('');
+            }
+        }
+
+        function renderDeckLanes() {
+            const grid = document.getElementById('lanesDeckGrid');
+            if (!grid) return;
+
+            // Adjust responsive grid columns based on lane count
+            const count = state.config.laneCount;
+            if (count <= 2) {
+                grid.className = 'grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1';
+            } else if (count === 3) {
+                grid.className = 'grid grid-cols-1 sm:grid-cols-3 gap-4 flex-1';
+            } else if (count <= 4) {
+                grid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 flex-1';
+            } else {
+                grid.className = 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 flex-1';
+            }
+
+            grid.innerHTML = '';
+            const currentMasterMs = getMasterElapsedMs();
+
+            for (let i = 0; i < count; i++) {
+                const lane = state.config.lanes[i];
+                const laneSwimmers = state.runtime.activeSwimmers
+                    .filter(s => s.laneIndex === i)
+                    .sort((a, b) => a.waveStartMs - b.waveStartMs);
+
+                const laneSplits = state.results.filter(r => r.laneIndex === i);
+                const lastSplit = laneSplits[0] || null;
+
+                const leadSwimmer = laneSwimmers[0] || null;
+                const followingSwimmers = laneSwimmers.slice(1);
+
+                const card = document.createElement('div');
+                card.className = 'bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between overflow-hidden transition';
+
+                // Top Header of Lane Card
+                let headerHtml = `
+                    <div class="px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="w-7 h-7 rounded-lg bg-cyan-500 text-slate-950 font-mono font-extrabold text-sm flex items-center justify-center">${i + 1}</span>
+                            <div>
+                                <h3 class="font-extrabold text-sm leading-tight">${escapeHtml(lane.name || 'Lane ' + (i + 1))}</h3>
+                                <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">${laneSwimmers.length} in water • ${laneSplits.length} finished</span>
+                            </div>
+                        </div>
+                        <button onclick="launchSingleLaneSwimmer(${i})" title="Launch an extra swimmer in this lane now" class="px-2.5 py-1 rounded-lg bg-slate-200/80 dark:bg-slate-700/80 hover:bg-cyan-500 hover:text-slate-950 text-[11px] font-extrabold transition">
+                            +1 Swim
+                        </button>
+                    </div>
+                `;
+
+                // Primary Lead Swimmer Touch Button (Huge Touch Target for Poolside Stopping)
+                let bodyHtml = '';
+                if (leadSwimmer) {
+                    const initialNetMs = Math.max(0, currentMasterMs - leadSwimmer.waveStartMs);
+                    bodyHtml += `
+                        <div class="p-3 flex-1 flex flex-col justify-between space-y-2.5">
+                            <div onclick="stopSwimmerByUid('${leadSwimmer.uid}')" role="button" tabindex="0"
+                                class="w-full flex-1 min-h-[135px] p-4 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 active:scale-[0.97] text-white shadow-md shadow-cyan-500/20 flex flex-col justify-between cursor-pointer transition relative overflow-hidden">
+                                
+                                <div class="flex items-center justify-between gap-1">
+                                    <span class="px-2.5 py-0.5 rounded-md bg-slate-950/35 backdrop-blur-sm font-mono font-extrabold text-xs uppercase tracking-wider">
+                                        WAVE #${leadSwimmer.waveNum} • NEXT AT WALL
+                                    </span>
+                                    <button type="button" onclick="scratchSwimmerByUid('${leadSwimmer.uid}', event)" title="Scratch / Skip this swimmer"
+                                        class="px-2 py-0.5 rounded bg-slate-950/25 hover:bg-rose-500 text-[11px] font-bold transition">
+                                        Skip ✕
+                                    </button>
+                                </div>
+
+                                <div class="my-2 text-center">
+                                    <div class="text-sm font-bold opacity-95 truncate">${escapeHtml(leadSwimmer.swimmerName)}</div>
+                                    <div data-swimmer-start-ms="${leadSwimmer.waveStartMs}" class="font-mono font-extrabold text-4xl sm:text-5xl tracking-tight tabular-nums leading-none mt-1">
+                                        ${formatNetSwimMs(initialNetMs)}
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider pt-1.5 border-t border-white/20">
+                                    <span>Dep: ${formatClockMs(leadSwimmer.waveStartMs, 1)}</span>
+                                    <span class="px-2 py-0.5 rounded bg-white text-blue-700 font-extrabold">TAP TO STOP</span>
+                                </div>
+                            </div>
+                    `;
+
+                    // Secondary Waves also swimming in this lane behind the leader
+                    if (followingSwimmers.length > 0) {
+                        bodyHtml += `
+                            <div class="space-y-1.5 max-h-40 overflow-y-auto pr-0.5">
+                                <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 px-1">Following Waves in Lane (${followingSwimmers.length})</div>
+                                ${followingSwimmers.map(sw => {
+                                    const swNet = Math.max(0, currentMasterMs - sw.waveStartMs);
+                                    return `
+                                        <div onclick="stopSwimmerByUid('${sw.uid}')"
+                                            class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/90 hover:bg-cyan-500/20 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-2 cursor-pointer active:scale-95 transition">
+                                            <div class="min-w-0">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 font-mono font-extrabold text-[11px]">W#${sw.waveNum}</span>
+                                                    <span class="font-bold text-xs truncate">${escapeHtml(sw.swimmerName)}</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-2 shrink-0">
+                                                <span data-swimmer-start-ms="${sw.waveStartMs}" class="font-mono font-extrabold text-sm tabular-nums text-slate-800 dark:text-slate-200">
+                                                    ${formatNetSwimMs(swNet)}
+                                                </span>
+                                                <span class="px-2 py-1 rounded-lg bg-cyan-600 text-white font-extrabold text-[11px]">STOP</span>
+                                                <button type="button" onclick="scratchSwimmerByUid('${sw.uid}', event)" class="text-slate-400 hover:text-rose-500 px-1 text-xs font-bold">✕</button>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        `;
+                    }
+                    bodyHtml += `</div>`;
+                } else {
+                    // Empty Lane State (Waiting for next wave to depart)
+                    bodyHtml += `
+                        <div class="p-5 flex-1 flex flex-col items-center justify-center text-center min-h-[150px] border-dashed border-slate-200 dark:border-slate-800">
+                            <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 mb-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
+                            <p class="text-xs font-bold text-slate-500 dark:text-slate-400">No Active Swimmers in Water</p>
+                            <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Launch next wave or tap "+1 Swim"</p>
+                        </div>
+                    `;
+                }
+
+                // Footer showing Last Recorded Split for this Lane
+                let footerHtml = '';
+                if (lastSplit) {
+                    let paceBadge = '';
+                    if (lastSplit.targetTimeSec > 0) {
+                        const diff = (lastSplit.netTimeMs / 1000) - lastSplit.targetTimeSec;
+                        const sign = diff > 0 ? '+' : '';
+                        const colorCls = diff <= 0
+                            ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                            : 'bg-amber-500/15 text-amber-600 dark:text-amber-400';
+                        paceBadge = `<span class="px-1.5 py-0.5 rounded font-mono text-[10px] font-bold ${colorCls}">${sign}${diff.toFixed(2)}s</span>`;
+                    }
+                    footerHtml = `
+                        <div class="px-3.5 py-2 bg-slate-50 dark:bg-slate-950/60 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
+                            <span class="text-slate-500 dark:text-slate-400 truncate">Last: <strong class="text-slate-700 dark:text-slate-200">W${lastSplit.waveNum} ${escapeHtml(lastSplit.swimmerName)}</strong></span>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                ${paceBadge}
+                                <span class="font-mono font-extrabold text-sm text-emerald-600 dark:text-emerald-400">${formatNetSwimMs(lastSplit.netTimeMs)}</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    footerHtml = `
+                        <div class="px-3.5 py-2 bg-slate-50 dark:bg-slate-950/60 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+                            <span>Last Split</span>
+                            <span class="font-mono">--.--</span>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = headerHtml + bodyHtml + footerHtml;
+                grid.appendChild(card);
+            }
+        }
+
+        /********************************************************************
+         * RESULTS TABLE, STATS & CSV EXPORT
+         ********************************************************************/
+        function populateResultsFilterDropdowns() {
+            const laneSel = document.getElementById('filterLaneSelect');
+            const waveSel = document.getElementById('filterWaveSelect');
+            const currentLaneVal = laneSel.value;
+            const currentWaveVal = waveSel.value;
+
+            // Unique lanes
+            const lanesMap = new Map();
+            state.results.forEach(r => lanesMap.set(r.laneId, r.laneName));
+            laneSel.innerHTML = `<option value="all">All Lanes</option>`;
+            Array.from(lanesMap.entries()).sort((a, b) => a[0] - b[0]).forEach(([id, name]) => {
+                laneSel.innerHTML += `<option value="${id}">${escapeHtml(name)}</option>`;
+            });
+            if ([...lanesMap.keys()].map(String).includes(currentLaneVal)) laneSel.value = currentLaneVal;
+
+            // Unique waves
+            const wavesSet = new Set(state.results.map(r => r.waveNum));
+            waveSel.innerHTML = `<option value="all">All Waves</option>`;
+            Array.from(wavesSet).sort((a, b) => a - b).forEach(w => {
+                waveSel.innerHTML += `<option value="${w}">Wave #${w}</option>`;
+            });
+            if ([...wavesSet].map(String).includes(currentWaveVal)) waveSel.value = currentWaveVal;
+        }
+
+        function renderResultsView() {
+            const laneFilter = document.getElementById('filterLaneSelect').value;
+            const waveFilter = document.getElementById('filterWaveSelect').value;
+            const sortBy = document.getElementById('sortResultsSelect').value;
+
+            let filtered = state.results.slice();
+            if (laneFilter !== 'all') {
+                filtered = filtered.filter(r => String(r.laneId) === laneFilter);
+            }
+            if (waveFilter !== 'all') {
+                filtered = filtered.filter(r => String(r.waveNum) === waveFilter);
+            }
+
+            if (sortBy === 'wave') {
+                filtered.sort((a, b) => a.waveNum - b.waveNum || a.laneId - b.laneId);
+            } else if (sortBy === 'lane') {
+                filtered.sort((a, b) => a.laneId - b.laneId || a.waveNum - b.waveNum);
+            } else if (sortBy === 'fastest') {
+                filtered.sort((a, b) => a.netTimeMs - b.netTimeMs);
+            }
+
+            // Update KPI Cards
+            document.getElementById('statTotalSwims').textContent = filtered.length;
+            const uniqueWavesCount = new Set(state.results.map(r => r.waveNum)).size;
+            document.getElementById('statTotalWaves').textContent = Math.max(state.runtime.wavesLaunched, uniqueWavesCount);
+
+            if (filtered.length > 0) {
+                const netTimes = filtered.map(r => r.netTimeMs);
+                const fastestMs = Math.min(...netTimes);
+                const avgMs = netTimes.reduce((a, b) => a + b, 0) / netTimes.length;
+                document.getElementById('statFastestSwim').textContent = formatNetSwimMs(fastestMs);
+                document.getElementById('statAverageSwim').textContent = formatNetSwimMs(avgMs);
+            } else {
+                document.getElementById('statFastestSwim').textContent = '--';
+                document.getElementById('statAverageSwim').textContent = '--';
+            }
+
+            const tbody = document.getElementById('resultsTableBody');
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="py-10 text-center text-slate-400">
+                            No recorded swim splits match the current filter. Stop swimmers on the Pool Deck tab to log splits.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(r => {
+                let diffHtml = `<span class="text-slate-400">--</span>`;
+                if (r.targetTimeSec > 0) {
+                    const diff = (r.netTimeMs / 1000) - r.targetTimeSec;
+                    const sign = diff > 0 ? '+' : '';
+                    const badgeClass = diff <= 0
+                        ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                        : 'bg-amber-500/15 text-amber-600 dark:text-amber-400';
+                    diffHtml = `<span class="px-2 py-0.5 rounded-md font-mono font-bold text-xs ${badgeClass}">${sign}${diff.toFixed(2)}s</span>`;
+                }
+
+                return `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                        <td class="py-3 px-3">
+                            <span class="px-2 py-0.5 rounded-md bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 font-mono font-extrabold text-xs">W#${r.waveNum}</span>
+                        </td>
+                        <td class="py-3 px-3 font-bold">${escapeHtml(r.laneName)}</td>
+                        <td class="py-3 px-3 font-semibold">${escapeHtml(r.swimmerName)}</td>
+                        <td class="py-3 px-3 font-mono font-extrabold text-base text-emerald-600 dark:text-emerald-400">${formatNetSwimMs(r.netTimeMs)}</td>
+                        <td class="py-3 px-3">${diffHtml}</td>
+                        <td class="py-3 px-3 font-mono text-xs text-slate-500">${formatClockMs(r.waveStartMs, 1)}</td>
+                        <td class="py-3 px-3 font-mono text-xs text-slate-500">${formatClockMs(r.finishMasterMs, 2)}</td>
+                        <td class="py-3 px-3 text-right">
+                            <button onclick="deleteResultRecord('${r.id}')" class="text-xs font-bold text-rose-500 hover:underline">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function deleteResultRecord(id) {
+            state.results = state.results.filter(r => r.id !== id);
+            saveToStorage();
+            renderResultsView();
+            updateDeckHeaderUI();
+            updateHeaderSummary();
+        }
+
+        function exportResultsCSV() {
+            if (state.results.length === 0) {
+                showToast('No results to export yet');
+                return;
+            }
+            const headers = ['Set Name', 'Pool Course', 'Wave #', 'Lane', 'Swimmer', 'Net Time (s)', 'Net Time Formatted', 'Target Time (s)', 'Wave Start Clock', 'Finish Clock', 'Recorded At'];
+            const rows = state.results.map(r => [
+                `"${(r.setName || '').replace(/"/g, '""')}"`,
+                `"${r.poolCourse || ''}"`,
+                r.waveNum,
+                `"${(r.laneName || '').replace(/"/g, '""')}"`,
+                `"${(r.swimmerName || '').replace(/"/g, '""')}"`,
+                (r.netTimeMs / 1000).toFixed(2),
+                `"${formatNetSwimMs(r.netTimeMs)}"`,
+                r.targetTimeSec || '',
+                `"${formatClockMs(r.waveStartMs, 2)}"`,
+                `"${formatClockMs(r.finishMasterMs, 2)}"`,
+                `"${r.timestampISO || ''}"`
+            ]);
+
+            const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const cleanSetName = (state.config.setName || 'swim_set').toLowerCase().replace(/[^a-z0-9]+/g, '_');
+            a.href = url;
+            a.download = `aquapace_${cleanSetName}_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('CSV exported successfully');
+        }
+
+        function copyResultsToClipboard() {
+            if (state.results.length === 0) {
+                showToast('No results to copy');
+                return;
+            }
+            const lines = [
+                `AquaPace Set Summary: ${state.config.setName} (${state.config.poolCourse})`,
+                `----------------------------------------`
+            ];
+            state.results.slice().reverse().forEach(r => {
+                lines.push(`Wave #${r.waveNum} | ${r.laneName} | ${r.swimmerName}: ${formatNetSwimMs(r.netTimeMs)}`);
+            });
+
+            const textarea = document.createElement('textarea');
+            textarea.value = lines.join('\n');
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast('Copied swim times to clipboard');
+            } catch (err) {
+                showToast('Could not copy to clipboard');
+            }
+            document.body.removeChild(textarea);
+        }
+
+        /********************************************************************
+         * MODALS, SOUND, THEME & UTILITIES
+         ********************************************************************/
+        function openResetModal() {
+            const overlay = document.getElementById('customModalOverlay');
+            document.getElementById('modalTitle').textContent = 'Reset Pool Deck Stopwatch?';
+            document.getElementById('modalDescription').textContent =
+                'Choose whether to reset only the active master clock and waves in the water (keeping your recorded splits), or start a brand new set with a clean log.';
+
+            document.getElementById('modalButtons').innerHTML = `
+                <button onclick="closeModal()" class="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 font-bold text-xs">Cancel</button>
+                <button onclick="confirmResetClockOnly()" class="px-4 py-2 rounded-xl bg-amber-500 text-slate-950 font-extrabold text-xs">Reset Clock Only</button>
+                <button onclick="confirmResetClockAndResults()" class="px-4 py-2 rounded-xl bg-rose-600 text-white font-extrabold text-xs">Reset Clock & Clear Splits</button>
+            `;
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+        }
+
+        function openClearResultsModal() {
+            const overlay = document.getElementById('customModalOverlay');
+            document.getElementById('modalTitle').textContent = 'Clear All Recorded Splits?';
+            document.getElementById('modalDescription').textContent =
+                'This will permanently remove all recorded swimmer times from your offline log. Make sure you have exported to CSV if needed.';
+
+            document.getElementById('modalButtons').innerHTML = `
+                <button onclick="closeModal()" class="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 font-bold text-xs">Cancel</button>
+                <button onclick="confirmClearAllSplits()" class="px-4 py-2 rounded-xl bg-rose-600 text-white font-extrabold text-xs">Yes, Clear Results</button>
+            `;
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+        }
+
+        function closeModal() {
+            const overlay = document.getElementById('customModalOverlay');
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+        }
+
+        function confirmResetClockOnly() {
+            if (rafId) cancelAnimationFrame(rafId);
+            state.runtime.isRunning = false;
+            state.runtime.isPaused = false;
+            state.runtime.wavesLaunched = 0;
+            state.runtime.activeSwimmers = [];
+            state.runtime.undoStack = [];
+            document.getElementById('masterClockDisplay').textContent = '00:00.0';
+            closeModal();
+            renderDeckLanes();
+            updateDeckHeaderUI();
+            updateHeaderSummary();
+            showToast('Deck clock reset — recorded splits kept');
+        }
+
+        function confirmResetClockAndResults() {
+            state.results = [];
+            saveToStorage();
+            confirmResetClockOnly();
+            showToast('Started fresh set — clock & splits cleared');
+        }
+
+        function confirmClearAllSplits() {
+            state.results = [];
+            saveToStorage();
+            closeModal();
+            renderResultsView();
+            updateDeckHeaderUI();
+            updateHeaderSummary();
+            showToast('Cleared recorded results log');
+        }
+
+        function toggleSound() {
+            state.soundEnabled = !state.soundEnabled;
+            updateSoundUI();
+            saveToStorage();
+            if (state.soundEnabled) {
+                playCountdownPip();
+                showToast('Poolside Audio Beeps ON');
+            } else {
+                showToast('Audio Muted');
+            }
+        }
+
+        function updateSoundUI() {
+            const onIcon = document.getElementById('soundOnIcon');
+            const offIcon = document.getElementById('soundOffIcon');
+            if (state.soundEnabled) {
+                onIcon.classList.remove('hidden');
+                offIcon.classList.add('hidden');
+            } else {
+                onIcon.classList.add('hidden');
+                offIcon.classList.remove('hidden');
+            }
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            html.classList.toggle('dark');
+        }
+
+        function showToast(message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'px-4 py-2.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-950 font-bold text-xs shadow-lg border border-slate-700 dark:border-slate-200 transition-all duration-300';
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 2200);
+        }
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        // Initialize App on Load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadFromStorage();
+            updateSoundUI();
+            updateHeaderSummary();
+            switchView('setup');
+        });
+    </script>
+</body>
+</html>
