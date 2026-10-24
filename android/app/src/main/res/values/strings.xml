@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AquaPace Swim Timer</string>
+    <string name="title_activity_main">AquaPace Swim Timer</string>
+    <string name="package_name">app.aquapace.swimtimer</string>
+    <string name="custom_url_scheme">app.aquapace.swimtimer</string>
+</resources>
