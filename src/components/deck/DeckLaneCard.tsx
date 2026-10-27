@@ -53,6 +53,38 @@ export function DeckLaneCard({ laneConfig }: DeckLaneCardProps) {
 
   const leadNetMs = leadSwimmer ? Math.max(0, elapsedMs - leadSwimmer.startTimeMs) : 0;
 
+  // Release button calculation
+  let isReleaseDisabled = false;
+  let releaseBtnLabel = '+ Release Next Wave';
+
+  if (names.length === 0) {
+    isReleaseDisabled = true;
+    releaseBtnLabel = 'No Swimmers Assigned';
+  } else if (config.stopwatchMode === 'manual') {
+    if (laneRt.nextWaveIndex >= names.length) {
+      isReleaseDisabled = true;
+      releaseBtnLabel = 'All Swimmers Released';
+    } else {
+      const candidateName = names[laneRt.nextWaveIndex];
+      const candidateInWater = activeList.some(s => s.name.toLowerCase() === candidateName?.toLowerCase());
+      if (candidateInWater) {
+        isReleaseDisabled = true;
+        releaseBtnLabel = `${candidateName} In Water`;
+      } else {
+        releaseBtnLabel = `+ Release ${candidateName}`;
+      }
+    }
+  } else {
+    const candidateName = names[laneRt.nextWaveIndex >= names.length ? 0 : laneRt.nextWaveIndex];
+    const candidateInWater = candidateName
+      ? activeList.some(s => s.name.toLowerCase() === candidateName.toLowerCase())
+      : false;
+    if (candidateInWater) {
+      isReleaseDisabled = true;
+      releaseBtnLabel = `${candidateName} In Water`;
+    }
+  }
+
   return (
     <div className="deck-lane-card">
       <div className="deck-lane-header">
@@ -134,9 +166,10 @@ export function DeckLaneCard({ laneConfig }: DeckLaneCardProps) {
         <button
           type="button"
           className="lane-util-btn send-wave"
+          disabled={isReleaseDisabled}
           onClick={() => handleReleaseNextInLane(laneNum)}
         >
-          + Release Next Wave
+          {releaseBtnLabel}
         </button>
       </div>
     </div>

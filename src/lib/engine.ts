@@ -67,6 +67,12 @@ export function spawnSwimmerInLane(
     activeSwimmers: []
   };
 
+  if (config.stopwatchMode === 'manual') {
+    if (laneRt.activeSwimmers.some(s => s.name.toLowerCase() === swimmerName.toLowerCase())) {
+      return { stopwatch, spawned: null };
+    }
+  }
+
   const repCount = getNextRepCountForSwimmer(
     laneNum,
     swimmerName,
@@ -214,9 +220,24 @@ export function releaseNextWaveInLane(
   let recycled = false;
 
   let nextWaveIndex = laneRt.nextWaveIndex;
-  if (nextWaveIndex >= names.length) {
-    nextWaveIndex = 0;
-    recycled = true;
+
+  if (config.stopwatchMode === 'manual') {
+    if (nextWaveIndex >= names.length) {
+      return { stopwatch, spawned: null, recycled: false };
+    }
+    const candidateName = names[nextWaveIndex];
+    if (laneRt.activeSwimmers.some(s => s.name.toLowerCase() === candidateName.toLowerCase())) {
+      return { stopwatch, spawned: null, recycled: false };
+    }
+  } else {
+    if (nextWaveIndex >= names.length) {
+      nextWaveIndex = 0;
+      recycled = true;
+    }
+    const candidateName = names[nextWaveIndex];
+    if (candidateName && laneRt.activeSwimmers.some(s => s.name.toLowerCase() === candidateName.toLowerCase())) {
+      return { stopwatch, spawned: null, recycled: false };
+    }
   }
 
   const res = spawnSwimmerInLane(nextSw, config, results, laneNum, nextWaveIndex, nowElapsed);

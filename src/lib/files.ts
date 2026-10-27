@@ -11,3 +11,12 @@ export function downloadFile(content: string, filename: string, mimeType: string
   URL.revokeObjectURL(url);
 }
 
+export function downloadDataUrl(dataUrl: string, filename: string): void {
+  if (typeof document === 'undefined') return;
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}

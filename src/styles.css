@@ -879,6 +879,20 @@ button {
   font-weight: 800;
 }
 
+.btn-stop {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff;
+  padding: 0.9rem 1.6rem;
+  font-size: 1rem;
+  font-weight: 800;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+}
+
+.btn-stop:hover {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+
 .btn-release-all {
   background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
   color: #fff;
@@ -890,9 +904,16 @@ button {
   transition: all 0.15s ease;
 }
 
-.btn-release-all:hover {
+.btn-release-all:hover:not(:disabled) {
   filter: brightness(1.12);
   transform: translateY(-1px);
+}
+
+.btn-release-all:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+  box-shadow: none;
 }
 
 .btn-release-all.btn-sm {
@@ -1145,6 +1166,18 @@ button {
   color: var(--text-primary);
   font-weight: 600;
   font-size: 0.8rem;
+  transition: all 0.15s ease;
+}
+
+.lane-util-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-cyan);
+}
+
+.lane-util-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 /* Swimmers Workspace & Tables */
@@ -1856,4 +1889,367 @@ button {
   margin-top: 0.5rem;
   max-height: 220px;
   overflow-y: auto;
+}
+
+/* ==========================================================================
+   QR Code Export & Scanner Components
+   ========================================================================== */
+
+/* QR Export View */
+.qr-export-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 0;
+}
+
+.qr-code-frame {
+  background: #ffffff;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 240px;
+  min-height: 240px;
+  border: 3px solid rgba(6, 182, 212, 0.4);
+}
+
+.qr-code-img {
+  width: 220px;
+  height: 220px;
+  display: block;
+  image-rendering: pixelated;
+}
+
+.qr-loading-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  color: #03131a;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.qr-payload-info {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.qr-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.qr-target-badge {
+  background: rgba(6, 182, 212, 0.18);
+  color: var(--accent-cyan);
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+}
+
+.qr-target-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.qr-summary-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.qr-byte-badge {
+  font-size: 0.78rem;
+  color: var(--accent-emerald);
+  font-family: var(--font-mono, monospace);
+  background: rgba(16, 185, 129, 0.12);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  display: inline-block;
+  align-self: flex-start;
+}
+
+.qr-size-warning {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+  padding: 0.6rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.qr-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+  flex-wrap: wrap;
+}
+
+/* QR Scanner Widget */
+.qr-scanner-widget {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.qr-scanner-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-subtle);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.qr-tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.65rem 0.5rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.qr-tab-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.qr-tab-btn.active {
+  color: var(--accent-cyan);
+  border-bottom-color: var(--accent-cyan);
+  background: rgba(6, 182, 212, 0.08);
+}
+
+.qr-camera-viewport {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  background: #020b0e;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-video-feed {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.qr-viewfinder-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-reticle {
+  position: relative;
+  width: 190px;
+  height: 190px;
+  box-shadow: 0 0 0 9999px rgba(2, 11, 14, 0.55);
+}
+
+.qr-reticle .corner {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--accent-cyan);
+}
+
+.qr-reticle .top-left {
+  top: 0;
+  left: 0;
+  border-right: none;
+  border-bottom: none;
+}
+
+.qr-reticle .top-right {
+  top: 0;
+  right: 0;
+  border-left: none;
+  border-bottom: none;
+}
+
+.qr-reticle .bottom-left {
+  bottom: 0;
+  left: 0;
+  border-right: none;
+  border-top: none;
+}
+
+.qr-reticle .bottom-right {
+  bottom: 0;
+  right: 0;
+  border-left: none;
+  border-top: none;
+}
+
+.qr-scan-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+  box-shadow: 0 0 8px var(--accent-cyan);
+  animation: scan-sweep 2.2s ease-in-out infinite alternate;
+}
+
+@keyframes scan-sweep {
+  0% { top: 6px; }
+  100% { top: 184px; }
+}
+
+.qr-instruction {
+  margin-top: 1rem;
+  background: rgba(3, 19, 26, 0.85);
+  color: #e2e8f0;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.qr-camera-toolbar {
+  position: absolute;
+  bottom: 0.6rem;
+  right: 0.6rem;
+  display: flex;
+  gap: 0.45rem;
+  z-index: 10;
+}
+
+.qr-image-dropzone {
+  padding: 2.2rem 1rem;
+  border: 2px dashed var(--border-subtle);
+  border-radius: var(--radius-sm);
+  margin: 0.75rem;
+  text-align: center;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.02);
+  transition: all 0.15s ease;
+}
+
+.qr-image-dropzone:hover {
+  border-color: var(--accent-cyan);
+  background: rgba(6, 182, 212, 0.05);
+}
+
+.qr-image-drop-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.drop-title {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 0.92rem;
+  margin: 0;
+}
+
+.drop-sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.qr-paste-box {
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.qr-paste-textarea {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem;
+  color: var(--text-primary);
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8rem;
+  resize: vertical;
+}
+
+.qr-paste-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.qr-scanner-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  background: rgba(239, 68, 68, 0.15);
+  border-bottom: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+  font-size: 0.8rem;
+}
+
+/* Import Preview Box Updates */
+.import-preview-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.import-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0.5rem;
+}
+
+.import-origin-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--accent-cyan);
+  background: rgba(6, 182, 212, 0.15);
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
 }

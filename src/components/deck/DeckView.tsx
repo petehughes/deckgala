@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp, useStopwatchState } from '../../context/AppContext';
+import { getSwimmerNamesForLane } from '../../lib/lanes';
 import { ConfirmModal } from '../common/ConfirmModal';
 import { Icon } from '../common/Icon';
 import { MasterConsole } from './MasterConsole';
@@ -8,10 +9,19 @@ import { DeckLaneCard } from './DeckLaneCard';
 
 export function DeckView() {
   const { config } = useApp();
-  const { resetClock, handleReleaseAllLanes } = useStopwatchState();
+  const { stopwatch, resetClock, handleReleaseAllLanes } = useStopwatchState();
   const [resetModalOpen, setResetModalOpen] = useState(false);
 
   const activeLanes = config.lanes.slice(0, config.laneCount);
+  const hasPendingManualWaves = config.stopwatchMode !== 'manual' || activeLanes.some(laneCfg => {
+    const names = getSwimmerNamesForLane(laneCfg);
+    const laneRt = stopwatch.lanes[laneCfg.lane];
+    if (names.length === 0 || !laneRt) return false;
+    if (laneRt.nextWaveIndex >= names.length) return false;
+    const candidate = names[laneRt.nextWaveIndex];
+    const inWater = laneRt.activeSwimmers.some(s => s.name.toLowerCase() === candidate?.toLowerCase());
+    return !inWater;
+  });
 
   return (
     <section className="view-panel active" aria-label="Pool Deck Stopwatch View">
@@ -26,7 +36,13 @@ export function DeckView() {
           <button
             type="button"
             className="btn btn-release-all btn-sm"
+            disabled={stopwatch.isRunning && !hasPendingManualWaves}
             onClick={handleReleaseAllLanes}
+            title={
+              stopwatch.isRunning && !hasPendingManualWaves
+                ? 'All swimmers have been released'
+                : 'Release next wave across all active lanes'
+            }
           >
             <Icon name="play" size={16} />
             <span>Release All Lanes</span>

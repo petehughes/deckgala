@@ -1,6 +1,7 @@
 import React from 'react';
 import { useApp, useStopwatchState, useElapsedMs } from '../../context/AppContext';
 import { formatMs } from '../../lib/format';
+import { getSwimmerNamesForLane } from '../../lib/lanes';
 import { Icon } from '../common/Icon';
 
 export interface MasterConsoleProps {
@@ -18,12 +19,40 @@ export function MasterConsole({ onRequestReset }: MasterConsoleProps) {
     mass: 'Mass Simultaneous Start'
   };
 
+  const totalActiveSwimmers = Object.values(stopwatch.lanes).reduce(
+    (acc, lane) => acc + (lane?.activeSwimmers?.length || 0),
+    0
+  );
+
   let startLabel = 'START SET';
+  let startIcon: 'play' | 'pause' | 'stop' = 'play';
+  let startBtnClass = 'btn-start';
+
   if (stopwatch.isRunning) {
-    startLabel = 'PAUSE';
+    if (totalActiveSwimmers === 0) {
+      startLabel = 'STOP';
+      startIcon = 'stop';
+      startBtnClass = 'btn-stop';
+    } else {
+      startLabel = 'PAUSE';
+      startIcon = 'pause';
+      startBtnClass = 'btn-pause';
+    }
   } else if (elapsedMs > 0) {
     startLabel = 'RESUME';
+    startIcon = 'play';
+    startBtnClass = 'btn-start';
   }
+
+  const hasPendingManualWaves = config.stopwatchMode !== 'manual' || config.lanes.slice(0, config.laneCount).some(laneCfg => {
+    const names = getSwimmerNamesForLane(laneCfg);
+    const laneRt = stopwatch.lanes[laneCfg.lane];
+    if (names.length === 0 || !laneRt) return false;
+    if (laneRt.nextWaveIndex >= names.length) return false;
+    const candidate = names[laneRt.nextWaveIndex];
+    const inWater = laneRt.activeSwimmers.some(s => s.name.toLowerCase() === candidate?.toLowerCase());
+    return !inWater;
+  });
 
   return (
     <div className="master-console">
@@ -44,10 +73,10 @@ export function MasterConsole({ onRequestReset }: MasterConsoleProps) {
       <div className="master-controls">
         <button
           type="button"
-          className={`btn ${stopwatch.isRunning ? 'btn-pause' : 'btn-start'}`}
+          className={`btn ${startBtnClass}`}
           onClick={toggleClock}
         >
-          <Icon name={stopwatch.isRunning ? 'pause' : 'play'} size={22} />
+          <Icon name={startIcon} size={22} />
           <span>{startLabel}</span>
         </button>
 
@@ -55,8 +84,13 @@ export function MasterConsole({ onRequestReset }: MasterConsoleProps) {
           <button
             type="button"
             className="btn btn-release-all"
+            disabled={stopwatch.isRunning && !hasPendingManualWaves}
             onClick={handleReleaseAllLanes}
-            title="Release next wave across all active lanes"
+            title={
+              stopwatch.isRunning && !hasPendingManualWaves
+                ? 'All swimmers have been released'
+                : 'Release next wave across all active lanes'
+            }
           >
             <Icon name="play" size={18} />
             <span>Release All Lanes</span>

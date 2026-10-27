@@ -134,7 +134,16 @@ export function useStopwatch({ config, results, setResults, showToast }: UseStop
       stopwatchRef.current = nextSw;
       setDisplayElapsedMs(nowElapsed);
       setStopwatch(nextSw);
-      showToast('Clock paused', 'warning');
+
+      const totalActiveSwimmers = Object.values(sw.lanes).reduce(
+        (acc, lane) => acc + (lane?.activeSwimmers?.length || 0),
+        0
+      );
+      if (totalActiveSwimmers === 0) {
+        showToast('Timer stopped', 'info');
+      } else {
+        showToast('Clock paused', 'warning');
+      }
     }
   }, [showToast]);
 
@@ -174,6 +183,14 @@ export function useStopwatch({ config, results, setResults, showToast }: UseStop
       playBeep('horn');
       stopwatchRef.current = nextSw;
       setStopwatch(nextSw);
+    } else if (cfg.stopwatchMode === 'manual') {
+      const laneRt = sw.lanes[laneNum];
+      if (laneRt && laneRt.nextWaveIndex >= names.length) {
+        showToast(`Lane ${laneNum}: All assigned swimmers already released`, 'info');
+      } else {
+        const candidateName = laneRt ? names[laneRt.nextWaveIndex] : '';
+        showToast(`Lane ${laneNum}: ${candidateName || 'Swimmer'} is already in the water`, 'warning');
+      }
     }
   }, [showToast]);
 
@@ -196,7 +213,11 @@ export function useStopwatch({ config, results, setResults, showToast }: UseStop
     );
 
     if (releasedCount === 0) {
-      showToast('No configured swimmers to release in active lanes', 'warning');
+      if (cfg.stopwatchMode === 'manual') {
+        showToast('All swimmers have already been released or are currently in the water', 'info');
+      } else {
+        showToast('No configured swimmers to release in active lanes', 'warning');
+      }
       return;
     }
 

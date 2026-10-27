@@ -41,7 +41,10 @@ export function SwimmersView() {
     open: false,
     scope: 'club'
   });
-  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [importModalState, setImportModalState] = useState<{ open: boolean; source: 'file' | 'qr' }>({
+    open: false,
+    source: 'file'
+  });
 
   const totalSwimmers = getTotalClubSwimmersCount(club);
   const activeGroup = getActiveGroup(club, activeGroupId);
@@ -90,10 +93,20 @@ export function SwimmersView() {
           <button
             type="button"
             className="btn btn-secondary btn-sm"
-            onClick={() => setImportModalOpen(true)}
+            onClick={() => setImportModalState({ open: true, source: 'file' })}
           >
             <Icon name="upload" size={16} />
             <span>Import Club / Group</span>
+          </button>
+
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={() => setImportModalState({ open: true, source: 'qr' })}
+            title="Scan an AquaPace QR Code with your camera or image"
+          >
+            <Icon name="qr" size={16} />
+            <span>Scan QR Code</span>
           </button>
 
           <button
@@ -277,8 +290,9 @@ export function SwimmersView() {
       />
 
       <ImportModal
-        isOpen={importModalOpen}
-        onClose={() => setImportModalOpen(false)}
+        isOpen={importModalState.open}
+        onClose={() => setImportModalState(prev => ({ ...prev, open: false }))}
+        initialSource={importModalState.source}
       />
 
       <ConfirmModal

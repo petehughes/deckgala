@@ -35,6 +35,10 @@ import {
   parseImportFileText,
   applyImportToClub
 } from './exporters';
+import {
+  buildSwimmerQrPayload,
+  generateQrDataUrl
+} from './qr';
 import { loadPersistedState, savePersistedState, getDefaultConfig } from './storage';
 import type { SwimResult } from '../types';
 
@@ -150,7 +154,7 @@ describe('stopwatch engine', () => {
     expect(sw.lanes[1].nextWaveTimeMs).toBe(Infinity);
   });
 
-  it('manually releases waves and recycles back to wave 1 when queue completes', () => {
+  it('manually releases waves and does not allow duplicate swimmers or wrap-around recycling in manual mode', () => {
     const config = {
       ...getDefaultConfig(),
       laneCount: 1,
@@ -162,17 +166,39 @@ describe('stopwatch engine', () => {
     sw = launchAllWaveZero(sw, config, [], 0);
     expect(sw.lanes[1].activeSwimmers.map(s => s.name)).toEqual(['A']);
 
+    // Release candidate B
     const rel1 = releaseNextWaveInLane(sw, config, [], 1, 4000);
     sw = rel1.stopwatch;
+    expect(rel1.spawned).not.toBeNull();
+    expect(rel1.spawned!.name).toBe('B');
     expect(rel1.recycled).toBe(false);
     expect(sw.lanes[1].activeSwimmers.map(s => s.name)).toEqual(['A', 'B']);
 
+    // All swimmers have now been released: cannot recycle back to A or duplicate anyone
     const rel2 = releaseNextWaveInLane(sw, config, [], 1, 8000);
-    sw = rel2.stopwatch;
-    expect(rel2.recycled).toBe(true);
-    expect(sw.lanes[1].activeSwimmers.length).toBe(3);
-    expect(sw.lanes[1].activeSwimmers[2].name).toBe('A');
-    expect(sw.lanes[1].activeSwimmers[2].rep).toBe(2);
+    expect(rel2.spawned).toBeNull();
+    expect(rel2.recycled).toBe(false);
+    expect(sw.lanes[1].activeSwimmers.length).toBe(2);
+    expect(sw.lanes[1].activeSwimmers.map(s => s.name)).toEqual(['A', 'B']);
+  });
+
+  it('prevents releasing a swimmer if that swimmer is already active in the lane in manual mode', () => {
+    const config = {
+      ...getDefaultConfig(),
+      laneCount: 1,
+      stopwatchMode: 'manual' as const,
+      lanes: [{ lane: 1, interval: 5, swimmersText: 'A\nA' }]
+    };
+
+    let sw = createInitialStopwatchState(1);
+    sw = launchAllWaveZero(sw, config, [], 0);
+    expect(sw.lanes[1].activeSwimmers.length).toBe(1);
+    expect(sw.lanes[1].activeSwimmers[0].name).toBe('A');
+
+    // Next candidate is also 'A', who is already active in water
+    const rel = releaseNextWaveInLane(sw, config, [], 1, 3000);
+    expect(rel.spawned).toBeNull();
+    expect(sw.lanes[1].activeSwimmers.length).toBe(1);
   });
 
   it('releases waves across all active lanes simultaneously in manual push mode', () => {
@@ -353,6 +379,40 @@ describe('roster management & import/export', () => {
     expect(parsedClubCsv.detectedScope).toBe('club');
     expect(parsedClubCsv.groups.length).toBe(4);
     expect(parsedClubCsv.totalSwimmers).toBe(21);
+  });
+
+  it('builds compact QR payload for a single group and generates QR data URL', async () => {
+    const club = createDefaultClub();
+    const groupPayload = buildSwimmerQrPayload(club, { scope: 'group', groupId: 'grp-senior-perf' });
+    expect(groupPayload).not.toBeNull();
+    expect(groupPayload!.scope).toBe('group');
+    expect(groupPayload!.totalSwimmers).toBe(6);
+    expect(groupPayload!.isWithinQrLimit).toBe(true);
+
+    const parsed = parseImportFileText(groupPayload!.json, 'qr-group.json');
+    expect(parsed.detectedScope).toBe('group');
+    expect(parsed.groups[0].name).toBe('Senior Performance');
+    expect(parsed.groups[0].swimmers.length).toBe(6);
+
+    const dataUrl = await generateQrDataUrl(groupPayload!.json);
+    expect(dataUrl.startsWith('data:image/png;base64,')).toBe(true);
+  });
+
+  it('builds compact QR payload for entire club and allows importing at club level', async () => {
+    const club = createDefaultClub();
+    const clubPayload = buildSwimmerQrPayload(club, { scope: 'club' });
+    expect(clubPayload).not.toBeNull();
+    expect(clubPayload!.scope).toBe('club');
+    expect(clubPayload!.totalGroups).toBe(4);
+    expect(clubPayload!.totalSwimmers).toBe(21);
+
+    const parsed = parseImportFileText(clubPayload!.json, 'qr-club.json');
+    expect(parsed.detectedScope).toBe('club');
+    expect(parsed.groups.length).toBe(4);
+    expect(parsed.totalSwimmers).toBe(21);
+
+    const dataUrl = await generateQrDataUrl(clubPayload!.json);
+    expect(dataUrl.startsWith('data:image/png;base64,')).toBe(true);
   });
 });
 
