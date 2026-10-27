@@ -2,10 +2,13 @@ import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { SET_PRESETS, POOL_COURSES } from '../../lib/constants';
 import { DraftNumberInput } from '../common/DraftNumberInput';
+import { formatSetItem } from '../../lib/weeks';
 import type { PoolCourse } from '../../types';
 
 export function SetDetailsCard() {
   const { config, updateConfig } = useApp();
+
+  const weeklySets = config.activeWeeklyPlan?.setList || [];
 
   return (
     <div className="config-card">
@@ -23,6 +26,33 @@ export function SetDetailsCard() {
             value={config.setName}
             onChange={e => updateConfig({ setName: e.target.value })}
           />
+
+          {/* Active Weekly Plan Sets */}
+          {weeklySets.length > 0 && (
+            <div className="weekly-set-presets-group">
+              <span className="weekly-presets-tag">
+                Week {config.activeWeeklyPlan?.weekNumber} Scheduled Workout Sets:
+              </span>
+              <div className="preset-chips">
+                {weeklySets.map((setItem, idx) => {
+                  const label = formatSetItem(setItem);
+                  const isSelected = config.setName === label;
+                  return (
+                    <button
+                      key={setItem.id || idx}
+                      type="button"
+                      className={`preset-chip weekly-set-chip ${isSelected ? 'active' : ''}`}
+                      onClick={() => updateConfig({ setName: label })}
+                      title="Load this weekly scheduled set"
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="preset-chips">
             {SET_PRESETS.slice(0, 4).map(preset => (
               <button
@@ -68,4 +98,3 @@ export function SetDetailsCard() {
     </div>
   );
 }
-

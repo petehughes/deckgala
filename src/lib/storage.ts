@@ -1,7 +1,25 @@
 import { STORAGE_KEY, LEGACY_STORAGE_KEY } from './constants';
-import { createDefaultClub, DEFAULT_POOLS } from './defaultClub';
+import {
+  createDefaultClub,
+  DEFAULT_POOLS,
+  DEFAULT_COACHES,
+  DEFAULT_SCHEDULED_SESSIONS,
+  DEFAULT_CLUB_CLOSURES,
+  DEFAULT_STAFF_OVERRIDES
+} from './defaultClub';
 import { createDefaultLanes } from './lanes';
-import type { AppConfig, PersistedState, ViewName, SwimmingPool, PoolCourse } from '../types';
+import type {
+  AppConfig,
+  PersistedState,
+  ViewName,
+  SwimmingPool,
+  PoolCourse,
+  Coach,
+  ScheduledSession,
+  ClubClosure,
+  SessionStaffOverride,
+  ClubSetupTab
+} from '../types';
 
 export function getDefaultConfig(): AppConfig {
   const today = new Date();
@@ -20,7 +38,9 @@ export function getDefaultConfig(): AppConfig {
     poolCourse: '25m',
     stopwatchMode: 'interval',
     selectedGroupIds: ['grp-senior-perf', 'grp-age-group-gold'],
-    lanes: createDefaultLanes(6)
+    lanes: createDefaultLanes(6),
+    assignedCoachId: 'coach-sarah',
+    headCoachNotes: 'Focus on underwater streamline to 15m and holding threshold pacing.'
   };
 }
 
@@ -34,12 +54,24 @@ export function getInitialState(): PersistedState {
     .flatMap(g => g.swimmers.map(s => s.id));
   defaultConfig.presentSwimmerIds = defaultPresent;
 
+  const defaultSession = defaultClub.scheduledSessions[0];
+  if (defaultSession) {
+    defaultConfig.scheduledSessionId = defaultSession.id;
+    if (defaultSession.weeklyPlans && defaultSession.weeklyPlans.length > 0) {
+      defaultConfig.activeWeeklyPlan = defaultSession.weeklyPlans.find(p => p.weekKey === '2026-W44') || defaultSession.weeklyPlans[0];
+      if (defaultConfig.activeWeeklyPlan?.briefing) {
+        defaultConfig.headCoachNotes = defaultConfig.activeWeeklyPlan.briefing;
+      }
+    }
+  }
+
   return {
     currentView: 'attendance',
     config: defaultConfig,
     results: [],
     club: defaultClub,
-    activeGroupId: defaultClub.groups[0]?.id || null
+    activeGroupId: defaultClub.groups[0]?.id || null,
+    activeClubSetupTab: 'calendar'
   };
 }
 
@@ -65,9 +97,78 @@ export function loadPersistedState(): PersistedState {
           }))
         : DEFAULT_POOLS;
 
+      const parsedCoaches: Coach[] = Array.isArray(data.club.coaches) && data.club.coaches.length > 0
+        ? data.club.coaches.map((c: Record<string, unknown>) => ({
+            id: String(c.id || `coach-${Date.now()}`),
+            name: String(c.name || 'Coach'),
+            role: (c.role as Coach['role']) || 'coach',
+            email: typeof c.email === 'string' ? c.email : '',
+            phone: typeof c.phone === 'string' ? c.phone : '',
+            certifications: typeof c.certifications === 'string' ? c.certifications : '',
+            notes: typeof c.notes === 'string' ? c.notes : '',
+            color: (c.color as Coach['color']) || 'cyan',
+            isHeadCoach: Boolean(c.isHeadCoach)
+          }))
+        : DEFAULT_COACHES;
+
+      const parsedScheduledSessions: ScheduledSession[] = Array.isArray(data.club.scheduledSessions) && data.club.scheduledSessions.length > 0
+        ? data.club.scheduledSessions.map((s: Record<string, unknown>) => ({
+            id: String(s.id || `sched-${Date.now()}`),
+            title: String(s.title || 'Training Session'),
+            recurrence: (s.recurrence === 'one_off' ? 'one_off' : 'weekly') as ScheduledSession['recurrence'],
+            dayOfWeek: typeof s.dayOfWeek === 'number' ? (s.dayOfWeek as ScheduledSession['dayOfWeek']) : 1,
+            specificDate: typeof s.specificDate === 'string' ? s.specificDate : undefined,
+            startTime: String(s.startTime || '18:00'),
+            endTime: String(s.endTime || '19:30'),
+            poolId: String(s.poolId || parsedPools[0]?.id || 'pool-main-25m'),
+            groupIds: Array.isArray(s.groupIds) ? (s.groupIds as string[]) : [],
+            defaultCoachId: typeof s.defaultCoachId === 'string' ? s.defaultCoachId : undefined,
+            headCoachNotes: typeof s.headCoachNotes === 'string' ? s.headCoachNotes : '',
+            targetFocus: typeof s.targetFocus === 'string' ? s.targetFocus : '',
+            expectedIntensity: (s.expectedIntensity as ScheduledSession['expectedIntensity']) || 'high',
+            weeklyPlans: Array.isArray(s.weeklyPlans) ? (s.weeklyPlans as ScheduledSession['weeklyPlans']) : []
+          }))
+        : DEFAULT_SCHEDULED_SESSIONS;
+
+      const parsedStaffOverrides: SessionStaffOverride[] = Array.isArray(data.club.staffOverrides)
+        ? data.club.staffOverrides.map((o: Record<string, unknown>) => ({
+            id: String(o.id || `override-${Date.now()}`),
+            scheduledSessionId: String(o.scheduledSessionId || ''),
+            date: String(o.date || ''),
+            assignedCoachId: String(o.assignedCoachId || ''),
+            originalCoachId: typeof o.originalCoachId === 'string' ? o.originalCoachId : undefined,
+            reason: typeof o.reason === 'string' ? o.reason : '',
+            notes: typeof o.notes === 'string' ? o.notes : ''
+          }))
+        : DEFAULT_STAFF_OVERRIDES;
+
+      const parsedClubClosures: ClubClosure[] = Array.isArray(data.club.clubClosures) && data.club.clubClosures.length > 0
+        ? data.club.clubClosures.map((c: Record<string, unknown>) => ({
+            id: String(c.id || `closure-${Date.now()}`),
+            title: String(c.title || 'Club Closure'),
+            startDate: String(c.startDate || ''),
+            endDate: String(c.endDate || ''),
+            reason: typeof c.reason === 'string' ? c.reason : ''
+          }))
+        : DEFAULT_CLUB_CLOSURES;
+
       club = {
         clubName: data.club.clubName || 'DeckGala Swim Club',
+        shortName: typeof data.club.shortName === 'string' ? data.club.shortName : 'DGSC',
+        code: typeof data.club.code === 'string' ? data.club.code : 'DGSC',
+        city: typeof data.club.city === 'string' ? data.club.city : 'Manchester',
+        country: typeof data.club.country === 'string' ? data.club.country : 'United Kingdom',
+        contactEmail: typeof data.club.contactEmail === 'string' ? data.club.contactEmail : 'info@deckgala.com',
+        contactPhone: typeof data.club.contactPhone === 'string' ? data.club.contactPhone : '+44 7700 900123',
+        headCoachName: typeof data.club.headCoachName === 'string' ? data.club.headCoachName : 'Coach Sarah Jenkins',
+        establishedYear: typeof data.club.establishedYear === 'string' ? data.club.establishedYear : '2012',
+        motto: typeof data.club.motto === 'string' ? data.club.motto : 'High Performance Poolside Excellence',
+        primaryPoolId: typeof data.club.primaryPoolId === 'string' ? data.club.primaryPoolId : parsedPools[0]?.id || 'pool-main-25m',
         pools: parsedPools,
+        coaches: parsedCoaches,
+        scheduledSessions: parsedScheduledSessions,
+        staffOverrides: parsedStaffOverrides,
+        clubClosures: parsedClubClosures,
         groups: data.club.groups.map((g: Record<string, unknown>) => ({
           id: String(g.id || `grp-${Date.now()}`),
           name: String(g.name || 'Unnamed Squad'),
@@ -102,6 +203,14 @@ export function loadPersistedState(): PersistedState {
       config.targetTime = parseFloat(String(data.config.targetTime)) || 0;
       config.poolCourse = data.config.poolCourse || '25m';
       config.stopwatchMode = data.config.stopwatchMode || 'interval';
+      config.assignedCoachId = typeof data.config.assignedCoachId === 'string' ? data.config.assignedCoachId : club.coaches[0]?.id;
+      config.coveringCoachId = typeof data.config.coveringCoachId === 'string' ? data.config.coveringCoachId : undefined;
+      config.headCoachNotes = typeof data.config.headCoachNotes === 'string' ? data.config.headCoachNotes : '';
+      config.scheduledSessionId = typeof data.config.scheduledSessionId === 'string' ? data.config.scheduledSessionId : undefined;
+      if (data.config.activeWeeklyPlan && typeof data.config.activeWeeklyPlan === 'object') {
+        config.activeWeeklyPlan = data.config.activeWeeklyPlan as AppConfig['activeWeeklyPlan'];
+      }
+
       if (Array.isArray(data.config.selectedGroupIds)) {
         config.selectedGroupIds = data.config.selectedGroupIds;
       }
@@ -137,7 +246,7 @@ export function loadPersistedState(): PersistedState {
       activeGroupId = club.groups[0]?.id || null;
     }
 
-    const validViews: ViewName[] = ['attendance', 'session', 'swimmers', 'deck', 'results'];
+    const validViews: ViewName[] = ['attendance', 'session', 'swimmers', 'deck', 'results', 'club-setup'];
     let currentView: ViewName = 'attendance';
     if (data.currentView === 'setup') {
       currentView = 'session';
@@ -145,12 +254,17 @@ export function loadPersistedState(): PersistedState {
       currentView = data.currentView;
     }
 
+    const activeClubSetupTab: ClubSetupTab = ['sessions', 'calendar', 'staff', 'pools'].includes(data.activeClubSetupTab)
+      ? data.activeClubSetupTab
+      : 'calendar';
+
     return {
       currentView,
       config,
       results,
       club,
-      activeGroupId
+      activeGroupId,
+      activeClubSetupTab
     };
   } catch {
     return initial;
@@ -165,7 +279,8 @@ export function savePersistedState(state: PersistedState): void {
       results: state.results,
       currentView: state.currentView,
       club: state.club,
-      activeGroupId: state.activeGroupId
+      activeGroupId: state.activeGroupId,
+      activeClubSetupTab: state.activeClubSetupTab
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   } catch {

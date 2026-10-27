@@ -3,6 +3,7 @@ import { uid } from '../lib/ids';
 import { parseBulkSwimmersText } from '../lib/roster';
 import { applyImportToClub } from '../lib/exporters';
 import { getSwimmerNamesForLane, distributeSwimmersAcrossLanes, getSessionPoolSwimmers } from '../lib/lanes';
+import { getISOWeek, formatSetItem, cloneWeeklyPlan } from '../lib/weeks';
 import type {
   AppConfig,
   ClubData,
@@ -14,6 +15,12 @@ import type {
   SwimmerGroup,
   SwimmingPool,
   PoolCourse,
+  Coach,
+  CoachRole,
+  ScheduledSession,
+  WeeklySessionPlan,
+  ClubClosure,
+  SessionStaffOverride,
   ToastItem
 } from '../types';
 
@@ -27,14 +34,49 @@ interface UseClubActionsParams {
 
 export function useClubActions({ club, activeGroupId, config, setPersisted, showToast }: UseClubActionsParams) {
   const setClubName = useCallback((clubName: string) => {
+    const name = clubName.trim() || 'DeckGala Swim Club';
     setPersisted(prev => ({
       ...prev,
       club: {
         ...prev.club,
-        clubName: clubName.trim() || 'DeckGala Swim Club'
+        clubName: name
       }
     }));
-  }, [setPersisted]);
+    showToast(`Club name updated to ${name}`, 'success');
+  }, [setPersisted, showToast]);
+
+  const updateClubProfile = useCallback((profile: {
+    clubName: string;
+    shortName?: string;
+    city?: string;
+    country?: string;
+    contactEmail?: string;
+    contactPhone?: string;
+    headCoachName?: string;
+    establishedYear?: string;
+    motto?: string;
+    primaryPoolId?: string;
+  }) => {
+    const clubName = (profile.clubName || '').trim() || 'DeckGala Swim Club';
+    setPersisted(prev => ({
+      ...prev,
+      club: {
+        ...prev.club,
+        clubName,
+        shortName: (profile.shortName || '').trim() || prev.club.shortName || 'DGSC',
+        city: (profile.city || '').trim(),
+        country: (profile.country || '').trim(),
+        contactEmail: (profile.contactEmail || '').trim(),
+        contactPhone: (profile.contactPhone || '').trim(),
+        headCoachName: (profile.headCoachName || '').trim(),
+        establishedYear: (profile.establishedYear || '').trim(),
+        motto: (profile.motto || '').trim(),
+        primaryPoolId: profile.primaryPoolId || prev.club.primaryPoolId
+      }
+    }));
+    showToast(`Club profile updated for ${clubName}`, 'success');
+    return true;
+  }, [setPersisted, showToast]);
 
   const saveGroup = useCallback((
     groupData: { name: string; coach: string; description: string; color: GroupColor },
@@ -594,8 +636,409 @@ export function useClubActions({ club, activeGroupId, config, setPersisted, show
     showToast('Updated session details', 'success');
   }, [setPersisted, showToast]);
 
+  const saveCoach = useCallback((
+    coachData: Partial<Coach> & { name: string; role: CoachRole },
+    editingCoachId?: string | null
+  ) => {
+    const name = (coachData.name || '').trim();
+    if (!name) {
+      showToast('Please enter a coach name', 'warning');
+      return false;
+    }
+
+    setPersisted(prev => {
+      const coaches = prev.club.coaches || [];
+      let nextCoaches: Coach[];
+      if (editingCoachId) {
+        nextCoaches = coaches.map(c =>
+          c.id === editingCoachId
+            ? {
+                ...c,
+                ...coachData,
+                name,
+                role: coachData.role || 'coach',
+                isHeadCoach: Boolean(coachData.isHeadCoach)
+              }
+            : c
+        );
+      } else {
+        const newCoach: Coach = {
+          id: uid('coach'),
+          name,
+          role: coachData.role || 'coach',
+          email: coachData.email || '',
+          phone: coachData.phone || '',
+          certifications: coachData.certifications || '',
+          notes: coachData.notes || '',
+          color: coachData.color || 'cyan',
+          isHeadCoach: Boolean(coachData.isHeadCoach)
+        };
+        nextCoaches = [...coaches, newCoach];
+      }
+
+      return {
+        ...prev,
+        club: {
+          ...prev.club,
+          coaches: nextCoaches
+        }
+      };
+    });
+
+    showToast(editingCoachId ? `Updated coach "${name}"` : `Added coach "${name}"`, 'success');
+    return true;
+  }, [setPersisted, showToast]);
+
+  const deleteCoach = useCallback((coachId: string) => {
+    let deleted = false;
+    setPersisted(prev => {
+      const coaches = prev.club.coaches || [];
+      if (coaches.length <= 1) {
+        showToast('At least one coach is required in the club', 'warning');
+        return prev;
+      }
+      deleted = true;
+      const nextCoaches = coaches.filter(c => c.id !== coachId);
+      return {
+        ...prev,
+        club: {
+          ...prev.club,
+          coaches: nextCoaches
+        }
+      };
+    });
+
+    if (deleted) {
+      showToast('Deleted coach', 'info');
+    }
+    return deleted;
+  }, [setPersisted, showToast]);
+
+  const saveScheduledSession = useCallback((
+    sessionData: Omit<ScheduledSession, 'id'>,
+    editingSessionId?: string | null
+  ) => {
+    const title = (sessionData.title || '').trim();
+    if (!title) {
+      showToast('Please enter a session title', 'warning');
+      return false;
+    }
+
+    setPersisted(prev => {
+      const sessions = prev.club.scheduledSessions || [];
+      let nextSessions: ScheduledSession[];
+
+      if (editingSessionId) {
+        nextSessions = sessions.map(s =>
+          s.id === editingSessionId
+            ? { ...sessionData, id: s.id, title }
+            : s
+        );
+      } else {
+        const newSession: ScheduledSession = {
+          ...sessionData,
+          id: uid('sched'),
+          title
+        };
+        nextSessions = [...sessions, newSession];
+      }
+
+      return {
+        ...prev,
+        club: {
+          ...prev.club,
+          scheduledSessions: nextSessions
+        }
+      };
+    });
+
+    showToast(editingSessionId ? `Updated scheduled session "${title}"` : `Added scheduled session "${title}"`, 'success');
+    return true;
+  }, [setPersisted, showToast]);
+
+  const deleteScheduledSession = useCallback((sessionId: string) => {
+    setPersisted(prev => ({
+      ...prev,
+      club: {
+        ...prev.club,
+        scheduledSessions: (prev.club.scheduledSessions || []).filter(s => s.id !== sessionId),
+        staffOverrides: (prev.club.staffOverrides || []).filter(o => o.scheduledSessionId !== sessionId)
+      }
+    }));
+    showToast('Deleted scheduled session', 'info');
+    return true;
+  }, [setPersisted, showToast]);
+
+  const saveStaffOverride = useCallback((
+    overrideData: Omit<SessionStaffOverride, 'id'>,
+    editingOverrideId?: string | null
+  ) => {
+    setPersisted(prev => {
+      const overrides = prev.club.staffOverrides || [];
+      let nextOverrides: SessionStaffOverride[];
+
+      if (editingOverrideId) {
+        nextOverrides = overrides.map(o =>
+          o.id === editingOverrideId
+            ? { ...overrideData, id: o.id }
+            : o
+        );
+      } else {
+        const filtered = overrides.filter(
+          o => !(o.scheduledSessionId === overrideData.scheduledSessionId && o.date === overrideData.date)
+        );
+        const newOverride: SessionStaffOverride = {
+          ...overrideData,
+          id: uid('override')
+        };
+        nextOverrides = [...filtered, newOverride];
+      }
+
+      return {
+        ...prev,
+        club: {
+          ...prev.club,
+          staffOverrides: nextOverrides
+        }
+      };
+    });
+
+    showToast('Saved staffing cover override', 'success');
+    return true;
+  }, [setPersisted, showToast]);
+
+  const deleteStaffOverride = useCallback((overrideId: string) => {
+    setPersisted(prev => ({
+      ...prev,
+      club: {
+        ...prev.club,
+        staffOverrides: (prev.club.staffOverrides || []).filter(o => o.id !== overrideId)
+      }
+    }));
+    showToast('Removed staffing override', 'info');
+    return true;
+  }, [setPersisted, showToast]);
+
+  const saveClubClosure = useCallback((
+    closureData: Omit<ClubClosure, 'id'>,
+    editingClosureId?: string | null
+  ) => {
+    const title = (closureData.title || '').trim();
+    if (!title) {
+      showToast('Please enter a closure name', 'warning');
+      return false;
+    }
+
+    setPersisted(prev => {
+      const closures = prev.club.clubClosures || [];
+      let nextClosures: ClubClosure[];
+
+      if (editingClosureId) {
+        nextClosures = closures.map(c =>
+          c.id === editingClosureId
+            ? { ...closureData, id: c.id, title }
+            : c
+        );
+      } else {
+        const newClosure: ClubClosure = {
+          ...closureData,
+          id: uid('closure'),
+          title
+        };
+        nextClosures = [...closures, newClosure];
+      }
+
+      return {
+        ...prev,
+        club: {
+          ...prev.club,
+          clubClosures: nextClosures
+        }
+      };
+    });
+
+    showToast(editingClosureId ? `Updated closure "${title}"` : `Added closure "${title}"`, 'success');
+    return true;
+  }, [setPersisted, showToast]);
+
+  const deleteClubClosure = useCallback((closureId: string) => {
+    setPersisted(prev => ({
+      ...prev,
+      club: {
+        ...prev.club,
+        clubClosures: (prev.club.clubClosures || []).filter(c => c.id !== closureId)
+      }
+    }));
+    showToast('Deleted club closure', 'info');
+    return true;
+  }, [setPersisted, showToast]);
+
+  const saveWeeklySessionPlan = useCallback((
+    sessionId: string,
+    planData: Omit<WeeklySessionPlan, 'id'>,
+    existingPlanId?: string | null
+  ) => {
+    setPersisted(prev => {
+      const sessions = prev.club.scheduledSessions || [];
+      const session = sessions.find(s => s.id === sessionId);
+      if (!session) return prev;
+
+      const currentPlans = session.weeklyPlans || [];
+      const planId = existingPlanId || `wplan-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      const newPlan: WeeklySessionPlan = {
+        ...planData,
+        id: planId
+      };
+
+      let nextPlans: WeeklySessionPlan[];
+      if (existingPlanId) {
+        nextPlans = currentPlans.map(p => (p.id === existingPlanId ? newPlan : p));
+      } else {
+        const exists = currentPlans.some(p => p.weekKey === planData.weekKey);
+        if (exists) {
+          nextPlans = currentPlans.map(p => (p.weekKey === planData.weekKey ? newPlan : p));
+        } else {
+          nextPlans = [...currentPlans, newPlan];
+        }
+      }
+
+      const nextSessions = sessions.map(s =>
+        s.id === sessionId ? { ...s, weeklyPlans: nextPlans } : s
+      );
+
+      return {
+        ...prev,
+        club: {
+          ...prev.club,
+          scheduledSessions: nextSessions
+        }
+      };
+    });
+
+    showToast(`Saved Week ${planData.weekNumber} Briefing & Set List`, 'success');
+    return true;
+  }, [setPersisted, showToast]);
+
+  const deleteWeeklySessionPlan = useCallback((sessionId: string, weekKey: string) => {
+    setPersisted(prev => {
+      const sessions = prev.club.scheduledSessions || [];
+      const session = sessions.find(s => s.id === sessionId);
+      if (!session) return prev;
+
+      const nextPlans = (session.weeklyPlans || []).filter(p => p.weekKey !== weekKey);
+      const nextSessions = sessions.map(s =>
+        s.id === sessionId ? { ...s, weeklyPlans: nextPlans } : s
+      );
+
+      return {
+        ...prev,
+        club: {
+          ...prev.club,
+          scheduledSessions: nextSessions
+        }
+      };
+    });
+
+    showToast(`Removed weekly plan for ${weekKey}`, 'info');
+    return true;
+  }, [setPersisted, showToast]);
+
+  const cloneWeeklySessionPlan = useCallback((sessionId: string, fromWeekKey: string, toWeekKey: string) => {
+    let success = false;
+    setPersisted(prev => {
+      const sessions = prev.club.scheduledSessions || [];
+      const session = sessions.find(s => s.id === sessionId);
+      if (!session) return prev;
+
+      const sourcePlan = (session.weeklyPlans || []).find(p => p.weekKey === fromWeekKey);
+      if (!sourcePlan) return prev;
+
+      const cloned = cloneWeeklyPlan(sourcePlan, toWeekKey);
+      const currentPlans = (session.weeklyPlans || []).filter(p => p.weekKey !== toWeekKey);
+      const nextPlans = [...currentPlans, cloned];
+
+      const nextSessions = sessions.map(s =>
+        s.id === sessionId ? { ...s, weeklyPlans: nextPlans } : s
+      );
+
+      success = true;
+      return {
+        ...prev,
+        club: {
+          ...prev.club,
+          scheduledSessions: nextSessions
+        }
+      };
+    });
+
+    if (success) {
+      showToast(`Cloned briefing & set list from ${fromWeekKey} to ${toWeekKey}`, 'success');
+    } else {
+      showToast(`No plan found to clone from ${fromWeekKey}`, 'warning');
+    }
+    return success;
+  }, [setPersisted, showToast]);
+
+  const loadSessionFromSchedule = useCallback((
+    scheduledSession: ScheduledSession,
+    targetDate?: string
+  ) => {
+    setPersisted(prev => {
+      const today = targetDate || new Date().toISOString().slice(0, 10);
+      const pool = (prev.club.pools || []).find(p => p.id === scheduledSession.poolId) || prev.club.pools[0];
+
+      const override = (prev.club.staffOverrides || []).find(
+        o => o.scheduledSessionId === scheduledSession.id && o.date === today
+      );
+
+      const assignedCoachId = override ? override.assignedCoachId : scheduledSession.defaultCoachId;
+      const coveringCoachId = override ? override.assignedCoachId : undefined;
+
+      const presentIds = prev.club.groups
+        .filter(g => scheduledSession.groupIds.includes(g.id))
+        .flatMap(g => g.swimmers.map(s => s.id));
+
+      const { weekKey, week } = getISOWeek(today);
+      const weeklyPlan = (scheduledSession.weeklyPlans || []).find(
+        wp => wp.weekKey === weekKey || wp.weekNumber === week
+      );
+
+      const notes = weeklyPlan?.briefing || scheduledSession.headCoachNotes || '';
+      let setName = prev.config.setName;
+      if (weeklyPlan && weeklyPlan.setList && weeklyPlan.setList.length > 0) {
+        const mainSet = weeklyPlan.setList.find(s => s.intensity === 'threshold' || s.intensity === 'lactate' || s.intensity === 'sprint') || weeklyPlan.setList[0];
+        setName = formatSetItem(mainSet);
+      }
+
+      return {
+        ...prev,
+        currentView: 'session',
+        config: {
+          ...prev.config,
+          sessionName: scheduledSession.title,
+          sessionDate: today,
+          sessionTime: scheduledSession.startTime,
+          selectedPoolId: pool?.id,
+          laneCount: pool?.laneCount || prev.config.laneCount,
+          poolCourse: pool?.length || prev.config.poolCourse,
+          selectedGroupIds: scheduledSession.groupIds,
+          presentSwimmerIds: presentIds,
+          assignedCoachId,
+          coveringCoachId,
+          headCoachNotes: notes,
+          setName,
+          scheduledSessionId: scheduledSession.id,
+          activeWeeklyPlan: weeklyPlan
+        }
+      };
+    });
+
+    showToast(`Loaded "${scheduledSession.title}" into Session`, 'success');
+  }, [setPersisted, showToast]);
+
   return {
     setClubName,
+    updateClubProfile,
     saveGroup,
     deleteGroup,
     saveSwimmer,
@@ -618,7 +1061,19 @@ export function useClubActions({ club, activeGroupId, config, setPersisted, show
     updateSessionDetails,
     selectPool,
     savePool,
-    deletePool
+    deletePool,
+    saveCoach,
+    deleteCoach,
+    saveScheduledSession,
+    deleteScheduledSession,
+    saveStaffOverride,
+    deleteStaffOverride,
+    saveClubClosure,
+    deleteClubClosure,
+    saveWeeklySessionPlan,
+    deleteWeeklySessionPlan,
+    cloneWeeklySessionPlan,
+    loadSessionFromSchedule
   };
 }
 

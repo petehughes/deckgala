@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { loadPersistedState, savePersistedState } from '../lib/storage';
-import type { AppConfig, ClubData, PersistedState, SwimResult, ViewName } from '../types';
+import type { AppConfig, ClubData, ClubSetupTab, PersistedState, SwimResult, ViewName } from '../types';
 
 export function usePersistentState() {
   const [persisted, setPersisted] = useState<PersistedState>(() => loadPersistedState());
@@ -38,18 +38,23 @@ export function usePersistentState() {
     setPersisted(prev => ({ ...prev, activeGroupId: groupId }));
   }, []);
 
+  const setActiveClubSetupTab = useCallback((tab: ClubSetupTab) => {
+    setPersisted(prev => ({ ...prev, activeClubSetupTab: tab }));
+  }, []);
+
   return {
     currentView: persisted.currentView,
     config: persisted.config,
     results: persisted.results,
     club: persisted.club,
     activeGroupId: persisted.activeGroupId,
+    activeClubSetupTab: persisted.activeClubSetupTab || 'calendar',
     setCurrentView,
     updateConfig,
     setResults,
     updateClub,
     setActiveGroupId,
+    setActiveClubSetupTab,
     setPersisted
   };
 }
-

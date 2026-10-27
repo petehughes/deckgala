@@ -6,14 +6,20 @@ import { SessionView } from './components/setup/SetupView';
 import { SwimmersView } from './components/swimmers/SwimmersView';
 import { DeckView } from './components/deck/DeckView';
 import { ResultsView } from './components/results/ResultsView';
+import { ClubSetupView } from './components/club/ClubSetupView';
 import { SessionModal } from './components/attendance/SessionModal';
+import { WelcomeTourModal } from './components/common/WelcomeTourModal';
 import { PoolModal } from './components/setup/PoolModal';
 import { Toasts } from './components/common/Toasts';
 import { SplashScreen } from './components/layout/SplashScreen';
 import { PieMenu } from './components/layout/PieMenu';
 import { HamburgerMenu } from './components/layout/HamburgerMenu';
 
-function MainContent() {
+interface MainContentProps {
+  onOpenTour: () => void;
+}
+
+function MainContent({ onOpenTour }: MainContentProps) {
   const { currentView } = useApp();
 
   return (
@@ -23,6 +29,7 @@ function MainContent() {
       {currentView === 'swimmers' && <SwimmersView />}
       {currentView === 'deck' && <DeckView />}
       {currentView === 'results' && <ResultsView />}
+      {currentView === 'club-setup' && <ClubSetupView onOpenTour={onOpenTour} />}
     </main>
   );
 }
@@ -33,6 +40,7 @@ function AppShell() {
   const [showSplash, setShowSplash] = useState(!isTestEnv);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSessionModalOpen, setIsSessionModalOpen] = useState(false);
+  const [isTourOpen, setIsTourOpen] = useState(false);
   const [hasPromptedSession, setHasPromptedSession] = useState(() => {
     try {
       if (typeof sessionStorage !== 'undefined') {
@@ -59,21 +67,29 @@ function AppShell() {
     <div className="app-shell">
       {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
       <Header onOpenMenu={() => setIsMenuOpen(true)} />
-      <MainContent />
+      <MainContent onOpenTour={() => setIsTourOpen(true)} />
       <Toasts />
       <PieMenu />
       <HamburgerMenu
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
         onOpenSessionModal={() => setIsSessionModalOpen(true)}
+        onOpenTour={() => setIsTourOpen(true)}
       />
-      <SessionModal
-        isOpen={(!hasPromptedSession && !showSplash) || isSessionModalOpen}
+      {/* 1st Load Welcome Page & Guided Tour Modal */}
+      <WelcomeTourModal
+        isOpen={(!hasPromptedSession && !showSplash) || isTourOpen}
         onClose={() => {
           handleClosePrompt();
-          setIsSessionModalOpen(false);
+          setIsTourOpen(false);
         }}
         isInitialPrompt={!hasPromptedSession}
+      />
+      {/* Session Details Modal (when opened from hamburger menu or buttons) */}
+      <SessionModal
+        isOpen={isSessionModalOpen}
+        onClose={() => setIsSessionModalOpen(false)}
+        isInitialPrompt={false}
       />
       <PoolModal
         isOpen={isPoolModalOpen}

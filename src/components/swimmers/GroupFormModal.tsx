@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { GROUP_COLORS } from '../../lib/constants';
 import { Modal } from '../common/Modal';
+import { CoachSelector } from '../common/CoachSelector';
 import type { GroupColor, SwimmerGroup } from '../../types';
 
 export interface GroupFormModalProps {
@@ -70,16 +71,20 @@ export function GroupFormModal({ isOpen, onClose, editingGroup = null }: GroupFo
           />
         </div>
 
-        <div className="form-field">
-          <label htmlFor="groupCoachField">Lead Coach</label>
-          <input
-            type="text"
-            id="groupCoachField"
-            placeholder="e.g. Coach Sarah"
-            value={coach}
-            onChange={e => setCoach(e.target.value)}
-          />
-        </div>
+        {/* Reusable CoachSelector for one or more coaches */}
+        <CoachSelector
+          id="groupCoachField"
+          label="Squad Coach(es)"
+          multiple={true}
+          valueKey="name"
+          value={coach}
+          onChange={val => {
+            const str = Array.isArray(val) ? val.join(', ') : val;
+            setCoach(str);
+          }}
+          allowCustomInput={true}
+          placeholder="Or type custom coach name..."
+        />
 
         <div className="form-field">
           <label htmlFor="groupDescField">Description / Schedule</label>
@@ -111,4 +116,3 @@ export function GroupFormModal({ isOpen, onClose, editingGroup = null }: GroupFo
     </Modal>
   );
 }
-

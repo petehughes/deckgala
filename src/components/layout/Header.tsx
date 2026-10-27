@@ -2,7 +2,6 @@ import React from 'react';
 import { useStopwatchState } from '../../context/AppContext';
 import logoUrl from '../../assets/logo.svg';
 import { Icon } from '../common/Icon';
-import { TabBar } from './TabBar';
 
 export interface HeaderProps {
   onOpenMenu?: () => void;
@@ -32,8 +31,6 @@ export function Header({ onOpenMenu }: HeaderProps = {}) {
         </div>
       </div>
 
-      <TabBar />
-
       <div className="header-actions">
         <div
           className="mesh-status-pill offline"
@@ -53,4 +50,3 @@ export function Header({ onOpenMenu }: HeaderProps = {}) {
     </header>
   );
 }
-

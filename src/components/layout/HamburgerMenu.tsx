@@ -3,16 +3,25 @@ import { useApp, useStopwatchState } from '../../context/AppContext';
 import { Icon } from '../common/Icon';
 import { playBeep, triggerHapticFeedback } from '../../lib/audio';
 import logoUrl from '../../assets/logo.svg';
-import type { ViewName } from '../../types';
+import type { ViewName, ClubSetupTab } from '../../types';
 
 export interface HamburgerMenuProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenSessionModal?: () => void;
+  onOpenTour?: () => void;
 }
 
 interface NavItem {
   id: ViewName;
+  label: string;
+  sublabel: string;
+  icon: string;
+}
+
+interface ClubSetupItem {
+  tab?: ClubSetupTab;
+  view?: ViewName;
   label: string;
   sublabel: string;
   icon: string;
@@ -38,12 +47,6 @@ const NAV_ITEMS: NavItem[] = [
     icon: 'session'
   },
   {
-    id: 'swimmers',
-    label: 'Swimmers & Squads',
-    sublabel: 'Rosters, PBs & QR sync',
-    icon: 'users'
-  },
-  {
     id: 'results',
     label: 'Results & Splits',
     sublabel: 'KPI statistics & CSV export',
@@ -51,16 +54,66 @@ const NAV_ITEMS: NavItem[] = [
   }
 ];
 
+const CLUB_SETUP_ITEMS: ClubSetupItem[] = [
+  {
+    tab: 'profile',
+    label: 'Club Profile & Name',
+    sublabel: 'Set club name, code & details',
+    icon: 'shield'
+  },
+  {
+    view: 'swimmers',
+    label: 'Swimmers & Squads',
+    sublabel: 'Rosters, PBs & QR sync',
+    icon: 'users'
+  },
+  {
+    tab: 'calendar',
+    label: 'Club Calendar',
+    sublabel: 'Events, staff covers & closures',
+    icon: 'calendar'
+  },
+  {
+    tab: 'sessions',
+    label: 'Session Schedules',
+    sublabel: 'Weekly & one-off creation',
+    icon: 'clock'
+  },
+  {
+    tab: 'staff',
+    label: 'Staffing & Coaches',
+    sublabel: 'Coaching team & cover allocation',
+    icon: 'users'
+  },
+  {
+    tab: 'pools',
+    label: 'Pool Setup',
+    sublabel: 'Lanes & length facilities',
+    icon: 'pool'
+  }
+];
+
 export function HamburgerMenu({
   isOpen,
   onClose,
-  onOpenSessionModal
+  onOpenSessionModal,
+  onOpenTour
 }: HamburgerMenuProps) {
-  const { currentView, setCurrentView, config, club, results, openPoolModal } = useApp();
+  const {
+    currentView,
+    setCurrentView,
+    activeClubSetupTab,
+    setActiveClubSetupTab,
+    config,
+    club,
+    results
+  } = useApp();
   const { stopwatch } = useStopwatchState();
 
   const pools = club.pools || [];
   const activePool = pools.find(p => p.id === config.selectedPoolId) || pools[0];
+  const assignedCoach = (club.coaches || []).find(c => c.id === config.assignedCoachId);
+  const coveringCoach = (club.coaches || []).find(c => c.id === config.coveringCoachId);
 
   // Close drawer on Escape key
   useEffect(() => {
@@ -83,6 +136,14 @@ export function HamburgerMenu({
     playBeep('pip');
     triggerHapticFeedback();
     setCurrentView(viewId);
+    onClose();
+  };
+
+  const handleSelectClubSetup = (tab: ClubSetupTab) => {
+    playBeep('pip');
+    triggerHapticFeedback();
+    setActiveClubSetupTab(tab);
+    setCurrentView('club-setup');
     onClose();
   };
 
@@ -174,14 +235,24 @@ export function HamburgerMenu({
               <span>{activePool.name} ({activePool.laneCount}L · {activePool.length})</span>
             </div>
           )}
+          {assignedCoach && (
+            <div className="drawer-session-coach">
+              <Icon name="users" size={13} />
+              <span>
+                {coveringCoach
+                  ? `Cover: ${coveringCoach.name} (covering for ${assignedCoach.name})`
+                  : `Coach: ${assignedCoach.name}`}
+              </span>
+            </div>
+          )}
           <div className="drawer-session-set">
             <span className="set-label">Set:</span> {config.setName || 'Unlabeled Set'}
           </div>
         </div>
 
-        {/* Navigation Links */}
-        <div className="drawer-section-label">NAVIGATION</div>
-        <nav className="drawer-nav-list" role="navigation">
+        {/* Deck Navigation Links */}
+        <div className="drawer-section-label">TIMING & DECKS</div>
+        <nav className="drawer-nav-list" role="navigation" aria-label="Deck Timing Views">
           {NAV_ITEMS.map(item => {
             const isActive = currentView === item.id;
             const badge = getItemBadge(item.id);
@@ -214,27 +285,72 @@ export function HamburgerMenu({
           })}
         </nav>
 
-        {/* Facility Management */}
-        <div className="drawer-section-label">FACILITY</div>
-        <div className="drawer-facility-action">
-          <button
-            type="button"
-            className="drawer-facility-btn"
-            onClick={() => {
-              onClose();
-              openPoolModal();
-            }}
-          >
-            <div className="drawer-facility-icon">
-              <Icon name="pool" size={18} />
-            </div>
-            <div className="drawer-facility-content">
-              <span className="drawer-facility-title">Swimming Pools</span>
-              <span className="drawer-facility-sub">Configure lanes & lengths</span>
-            </div>
-            <span className="drawer-facility-count">{pools.length}</span>
-          </button>
+        {/* Club Setup Section (User requested dedicated section) */}
+        <div className="drawer-section-label">CLUB SETUP</div>
+        <div className="drawer-setup-list" role="navigation" aria-label="Club Setup Sections">
+          {CLUB_SETUP_ITEMS.map(item => {
+            const isActive = item.view
+              ? currentView === item.view
+              : (currentView === 'club-setup' && activeClubSetupTab === item.tab);
+
+            let badgeText: string | undefined;
+            if (item.view === 'swimmers') {
+              const total = club.groups.reduce((acc, g) => acc + g.swimmers.length, 0);
+              badgeText = total > 0 ? `${total} swimmers` : undefined;
+            } else if (item.tab === 'calendar' && (club.clubClosures || []).length > 0) {
+              badgeText = `${club.clubClosures.length} closures`;
+            } else if (item.tab === 'sessions') {
+              badgeText = `${(club.scheduledSessions || []).length} slots`;
+            } else if (item.tab === 'staff') {
+              badgeText = `${(club.coaches || []).length} staff`;
+            } else if (item.tab === 'pools') {
+              badgeText = `${pools.length} pools`;
+            }
+
+            const handleClick = () => {
+              if (item.view) {
+                handleSelect(item.view);
+              } else if (item.tab) {
+                handleSelectClubSetup(item.tab);
+              }
+            };
+
+            return (
+              <button
+                key={item.label}
+                type="button"
+                className={`drawer-nav-item setup-item ${isActive ? 'active' : ''}`}
+                onClick={handleClick}
+              >
+                <div className="drawer-nav-icon">
+                  <Icon name={item.icon} size={18} />
+                </div>
+                <div className="drawer-nav-content">
+                  <span className="drawer-nav-title">{item.label}</span>
+                  <span className="drawer-nav-sub">{item.sublabel}</span>
+                </div>
+                {badgeText && <span className="drawer-nav-badge">{badgeText}</span>}
+              </button>
+            );
+          })}
         </div>
+
+        {onOpenTour && (
+          <div className="drawer-tour-section" style={{ padding: '0.65rem 1.15rem' }}>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              style={{ width: '100%', justifyContent: 'center', gap: '0.5rem' }}
+              onClick={() => {
+                onClose();
+                onOpenTour();
+              }}
+            >
+              <Icon name="compass" size={16} />
+              <span>Welcome Guided Tour</span>
+            </button>
+          </div>
+        )}
 
         {/* Footer / System Status */}
         <div className="drawer-footer">

@@ -313,7 +313,11 @@ export function applyImportToClub(
   const nextClub: ClubData = {
     clubName: club.clubName,
     groups: club.groups.map(g => ({ ...g, swimmers: [...g.swimmers] })),
-    pools: Array.isArray(club.pools) ? [...club.pools] : []
+    pools: Array.isArray(club.pools) ? [...club.pools] : [],
+    coaches: Array.isArray(club.coaches) ? [...club.coaches] : [],
+    scheduledSessions: Array.isArray(club.scheduledSessions) ? [...club.scheduledSessions] : [],
+    staffOverrides: Array.isArray(club.staffOverrides) ? [...club.staffOverrides] : [],
+    clubClosures: Array.isArray(club.clubClosures) ? [...club.clubClosures] : []
   };
   let nextActiveGroupId = activeGroupId;
   let nextSelectedGroupIds = [...selectedGroupIds];

@@ -1,18 +1,19 @@
 import React from 'react';
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
-import { render, fireEvent, cleanup } from '@testing-library/react';
+import { render, fireEvent, cleanup, RenderResult } from '@testing-library/react';
 import { App } from './App';
+
+function navigateTo(view: RenderResult, label: string) {
+  const menuBtn = view.getByRole('button', { name: /Open main menu/i });
+  fireEvent.click(menuBtn);
+  const navBtn = view.getByText(label);
+  fireEvent.click(navBtn);
+}
 
 describe('DeckGala React App', () => {
   beforeEach(() => {
     localStorage.clear();
-    try {
-      if (typeof sessionStorage !== 'undefined') {
-        sessionStorage.clear();
-      }
-    } catch {
-      // Ignore
-    }
+    sessionStorage.clear();
   });
 
   afterEach(() => {
@@ -22,11 +23,8 @@ describe('DeckGala React App', () => {
   it('prompts user for session details on start and opens Attendance screen before Session', () => {
     const view = render(<App />);
 
-    // Initial session prompt modal appears on start
-    expect(view.getByText(/Start Session/i)).toBeDefined();
-    expect(view.getByLabelText(/Session Name/i)).toBeDefined();
-    expect(view.getByLabelText(/Session Date/i)).toBeDefined();
-    expect(view.getByLabelText(/Session Time/i)).toBeDefined();
+    // Verify initial SessionModal is shown on startup
+    expect(view.getByText('Welcome to DeckGala — Start Session')).toBeDefined();
 
     // Confirm session details
     const beginBtn = view.getByText(/Begin Session & Attendance/i);
@@ -37,36 +35,30 @@ describe('DeckGala React App', () => {
     expect(view.getByText('Swimmer Attendance Checklist')).toBeDefined();
     expect(view.getByText('Marked Present')).toBeDefined();
 
-    // Navigate to Setup tab
-    const setupTab = view.getByRole('tab', { name: /^Session/i });
-    fireEvent.click(setupTab);
+    // Navigate to Setup tab via Hamburger Menu
+    navigateTo(view, 'Session');
     expect(view.getByText('Active Lanes')).toBeDefined();
     expect(view.getByText('Session Squads in the Water')).toBeDefined();
 
     // Navigate to Swimmers tab
-    const swimmersTab = view.getByRole('tab', { name: /Swimmers/i });
-    fireEvent.click(swimmersTab);
+    navigateTo(view, 'Swimmers & Squads');
     expect(view.getByText('SWIMMING GROUPS')).toBeDefined();
     expect(view.getAllByText('Senior Performance').length).toBeGreaterThan(0);
 
     // Navigate to Pool Deck tab
-    const deckTab = view.getByRole('tab', { name: /Pool Deck/i });
-    fireEvent.click(deckTab);
+    navigateTo(view, 'Pool Deck');
     expect(view.getByText('START SET')).toBeDefined();
 
     // Navigate to Results tab
-    const resultsTab = view.getByRole('tab', { name: /Results/i });
-    fireEvent.click(resultsTab);
+    navigateTo(view, 'Results & Splits');
     expect(view.getByText('Total Swims Recorded')).toBeDefined();
   });
 
   it('allows starting the stopwatch on Pool Deck and records session name in Results output', () => {
-    // Set prompted in sessionStorage so it doesn't block the test
     sessionStorage.setItem('deckgala_session_prompted', 'true');
     const view = render(<App />);
 
-    const deckTab = view.getByRole('tab', { name: /Pool Deck/i });
-    fireEvent.click(deckTab);
+    navigateTo(view, 'Pool Deck');
 
     const startBtn = view.getByText('START SET');
     fireEvent.click(startBtn);
@@ -79,8 +71,7 @@ describe('DeckGala React App', () => {
     fireEvent.click(stopButtons[0]);
 
     // Navigate to Results tab and verify 1 split recorded with session name
-    const resultsTab = view.getByRole('tab', { name: /Results/i });
-    fireEvent.click(resultsTab);
+    navigateTo(view, 'Results & Splits');
 
     expect(view.getByText('Alex Rivera')).toBeDefined();
     expect(view.getAllByText(/Morning Training Session/i).length).toBeGreaterThan(0);
@@ -91,7 +82,7 @@ describe('DeckGala React App', () => {
     const view = render(<App />);
 
     // Go to Swimmers tab
-    fireEvent.click(view.getByRole('tab', { name: /Swimmers/i }));
+    navigateTo(view, 'Swimmers & Squads');
 
     // Open New Group modal
     fireEvent.click(view.getByText('New Group'));
@@ -112,7 +103,7 @@ describe('DeckGala React App', () => {
     expect(view.getByText('Sarah Sjostrom')).toBeDefined();
 
     // Go back to Setup tab and verify the new group is selected and Sarah Sjostrom is in the lane dropdown
-    fireEvent.click(view.getByRole('tab', { name: /^Session/i }));
+    navigateTo(view, 'Session');
     expect(view.getByText('Regional Sprint Squad')).toBeDefined();
 
     const lane1Select = view.getByLabelText('Select swimmer for Lane 1') as HTMLSelectElement;
@@ -126,12 +117,12 @@ describe('DeckGala React App', () => {
     const view = render(<App />);
 
     // Navigate to Setup tab and select Coach Manual Push Release mode
-    fireEvent.click(view.getByRole('tab', { name: /^Session/i }));
+    navigateTo(view, 'Session');
     const manualModeCard = view.getByText(/Coach Manual Push Release/i);
     fireEvent.click(manualModeCard);
 
     // Navigate to Pool Deck tab
-    fireEvent.click(view.getByRole('tab', { name: /Pool Deck/i }));
+    navigateTo(view, 'Pool Deck');
 
     // Verify "Release All Lanes" button is present
     const releaseAllBtns = view.getAllByText('Release All Lanes');
@@ -163,7 +154,7 @@ describe('DeckGala React App', () => {
     expect(alexToggle.textContent).toContain('ABSENT');
 
     // Go to Setup tab
-    fireEvent.click(view.getByRole('tab', { name: /^Session/i }));
+    navigateTo(view, 'Session');
 
     // Check Lane 1 dropdown options
     const lane1Select = view.getByLabelText('Select swimmer for Lane 1') as HTMLSelectElement;
@@ -181,11 +172,11 @@ describe('DeckGala React App', () => {
     const view = render(<App />);
 
     // Go to Setup tab and switch to Coach Manual Push Release mode
-    fireEvent.click(view.getByRole('tab', { name: /^Session/i }));
+    navigateTo(view, 'Session');
     fireEvent.click(view.getByText(/Coach Manual Push Release/i));
 
     // Go to Pool Deck
-    fireEvent.click(view.getByRole('tab', { name: /Pool Deck/i }));
+    navigateTo(view, 'Pool Deck');
 
     // Initially says START SET
     expect(view.getByText('START SET')).toBeDefined();
@@ -217,7 +208,7 @@ describe('DeckGala React App', () => {
     const view = render(<App />);
 
     // Go to Swimmers tab
-    fireEvent.click(view.getByRole('tab', { name: /Swimmers/i }));
+    navigateTo(view, 'Swimmers & Squads');
 
     // Open Export modal
     fireEvent.click(view.getByText('Export Club / Group'));
@@ -250,7 +241,7 @@ describe('DeckGala React App', () => {
     const view = render(<App />);
 
     // Go to Swimmers tab
-    fireEvent.click(view.getByRole('tab', { name: /Swimmers/i }));
+    navigateTo(view, 'Swimmers & Squads');
 
     // Click "Scan QR Code" button directly from club header
     fireEvent.click(view.getByText('Scan QR Code'));
@@ -289,5 +280,84 @@ describe('DeckGala React App', () => {
     // Verify Sprint Elite squad and Leon Marchand are now in the roster
     expect(view.getAllByText('Sprint Elite').length).toBeGreaterThan(0);
     expect(view.getByText('Leon Marchand')).toBeDefined();
+  });
+
+  it('navigates to Club Setup pages from the Hamburger menu', () => {
+    sessionStorage.setItem('deckgala_session_prompted', 'true');
+    const view = render(<App />);
+
+    // Open hamburger menu and click Club Calendar
+    navigateTo(view, 'Club Calendar');
+    expect(view.getByText('CLUB SETUP & MANAGEMENT')).toBeDefined();
+    expect(view.getByText('Club Calendar & Closures')).toBeDefined();
+
+    // Switch to Session Schedules tab
+    const sessionSchedTab = view.getByRole('tab', { name: /Session Schedules/i });
+    fireEvent.click(sessionSchedTab);
+    expect(view.getByText('+ Create Session Schedule')).toBeDefined();
+
+    // Switch to Staffing & Coaches tab
+    const staffTab = view.getByRole('tab', { name: /Staffing & Coaches/i });
+    fireEvent.click(staffTab);
+    expect(view.getByText('+ Add Club Coach')).toBeDefined();
+    expect(view.getByText('Coach Sarah Jenkins')).toBeDefined();
+  });
+
+  it('allows setting club name and details in 1st-load welcome page guided tour and club profile tab', () => {
+    // Clear storage to simulate 1st launch
+    localStorage.clear();
+    sessionStorage.clear();
+
+    const view = render(<App />);
+
+    // 1st load Welcome Page & Guided Tour Modal should open
+    expect(view.getByText('Welcome to DeckGala — Start Session')).toBeDefined();
+    expect(view.getByText('Club Setup')).toBeDefined();
+
+    // Step 1: Set Club Name, Acronym, and Head Coach
+    const clubNameInput = view.getByLabelText(/Club Full Name/i);
+    fireEvent.change(clubNameInput, { target: { value: 'Pacific Coast Aquatics' } });
+
+    const acronymInput = view.getByLabelText(/Club Acronym/i);
+    fireEvent.change(acronymInput, { target: { value: 'PCA' } });
+
+    const cityInput = view.getByLabelText(/Home City \/ Region/i);
+    fireEvent.change(cityInput, { target: { value: 'San Diego, CA' } });
+
+    // Advance to Step 2: Pool Facility
+    fireEvent.click(view.getByRole('button', { name: /Next: Pool Facility/i }));
+    expect(view.getByText('Select Your Home Pool Facility')).toBeDefined();
+
+    // Advance to Step 3: Deck Features Tour
+    fireEvent.click(view.getByRole('button', { name: /Next: Deck Tour/i }));
+    expect(view.getByText('DeckGala Poolside Features & Tour')).toBeDefined();
+    expect(view.getByText('Multi-Lane Stopwatch')).toBeDefined();
+    expect(view.getByText('Poolside Gesture Menus')).toBeDefined();
+
+    // Advance to Step 4: Today's Session
+    fireEvent.click(view.getByRole('button', { name: /Next: Start Session/i }));
+    expect(view.getByText("Start Today's Deck Session")).toBeDefined();
+
+    // Finish tour and start session
+    fireEvent.click(view.getByRole('button', { name: /Begin Session & Attendance/i }));
+
+    // Lands on Attendance screen
+    expect(view.getByText('ACTIVE SESSION')).toBeDefined();
+
+    // Open Hamburger Menu and go to Club Profile
+    navigateTo(view, 'Club Profile & Name');
+
+    // Verify Club Name is updated in the banner and profile
+    expect(view.getAllByText('Pacific Coast Aquatics').length).toBeGreaterThan(0);
+    expect(view.getAllByText('PCA').length).toBeGreaterThan(0);
+    expect(view.getAllByText(/San Diego/i).length).toBeGreaterThan(0);
+
+    // Edit club profile in Club Setup
+    const mottoInput = view.getByLabelText(/Club Motto/i);
+    fireEvent.change(mottoInput, { target: { value: 'Fast Waves, Relentless Focus' } });
+
+    fireEvent.click(view.getByRole('button', { name: /Save Club Profile/i }));
+    expect(view.getByText(/Profile Saved/i)).toBeDefined();
+    expect(view.getByText(/"Fast Waves, Relentless Focus"/i)).toBeDefined();
   });
 });

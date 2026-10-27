@@ -10,6 +10,13 @@ import type {
   ImportOptions,
   PendingImport,
   PoolCourse,
+  Coach,
+  CoachRole,
+  ScheduledSession,
+  WeeklySessionPlan,
+  ClubClosure,
+  SessionStaffOverride,
+  ClubSetupTab,
   StopwatchRuntime,
   SwimResult,
   Swimmer,
@@ -32,6 +39,18 @@ export interface AppContextValue {
   showToast: (message: string, type?: ToastItem['type']) => void;
   dismissToast: (id: number) => void;
   setClubName: (clubName: string) => void;
+  updateClubProfile: (profile: {
+    clubName: string;
+    shortName?: string;
+    city?: string;
+    country?: string;
+    contactEmail?: string;
+    contactPhone?: string;
+    headCoachName?: string;
+    establishedYear?: string;
+    motto?: string;
+    primaryPoolId?: string;
+  }) => boolean;
   saveGroup: (
     groupData: { name: string; coach: string; description: string; color: GroupColor },
     editingGroupId?: string | null
@@ -74,6 +93,20 @@ export interface AppContextValue {
   isPoolModalOpen: boolean;
   openPoolModal: () => void;
   closePoolModal: () => void;
+  activeClubSetupTab: ClubSetupTab;
+  setActiveClubSetupTab: (tab: ClubSetupTab) => void;
+  saveCoach: (coachData: Partial<Coach> & { name: string; role: CoachRole }, editingCoachId?: string | null) => boolean;
+  deleteCoach: (coachId: string) => boolean;
+  saveScheduledSession: (sessionData: Omit<ScheduledSession, 'id'>, editingSessionId?: string | null) => boolean;
+  deleteScheduledSession: (sessionId: string) => boolean;
+  saveStaffOverride: (overrideData: Omit<SessionStaffOverride, 'id'>, editingOverrideId?: string | null) => boolean;
+  deleteStaffOverride: (overrideId: string) => boolean;
+  saveClubClosure: (closureData: Omit<ClubClosure, 'id'>, editingClosureId?: string | null) => boolean;
+  deleteClubClosure: (closureId: string) => boolean;
+  saveWeeklySessionPlan: (sessionId: string, planData: Omit<WeeklySessionPlan, 'id'>, existingPlanId?: string | null) => boolean;
+  deleteWeeklySessionPlan: (sessionId: string, weekKey: string) => boolean;
+  cloneWeeklySessionPlan: (sessionId: string, fromWeekKey: string, toWeekKey: string) => boolean;
+  loadSessionFromSchedule: (scheduledSession: ScheduledSession, targetDate?: string) => void;
 }
 
 export interface StopwatchContextValue {
@@ -98,7 +131,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     results,
     club,
     activeGroupId,
+    activeClubSetupTab,
     setCurrentView,
+    setActiveClubSetupTab,
     updateConfig,
     setResults,
     updateClub,
@@ -143,7 +178,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       results,
       club,
       activeGroupId,
+      activeClubSetupTab,
       setCurrentView,
+      setActiveClubSetupTab,
       updateConfig,
       setResults,
       updateClub,
@@ -162,7 +199,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       results,
       club,
       activeGroupId,
+      activeClubSetupTab,
       setCurrentView,
+      setActiveClubSetupTab,
       updateConfig,
       setResults,
       updateClub,

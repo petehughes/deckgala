@@ -2,6 +2,7 @@ import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { Icon } from '../common/Icon';
 import { PoolSelectorCard } from './PoolSelectorCard';
+import { HeadCoachBriefingCard } from './HeadCoachBriefingCard';
 import { LaneCountPicker } from './LaneCountPicker';
 import { SetDetailsCard } from './SetDetailsCard';
 import { StopwatchModeSection } from './StopwatchModeSection';
@@ -16,6 +17,8 @@ export function SessionView() {
       <div className="session-facility-section">
         <PoolSelectorCard />
       </div>
+
+      <HeadCoachBriefingCard />
 
       <div className="setup-top-grid">
         <LaneCountPicker />
