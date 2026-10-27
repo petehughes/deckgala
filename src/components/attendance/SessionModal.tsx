@@ -54,7 +54,7 @@ export function SessionModal({ isOpen, onClose, isInitialPrompt = false }: Sessi
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isInitialPrompt ? 'Welcome to AquaPace — Start Session' : 'Edit Session Details'}
+      title={isInitialPrompt ? 'Welcome to DeckGala — Start Session' : 'Edit Session Details'}
       size="md"
       footer={
         <>

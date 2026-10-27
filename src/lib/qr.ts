@@ -28,7 +28,7 @@ export function buildSwimmerQrPayload(
     if (!group) return null;
 
     const payload = {
-      schema: 'aquapace_group_v1',
+      schema: 'deckgala_group_v1',
       scope: 'group',
       clubName: club.clubName,
       group: {
@@ -66,7 +66,7 @@ export function buildSwimmerQrPayload(
   // Club level payload
   const totalSwimmers = club.groups.reduce((acc, g) => acc + g.swimmers.length, 0);
   const payload = {
-    schema: 'aquapace_club_v1',
+    schema: 'deckgala_club_v1',
     scope: 'club',
     clubName: club.clubName,
     groups: club.groups.map(g => ({

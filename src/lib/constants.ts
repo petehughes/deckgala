@@ -1,6 +1,7 @@
 import type { GroupColor, PoolCourse } from '../types';
 
-export const STORAGE_KEY = 'aquapace_club_swim_v1';
+export const STORAGE_KEY = 'deckgala_club_swim_v1';
+export const LEGACY_STORAGE_KEY = 'aquapace_club_swim_v1';
 
 export const GROUP_COLORS: { id: GroupColor; label: string }[] = [
   { id: 'cyan', label: 'Cyan' },

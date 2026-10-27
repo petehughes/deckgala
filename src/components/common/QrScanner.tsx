@@ -232,7 +232,7 @@ export function QrScanner({ onScan, onCancel, className = '' }: QrScannerProps) 
               <span className="corner bottom-right" />
               <div className="qr-scan-line" />
             </div>
-            <p className="qr-instruction">Point camera at AquaPace QR Code</p>
+            <p className="qr-instruction">Point camera at DeckGala QR Code</p>
           </div>
 
           <div className="qr-camera-toolbar">
@@ -300,7 +300,7 @@ export function QrScanner({ onScan, onCancel, className = '' }: QrScannerProps) 
         <div className="qr-paste-box">
           <textarea
             className="qr-paste-textarea"
-            placeholder={'Paste raw JSON payload or text scanned from another app:\n{"schema":"aquapace_group_v1", ...}'}
+            placeholder={'Paste raw JSON payload or text scanned from another app:\n{"schema":"deckgala_group_v1", ...}'}
             rows={5}
             value={pasteText}
             onChange={e => setPasteText(e.target.value)}

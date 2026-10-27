@@ -29,7 +29,7 @@ export function useClubActions({ club, activeGroupId, config, setPersisted, show
       ...prev,
       club: {
         ...prev.club,
-        clubName: clubName.trim() || 'AquaPace Swim Club'
+        clubName: clubName.trim() || 'DeckGala Swim Club'
       }
     }));
   }, [setPersisted]);

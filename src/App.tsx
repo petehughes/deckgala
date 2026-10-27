@@ -27,7 +27,7 @@ function AppShell() {
   const [hasPromptedSession, setHasPromptedSession] = useState(() => {
     try {
       if (typeof sessionStorage !== 'undefined') {
-        return sessionStorage.getItem('aquapace_session_prompted') === 'true';
+        return sessionStorage.getItem('deckgala_session_prompted') === 'true' || sessionStorage.getItem('aquapace_session_prompted') === 'true';
       }
     } catch {
       // Ignore storage errors
@@ -39,7 +39,7 @@ function AppShell() {
     setHasPromptedSession(true);
     try {
       if (typeof sessionStorage !== 'undefined') {
-        sessionStorage.setItem('aquapace_session_prompted', 'true');
+        sessionStorage.setItem('deckgala_session_prompted', 'true');
       }
     } catch {
       // Ignore

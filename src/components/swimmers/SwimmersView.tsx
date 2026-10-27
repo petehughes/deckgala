@@ -103,7 +103,7 @@ export function SwimmersView() {
             type="button"
             className="btn btn-secondary btn-sm"
             onClick={() => setImportModalState({ open: true, source: 'qr' })}
-            title="Scan an AquaPace QR Code with your camera or image"
+            title="Scan a DeckGala QR Code with your camera or image"
           >
             <Icon name="qr" size={16} />
             <span>Scan QR Code</span>

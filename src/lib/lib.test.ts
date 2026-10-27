@@ -299,7 +299,7 @@ describe('results calculations and exports', () => {
 
   it('builds clipboard summary and CSV export', () => {
     const clip = buildResultsClipboardText(sampleResults, 'Morning Training Session');
-    expect(clip).toContain('AquaPace Pro — Morning Training Session');
+    expect(clip).toContain('DeckGala Pro — Morning Training Session');
     expect(clip).toContain('Alex Rivera');
 
     const csv = buildResultsCsv(sampleResults);

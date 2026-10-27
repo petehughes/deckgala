@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { render, fireEvent, cleanup } from '@testing-library/react';
 import { App } from './App';
 
-describe('AquaPace React App', () => {
+describe('DeckGala React App', () => {
   beforeEach(() => {
     localStorage.clear();
     try {
@@ -62,7 +62,7 @@ describe('AquaPace React App', () => {
 
   it('allows starting the stopwatch on Pool Deck and records session name in Results output', () => {
     // Set prompted in sessionStorage so it doesn't block the test
-    sessionStorage.setItem('aquapace_session_prompted', 'true');
+    sessionStorage.setItem('deckgala_session_prompted', 'true');
     const view = render(<App />);
 
     const deckTab = view.getByRole('tab', { name: /Pool Deck/i });
@@ -87,7 +87,7 @@ describe('AquaPace React App', () => {
   });
 
   it('allows creating a new group and adding a swimmer in the Swimmers tab, then selecting them in Setup', () => {
-    sessionStorage.setItem('aquapace_session_prompted', 'true');
+    sessionStorage.setItem('deckgala_session_prompted', 'true');
     const view = render(<App />);
 
     // Go to Swimmers tab
@@ -122,7 +122,7 @@ describe('AquaPace React App', () => {
   });
 
   it('shows Release All Lanes in Coach Manual Push Release mode and releases next wave across all lanes', () => {
-    sessionStorage.setItem('aquapace_session_prompted', 'true');
+    sessionStorage.setItem('deckgala_session_prompted', 'true');
     const view = render(<App />);
 
     // Navigate to Setup tab and select Coach Manual Push Release mode
@@ -151,7 +151,7 @@ describe('AquaPace React App', () => {
   });
 
   it('only shows present swimmers in the lane assignment picker dropdown and excludes absent swimmers', () => {
-    sessionStorage.setItem('aquapace_session_prompted', 'true');
+    sessionStorage.setItem('deckgala_session_prompted', 'true');
     const view = render(<App />);
 
     // Starts on Attendance tab
@@ -177,7 +177,7 @@ describe('AquaPace React App', () => {
   });
 
   it('displays STOP when running and no swimmers are in the water, and PAUSE when swimmers are active', () => {
-    sessionStorage.setItem('aquapace_session_prompted', 'true');
+    sessionStorage.setItem('deckgala_session_prompted', 'true');
     const view = render(<App />);
 
     // Go to Setup tab and switch to Coach Manual Push Release mode
@@ -213,7 +213,7 @@ describe('AquaPace React App', () => {
   });
 
   it('allows generating a QR code for export at group and club level', async () => {
-    sessionStorage.setItem('aquapace_session_prompted', 'true');
+    sessionStorage.setItem('deckgala_session_prompted', 'true');
     const view = render(<App />);
 
     // Go to Swimmers tab
@@ -246,7 +246,7 @@ describe('AquaPace React App', () => {
   });
 
   it('allows importing swimmers and squads via QR code at group and club level', async () => {
-    sessionStorage.setItem('aquapace_session_prompted', 'true');
+    sessionStorage.setItem('deckgala_session_prompted', 'true');
     const view = render(<App />);
 
     // Go to Swimmers tab
@@ -263,9 +263,9 @@ describe('AquaPace React App', () => {
     // Input a group QR payload
     const textarea = view.getByPlaceholderText(/Paste raw JSON payload/i);
     const sampleGroupPayload = JSON.stringify({
-      schema: 'aquapace_group_v1',
+      schema: 'deckgala_group_v1',
       scope: 'group',
-      clubName: 'AquaPace Test Club',
+      clubName: 'DeckGala Test Club',
       group: {
         name: 'Sprint Elite',
         coach: 'Coach Mark',

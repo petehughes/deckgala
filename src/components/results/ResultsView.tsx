@@ -58,7 +58,7 @@ export function ResultsView() {
     }
     const csvContent = buildResultsCsv(results);
     const slug = sanitizeFilename(config.sessionName || 'session');
-    const filename = `aquapace-${slug}-${config.sessionDate || new Date().toISOString().slice(0, 10)}.csv`;
+    const filename = `deckgala-${slug}-${config.sessionDate || new Date().toISOString().slice(0, 10)}.csv`;
     downloadFile(csvContent, filename, 'text/csv;charset=utf-8;');
     showToast('Exported CSV file!', 'success');
   };

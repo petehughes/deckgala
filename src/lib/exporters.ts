@@ -20,7 +20,7 @@ export function buildSwimmerExportPayload(
     const clubSlug = sanitizeFilename(club.clubName);
     if (format === 'json') {
       const payload = {
-        schema: 'aquapace_club_v1',
+        schema: 'deckgala_club_v1',
         exportedAt: new Date().toISOString(),
         scope: 'club',
         clubName: club.clubName,
@@ -75,7 +75,7 @@ export function buildSwimmerExportPayload(
 
     if (format === 'json') {
       const payload = {
-        schema: 'aquapace_group_v1',
+        schema: 'deckgala_group_v1',
         exportedAt: new Date().toISOString(),
         scope: 'group',
         clubName: club.clubName,
@@ -144,7 +144,7 @@ export function normalizeGroupObj(raw: Record<string, unknown> = {}): SwimmerGro
   };
 }
 
-export function parseImportFileText(text: string, fileName: string, defaultClubName: string = 'AquaPace Swim Club'): PendingImport {
+export function parseImportFileText(text: string, fileName: string, defaultClubName: string = 'DeckGala Swim Club'): PendingImport {
   const trimmed = String(text || '').trim();
   if (!trimmed) {
     throw new Error('File is empty');

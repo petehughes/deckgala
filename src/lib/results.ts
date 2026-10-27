@@ -102,7 +102,7 @@ export function buildResultsClipboardText(results: SwimResult[] = [], setName: s
   const dateSub = [sDate, sTime].filter(Boolean).join(' @ ');
 
   const lines: string[] = [
-    `🏊 AquaPace Pro — ${sName}${dateSub ? ` (${dateSub})` : ''}`,
+    `🏊 DeckGala Pro — ${sName}${dateSub ? ` (${dateSub})` : ''}`,
     `Total Swims: ${results.length}`,
     '----------------------------------------'
   ];

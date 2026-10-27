@@ -2,7 +2,7 @@ import type { ClubData } from '../types';
 
 export function createDefaultClub(): ClubData {
   return {
-    clubName: 'AquaPace Swim Club',
+    clubName: 'DeckGala Swim Club',
     groups: [
       {
         id: 'grp-senior-perf',

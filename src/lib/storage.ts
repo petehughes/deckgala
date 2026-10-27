@@ -1,4 +1,4 @@
-import { STORAGE_KEY } from './constants';
+import { STORAGE_KEY, LEGACY_STORAGE_KEY } from './constants';
 import { createDefaultClub } from './defaultClub';
 import { createDefaultLanes } from './lanes';
 import type { AppConfig, PersistedState, ViewName } from '../types';
@@ -46,7 +46,7 @@ export function loadPersistedState(): PersistedState {
   const initial = getInitialState();
   try {
     if (typeof localStorage === 'undefined') return initial;
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
     if (!raw) return initial;
 
     const data = JSON.parse(raw);
@@ -94,7 +94,7 @@ export function loadPersistedState(): PersistedState {
     let club = initial.club;
     if (data.club && Array.isArray(data.club.groups)) {
       club = {
-        clubName: data.club.clubName || 'AquaPace Swim Club',
+        clubName: data.club.clubName || 'DeckGala Swim Club',
         groups: data.club.groups.map((g: Record<string, unknown>) => ({
           id: String(g.id || `grp-${Date.now()}`),
           name: String(g.name || 'Unnamed Squad'),

@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "app.aquapace.swimtimer"
+    namespace = "app.deckgala.swimtimer"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "app.aquapace.swimtimer"
+        applicationId "app.deckgala.swimtimer"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

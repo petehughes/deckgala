@@ -23,13 +23,13 @@ tailwind.config = {
         }
 
 /********************************************************************
-         * AQUAPACE — OFFLINE CLUB SWIMMING WAVE & LANE STOPWATCH ENGINE
+         * DECKGALA — OFFLINE CLUB SWIMMING WAVE & LANE STOPWATCH ENGINE
          ********************************************************************/
-        const STORAGE_KEY = 'aquapace_club_swim_v1';
+        const STORAGE_KEY = 'deckgala_club_swim_v1';
 
         function getDefaultClubData() {
             return {
-                name: 'AquaPace Swim Club',
+                name: 'DeckGala Swim Club',
                 groups: [
                     { id: 'grp_senior', name: 'Senior Performance', description: 'National and Regional squad qualifiers', color: 'cyan' },
                     { id: 'grp_junior', name: 'Junior Squad', description: 'County qualifiers and age-group competitors', color: 'blue' },
@@ -1393,7 +1393,7 @@ tailwind.config = {
             const a = document.createElement('a');
             const cleanSetName = (state.config.setName || 'swim_set').toLowerCase().replace(/[^a-z0-9]+/g, '_');
             a.href = url;
-            a.download = `aquapace_${cleanSetName}_${new Date().toISOString().slice(0,10)}.csv`;
+            a.download = `deckgala_${cleanSetName}_${new Date().toISOString().slice(0,10)}.csv`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -1407,7 +1407,7 @@ tailwind.config = {
                 return;
             }
             const lines = [
-                `AquaPace Set Summary: ${state.config.setName} (${state.config.poolCourse})`,
+                `DeckGala Set Summary: ${state.config.setName} (${state.config.poolCourse})`,
                 `----------------------------------------`
             ];
             state.results.slice().reverse().forEach(r => {
@@ -2228,17 +2228,17 @@ tailwind.config = {
 
         function exportClubJSON() {
             const data = {
-                app: 'AquaPace',
+                app: 'DeckGala',
                 version: '1.0',
                 exportType: 'club',
                 exportedAt: new Date().toISOString(),
-                clubName: state.club.name || 'AquaPace Swim Club',
+                clubName: state.club.name || 'DeckGala Swim Club',
                 groups: state.club.groups,
                 swimmers: state.club.swimmers
             };
             const jsonStr = JSON.stringify(data, null, 2);
             const dateStr = new Date().toISOString().slice(0, 10);
-            downloadFile(jsonStr, `aquapace_club_roster_${dateStr}.json`, 'application/json');
+            downloadFile(jsonStr, `deckgala_club_roster_${dateStr}.json`, 'application/json');
             showToast('Club roster JSON exported');
         }
 
@@ -2254,7 +2254,7 @@ tailwind.config = {
             ]);
             const csv = generateCSV(headers, rows);
             const dateStr = new Date().toISOString().slice(0, 10);
-            downloadFile(csv, `aquapace_club_roster_${dateStr}.csv`, 'text/csv;charset=utf-8;');
+            downloadFile(csv, `deckgala_club_roster_${dateStr}.csv`, 'text/csv;charset=utf-8;');
             showToast('Club roster CSV exported');
         }
 
@@ -2263,7 +2263,7 @@ tailwind.config = {
             if (!grp) return;
             const swimmers = state.club.swimmers.filter(s => s.groupId === groupId);
             const data = {
-                app: 'AquaPace',
+                app: 'DeckGala',
                 version: '1.0',
                 exportType: 'group',
                 exportedAt: new Date().toISOString(),
@@ -2272,7 +2272,7 @@ tailwind.config = {
             };
             const jsonStr = JSON.stringify(data, null, 2);
             const cleanName = grp.name.toLowerCase().replace(/[^a-z0-9]+/g, '_');
-            downloadFile(jsonStr, `aquapace_${cleanName}_squad.json`, 'application/json');
+            downloadFile(jsonStr, `deckgala_${cleanName}_squad.json`, 'application/json');
             showToast(`Exported squad: ${grp.name} (JSON)`);
         }
 
@@ -2290,7 +2290,7 @@ tailwind.config = {
             ]);
             const csv = generateCSV(headers, rows);
             const cleanName = grp.name.toLowerCase().replace(/[^a-z0-9]+/g, '_');
-            downloadFile(csv, `aquapace_${cleanName}_squad.csv`, 'text/csv;charset=utf-8;');
+            downloadFile(csv, `deckgala_${cleanName}_squad.csv`, 'text/csv;charset=utf-8;');
             showToast(`Exported squad: ${grp.name} (CSV)`);
         }
 
@@ -2361,7 +2361,7 @@ tailwind.config = {
                             group: parsed.group,
                             swimmers: parsed.swimmers
                         };
-                        displayImportPreview(fileName, `1 Squad ("${parsed.group.name}"), ${parsed.swimmers.length} Swimmers`, 'AquaPace Squad JSON file');
+                        displayImportPreview(fileName, `1 Squad ("${parsed.group.name}"), ${parsed.swimmers.length} Swimmers`, 'DeckGala Squad JSON file');
                     } else if (Array.isArray(parsed.groups) || Array.isArray(parsed.swimmers)) {
                         swimmersUI.pendingImport = {
                             type: 'club_json',
@@ -2369,7 +2369,7 @@ tailwind.config = {
                             groups: parsed.groups || [],
                             swimmers: parsed.swimmers || []
                         };
-                        displayImportPreview(fileName, `${parsed.groups ? parsed.groups.length : 0} Squads, ${parsed.swimmers ? parsed.swimmers.length : 0} Swimmers`, 'AquaPace Club Roster JSON file');
+                        displayImportPreview(fileName, `${parsed.groups ? parsed.groups.length : 0} Squads, ${parsed.swimmers ? parsed.swimmers.length : 0} Swimmers`, 'DeckGala Club Roster JSON file');
                     } else if (Array.isArray(parsed)) {
                         // Array of swimmer objects
                         swimmersUI.pendingImport = {
@@ -2465,7 +2465,7 @@ tailwind.config = {
             const targetSquadId = document.getElementById('importTargetSquadSelect').value;
 
             if (strategy === 'replace') {
-                state.club = { name: state.club.name || 'AquaPace Swim Club', groups: [], swimmers: [] };
+                state.club = { name: state.club.name || 'DeckGala Swim Club', groups: [], swimmers: [] };
             }
 
             let importedCount = 0;

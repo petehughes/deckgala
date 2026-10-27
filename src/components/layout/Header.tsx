@@ -13,7 +13,7 @@ export function Header() {
           <Icon name="pool" size={24} />
         </div>
         <div className="brand-text">
-          <span className="brand-title">AquaPace</span>
+          <span className="brand-title">DeckGala</span>
           <span className="brand-subtitle">Club Coach Timer</span>
         </div>
       </div>
