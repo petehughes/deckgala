@@ -5,7 +5,9 @@ type ToneType = 'pip' | 'horn' | 'split';
 export function playBeep(type: ToneType = 'pip'): void {
   try {
     if (typeof window === 'undefined') return;
-    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    const AudioContextClass =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!AudioContextClass) return;
 
     if (!audioCtx) {
@@ -35,15 +37,25 @@ export function playBeep(type: ToneType = 'pip'): void {
       osc.start(now);
       osc.stop(now + 0.28);
     } else if (type === 'split') {
+      // 1200 Hz, 40 ms pip as per DeckGala Brand Guidelines Section 6.2
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(1046, now);
-      gain.gain.setValueAtTime(0.07, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+      osc.frequency.setValueAtTime(1200, now);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
       osc.start(now);
-      osc.stop(now + 0.06);
+      osc.stop(now + 0.04);
     }
   } catch {
     // Ignore audio context restrictions
   }
 }
 
+export function triggerHapticFeedback(): void {
+  try {
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      navigator.vibrate(40);
+    }
+  } catch {
+    // Ignore haptic errors on unsupported devices
+  }
+}

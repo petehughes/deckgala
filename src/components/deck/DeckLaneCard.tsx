@@ -2,6 +2,7 @@ import React from 'react';
 import { useApp, useStopwatchState, useElapsedMs } from '../../context/AppContext';
 import { getSwimmerNamesForLane } from '../../lib/lanes';
 import { formatMs, formatShortSec } from '../../lib/format';
+import { triggerHapticFeedback } from '../../lib/audio';
 import type { LaneConfig } from '../../types';
 
 export interface DeckLaneCardProps {
@@ -27,6 +28,16 @@ export function DeckLaneCard({ laneConfig }: DeckLaneCardProps) {
   };
   const activeList = laneRt.activeSwimmers;
   const leadSwimmer = activeList[0] || null;
+  const [isFlashing, setIsFlashing] = React.useState(false);
+
+  const onRegisterTouch = (targetSwimmerId?: string | null) => {
+    setIsFlashing(true);
+    triggerHapticFeedback();
+    handleStopSwimmer(laneNum, targetSwimmerId);
+    setTimeout(() => {
+      setIsFlashing(false);
+    }, 150);
+  };
 
   // Next wave banner info
   let waveBannerText = 'All waves released';
@@ -98,9 +109,9 @@ export function DeckLaneCard({ laneConfig }: DeckLaneCardProps) {
       <div className="deck-lane-body">
         <button
           type="button"
-          className={`primary-stop-btn ${leadSwimmer ? '' : 'idle'}`}
+          className={`primary-stop-btn ${leadSwimmer ? '' : 'idle'} ${isFlashing ? 'flash-touch' : ''}`}
           disabled={!leadSwimmer}
-          onClick={() => handleStopSwimmer(laneNum)}
+          onClick={() => onRegisterTouch()}
         >
           {leadSwimmer ? (
             <>
@@ -135,7 +146,7 @@ export function DeckLaneCard({ laneConfig }: DeckLaneCardProps) {
                 <div
                   key={sw.id}
                   className={`queue-item ${idx === 0 ? 'lead' : ''}`}
-                  onClick={() => handleStopSwimmer(laneNum, sw.id)}
+                  onClick={() => onRegisterTouch(sw.id)}
                 >
                   <div className="queue-item-left">
                     <span className="queue-wave-tag">W{sw.wave}</span>

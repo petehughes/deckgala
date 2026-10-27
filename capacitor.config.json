@@ -1,5 +1,5 @@
 {
-  "appId": "app.deckgala.swimtimer",
-  "appName": "DeckGala Swim Timer",
+  "appId": "com.deckgala.app",
+  "appName": "DeckGala",
   "webDir": "dist"
 }

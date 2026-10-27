@@ -1,4 +1,4 @@
-package app.deckgala.swimtimer;
+package com.deckgala.app;
 
 import com.getcapacitor.BridgeActivity;
 
