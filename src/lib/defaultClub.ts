@@ -1,8 +1,33 @@
-import type { ClubData } from '../types';
+import type { ClubData, SwimmingPool } from '../types';
+
+export const DEFAULT_POOLS: SwimmingPool[] = [
+  {
+    id: 'pool-main-25m',
+    name: 'Main Competition Pool',
+    laneCount: 6,
+    length: '25m',
+    notes: '25m short course training pool'
+  },
+  {
+    id: 'pool-olympic-50m',
+    name: 'Olympic Long Course Pool',
+    laneCount: 8,
+    length: '50m',
+    notes: '50m long course Olympic standard'
+  },
+  {
+    id: 'pool-outdoor-25y',
+    name: 'Outdoor Training Pool',
+    laneCount: 6,
+    length: '25y',
+    notes: '25y short course yards facility'
+  }
+];
 
 export function createDefaultClub(): ClubData {
   return {
     clubName: 'DeckGala Swim Club',
+    pools: DEFAULT_POOLS,
     groups: [
       {
         id: 'grp-senior-perf',
@@ -64,4 +89,3 @@ export function createDefaultClub(): ClubData {
     ]
   };
 }
-

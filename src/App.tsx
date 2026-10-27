@@ -7,6 +7,7 @@ import { SwimmersView } from './components/swimmers/SwimmersView';
 import { DeckView } from './components/deck/DeckView';
 import { ResultsView } from './components/results/ResultsView';
 import { SessionModal } from './components/attendance/SessionModal';
+import { PoolModal } from './components/setup/PoolModal';
 import { Toasts } from './components/common/Toasts';
 import { SplashScreen } from './components/layout/SplashScreen';
 import { PieMenu } from './components/layout/PieMenu';
@@ -27,6 +28,7 @@ function MainContent() {
 }
 
 function AppShell() {
+  const { isPoolModalOpen, closePoolModal } = useApp();
   const isTestEnv = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test';
   const [showSplash, setShowSplash] = useState(!isTestEnv);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -73,6 +75,10 @@ function AppShell() {
         }}
         isInitialPrompt={!hasPromptedSession}
       />
+      <PoolModal
+        isOpen={isPoolModalOpen}
+        onClose={closePoolModal}
+      />
     </div>
   );
 }
@@ -86,4 +92,3 @@ export function App() {
 }
 
 export default App;
-

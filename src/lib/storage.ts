@@ -1,7 +1,7 @@
 import { STORAGE_KEY, LEGACY_STORAGE_KEY } from './constants';
-import { createDefaultClub } from './defaultClub';
+import { createDefaultClub, DEFAULT_POOLS } from './defaultClub';
 import { createDefaultLanes } from './lanes';
-import type { AppConfig, PersistedState, ViewName } from '../types';
+import type { AppConfig, PersistedState, ViewName, SwimmingPool, PoolCourse } from '../types';
 
 export function getDefaultConfig(): AppConfig {
   const today = new Date();
@@ -12,6 +12,7 @@ export function getDefaultConfig(): AppConfig {
     sessionName: 'Morning Training Session',
     sessionDate: dateStr,
     sessionTime: timeStr,
+    selectedPoolId: 'pool-main-25m',
     presentSwimmerIds: [],
     laneCount: 6,
     setName: '10 x 100m Freestyle',
@@ -52,10 +53,49 @@ export function loadPersistedState(): PersistedState {
     const data = JSON.parse(raw);
     const config: AppConfig = { ...initial.config };
 
+    let club = initial.club;
+    if (data.club && Array.isArray(data.club.groups)) {
+      const parsedPools: SwimmingPool[] = Array.isArray(data.club.pools) && data.club.pools.length > 0
+        ? data.club.pools.map((p: Record<string, unknown>) => ({
+            id: String(p.id || `pool-${Date.now()}`),
+            name: String(p.name || 'Swimming Pool'),
+            laneCount: Math.min(10, Math.max(1, parseInt(String(p.laneCount), 10) || 6)),
+            length: (['25m', '50m', '25y'].includes(String(p.length)) ? String(p.length) : '25m') as PoolCourse,
+            notes: typeof p.notes === 'string' ? p.notes : ''
+          }))
+        : DEFAULT_POOLS;
+
+      club = {
+        clubName: data.club.clubName || 'DeckGala Swim Club',
+        pools: parsedPools,
+        groups: data.club.groups.map((g: Record<string, unknown>) => ({
+          id: String(g.id || `grp-${Date.now()}`),
+          name: String(g.name || 'Unnamed Squad'),
+          description: String(g.description || ''),
+          coach: String(g.coach || ''),
+          color: (g.color as PersistedState['club']['groups'][0]['color']) || 'cyan',
+          swimmers: Array.isArray(g.swimmers)
+            ? g.swimmers.map((s: Record<string, unknown>) => ({
+                id: String(s.id || `sw-${Date.now()}-${Math.random()}`),
+                name: String(s.name || 'Swimmer'),
+                age: typeof s.age === 'number' ? s.age : (s.age ? Number(s.age) || '' : ''),
+                gender: (s.gender as PersistedState['club']['groups'][0]['swimmers'][0]['gender']) || '',
+                pb50m: String(s.pb50m || ''),
+                pb100m: String(s.pb100m || ''),
+                notes: String(s.notes || '')
+              }))
+            : []
+        }))
+      };
+    }
+
     if (data.config) {
       config.sessionName = typeof data.config.sessionName === 'string' ? data.config.sessionName : initial.config.sessionName;
       config.sessionDate = typeof data.config.sessionDate === 'string' ? data.config.sessionDate : initial.config.sessionDate;
       config.sessionTime = typeof data.config.sessionTime === 'string' ? data.config.sessionTime : initial.config.sessionTime;
+      config.selectedPoolId = typeof data.config.selectedPoolId === 'string' && club.pools.some(p => p.id === data.config.selectedPoolId)
+        ? data.config.selectedPoolId
+        : club.pools[0]?.id || 'pool-main-25m';
       config.presentSwimmerIds = Array.isArray(data.config.presentSwimmerIds) ? data.config.presentSwimmerIds : initial.config.presentSwimmerIds;
       config.laneCount = Math.min(10, Math.max(1, parseInt(String(data.config.laneCount), 10) || 6));
       config.setName = data.config.setName ?? '10 x 100m Freestyle';
@@ -91,30 +131,6 @@ export function loadPersistedState(): PersistedState {
           targetTimeSec: Number(r.targetTimeSec) || 0
         }))
       : [];
-    let club = initial.club;
-    if (data.club && Array.isArray(data.club.groups)) {
-      club = {
-        clubName: data.club.clubName || 'DeckGala Swim Club',
-        groups: data.club.groups.map((g: Record<string, unknown>) => ({
-          id: String(g.id || `grp-${Date.now()}`),
-          name: String(g.name || 'Unnamed Squad'),
-          description: String(g.description || ''),
-          coach: String(g.coach || ''),
-          color: (g.color as PersistedState['club']['groups'][0]['color']) || 'cyan',
-          swimmers: Array.isArray(g.swimmers)
-            ? g.swimmers.map((s: Record<string, unknown>) => ({
-                id: String(s.id || `sw-${Date.now()}-${Math.random()}`),
-                name: String(s.name || 'Swimmer'),
-                age: typeof s.age === 'number' ? s.age : (s.age ? Number(s.age) || '' : ''),
-                gender: (s.gender as PersistedState['club']['groups'][0]['swimmers'][0]['gender']) || '',
-                pb50m: String(s.pb50m || ''),
-                pb100m: String(s.pb100m || ''),
-                notes: String(s.notes || '')
-              }))
-            : []
-        }))
-      };
-    }
 
     let activeGroupId: string | null = data.activeGroupId || club.groups[0]?.id || null;
     if (activeGroupId && !club.groups.some(g => g.id === activeGroupId)) {
@@ -156,4 +172,3 @@ export function savePersistedState(state: PersistedState): void {
     // Storage quota exceeded or private browsing
   }
 }
-

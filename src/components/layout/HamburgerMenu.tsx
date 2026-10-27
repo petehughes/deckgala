@@ -56,8 +56,11 @@ export function HamburgerMenu({
   onClose,
   onOpenSessionModal
 }: HamburgerMenuProps) {
-  const { currentView, setCurrentView, config, club, results } = useApp();
+  const { currentView, setCurrentView, config, club, results, openPoolModal } = useApp();
   const { stopwatch } = useStopwatchState();
+
+  const pools = club.pools || [];
+  const activePool = pools.find(p => p.id === config.selectedPoolId) || pools[0];
 
   // Close drawer on Escape key
   useEffect(() => {
@@ -165,6 +168,12 @@ export function HamburgerMenu({
             <span>·</span>
             <span className="drawer-course-tag">{config.poolCourse}</span>
           </div>
+          {activePool && (
+            <div className="drawer-session-pool">
+              <Icon name="pool" size={14} />
+              <span>{activePool.name} ({activePool.laneCount}L · {activePool.length})</span>
+            </div>
+          )}
           <div className="drawer-session-set">
             <span className="set-label">Set:</span> {config.setName || 'Unlabeled Set'}
           </div>
@@ -205,6 +214,28 @@ export function HamburgerMenu({
           })}
         </nav>
 
+        {/* Facility Management */}
+        <div className="drawer-section-label">FACILITY</div>
+        <div className="drawer-facility-action">
+          <button
+            type="button"
+            className="drawer-facility-btn"
+            onClick={() => {
+              onClose();
+              openPoolModal();
+            }}
+          >
+            <div className="drawer-facility-icon">
+              <Icon name="pool" size={18} />
+            </div>
+            <div className="drawer-facility-content">
+              <span className="drawer-facility-title">Swimming Pools</span>
+              <span className="drawer-facility-sub">Configure lanes & lengths</span>
+            </div>
+            <span className="drawer-facility-count">{pools.length}</span>
+          </button>
+        </div>
+
         {/* Footer / System Status */}
         <div className="drawer-footer">
           <div className="drawer-mesh-info">
@@ -221,4 +252,3 @@ export function HamburgerMenu({
     </div>
   );
 }
-

@@ -12,6 +12,8 @@ import type {
   PersistedState,
   Swimmer,
   SwimmerGroup,
+  SwimmingPool,
+  PoolCourse,
   ToastItem
 } from '../types';
 
@@ -433,22 +435,162 @@ export function useClubActions({ club, activeGroupId, config, setPersisted, show
     showToast('Cleared attendance', 'info');
   }, [setPersisted, showToast]);
 
+  const selectPool = useCallback((poolId: string) => {
+    setPersisted(prev => {
+      const pool = (prev.club.pools || []).find(p => p.id === poolId);
+      if (!pool) return prev;
+      return {
+        ...prev,
+        config: {
+          ...prev.config,
+          selectedPoolId: pool.id,
+          laneCount: pool.laneCount,
+          poolCourse: pool.length
+        }
+      };
+    });
+    const pool = (club.pools || []).find(p => p.id === poolId);
+    if (pool) {
+      showToast(`Selected ${pool.name} (${pool.laneCount} lanes, ${pool.length})`, 'info');
+    }
+  }, [club.pools, setPersisted, showToast]);
+
+  const savePool = useCallback((
+    poolData: { name: string; laneCount: number; length: PoolCourse; notes?: string },
+    editingPoolId?: string | null
+  ) => {
+    const name = (poolData.name || '').trim();
+    if (!name) {
+      showToast('Please enter a pool name', 'warning');
+      return false;
+    }
+    const laneCount = Math.min(10, Math.max(1, Math.round(poolData.laneCount) || 6));
+    const length = poolData.length || '25m';
+    const notes = (poolData.notes || '').trim();
+
+    setPersisted(prev => {
+      let nextPools = [...(prev.club.pools || [])];
+      let selectedPoolId = prev.config.selectedPoolId;
+      let nextLaneCount = prev.config.laneCount;
+      let nextPoolCourse = prev.config.poolCourse;
+
+      if (editingPoolId) {
+        nextPools = nextPools.map(p =>
+          p.id === editingPoolId
+            ? { ...p, name, laneCount, length, notes }
+            : p
+        );
+        if (selectedPoolId === editingPoolId) {
+          nextLaneCount = laneCount;
+          nextPoolCourse = length;
+        }
+      } else {
+        const newPool: SwimmingPool = {
+          id: uid('pool'),
+          name,
+          laneCount,
+          length,
+          notes
+        };
+        nextPools.push(newPool);
+        selectedPoolId = newPool.id;
+        nextLaneCount = laneCount;
+        nextPoolCourse = length;
+      }
+
+      return {
+        ...prev,
+        club: {
+          ...prev.club,
+          pools: nextPools
+        },
+        config: {
+          ...prev.config,
+          selectedPoolId,
+          laneCount: nextLaneCount,
+          poolCourse: nextPoolCourse
+        }
+      };
+    });
+
+    showToast(editingPoolId ? `Updated pool "${name}"` : `Added pool "${name}"`, 'success');
+    return true;
+  }, [setPersisted, showToast]);
+
+  const deletePool = useCallback((poolId: string) => {
+    let deleted = false;
+    setPersisted(prev => {
+      const pools = prev.club.pools || [];
+      if (pools.length <= 1) {
+        showToast('At least one swimming pool is required', 'warning');
+        return prev;
+      }
+      deleted = true;
+      const nextPools = pools.filter(p => p.id !== poolId);
+      let selectedPoolId = prev.config.selectedPoolId;
+      let nextLaneCount = prev.config.laneCount;
+      let nextPoolCourse = prev.config.poolCourse;
+
+      if (selectedPoolId === poolId) {
+        const fallback = nextPools[0];
+        selectedPoolId = fallback.id;
+        nextLaneCount = fallback.laneCount;
+        nextPoolCourse = fallback.length;
+      }
+
+      return {
+        ...prev,
+        club: {
+          ...prev.club,
+          pools: nextPools
+        },
+        config: {
+          ...prev.config,
+          selectedPoolId,
+          laneCount: nextLaneCount,
+          poolCourse: nextPoolCourse
+        }
+      };
+    });
+
+    if (deleted) {
+      showToast('Deleted swimming pool', 'info');
+    }
+    return deleted;
+  }, [setPersisted, showToast]);
+
   const updateSessionDetails = useCallback((details: {
     sessionName?: string;
     sessionDate?: string;
     sessionTime?: string;
     selectedGroupIds?: string[];
+    selectedPoolId?: string;
   }) => {
-    setPersisted(prev => ({
-      ...prev,
-      config: {
-        ...prev.config,
-        sessionName: details.sessionName !== undefined ? details.sessionName : prev.config.sessionName,
-        sessionDate: details.sessionDate !== undefined ? details.sessionDate : prev.config.sessionDate,
-        sessionTime: details.sessionTime !== undefined ? details.sessionTime : prev.config.sessionTime,
-        selectedGroupIds: details.selectedGroupIds !== undefined ? details.selectedGroupIds : prev.config.selectedGroupIds
+    setPersisted(prev => {
+      let nextLaneCount = prev.config.laneCount;
+      let nextPoolCourse = prev.config.poolCourse;
+      let nextPoolId = details.selectedPoolId !== undefined ? details.selectedPoolId : prev.config.selectedPoolId;
+      if (details.selectedPoolId) {
+        const pool = (prev.club.pools || []).find(p => p.id === details.selectedPoolId);
+        if (pool) {
+          nextLaneCount = pool.laneCount;
+          nextPoolCourse = pool.length;
+        }
       }
-    }));
+      return {
+        ...prev,
+        config: {
+          ...prev.config,
+          sessionName: details.sessionName !== undefined ? details.sessionName : prev.config.sessionName,
+          sessionDate: details.sessionDate !== undefined ? details.sessionDate : prev.config.sessionDate,
+          sessionTime: details.sessionTime !== undefined ? details.sessionTime : prev.config.sessionTime,
+          selectedGroupIds: details.selectedGroupIds !== undefined ? details.selectedGroupIds : prev.config.selectedGroupIds,
+          selectedPoolId: nextPoolId,
+          laneCount: nextLaneCount,
+          poolCourse: nextPoolCourse
+        }
+      };
+    });
     showToast('Updated session details', 'success');
   }, [setPersisted, showToast]);
 
@@ -473,7 +615,10 @@ export function useClubActions({ club, activeGroupId, config, setPersisted, show
     toggleSwimmerAttendance,
     markAllSwimmersPresent,
     clearSwimmersAttendance,
-    updateSessionDetails
+    updateSessionDetails,
+    selectPool,
+    savePool,
+    deletePool
   };
 }
 

@@ -312,7 +312,8 @@ export function applyImportToClub(
 
   const nextClub: ClubData = {
     clubName: club.clubName,
-    groups: club.groups.map(g => ({ ...g, swimmers: [...g.swimmers] }))
+    groups: club.groups.map(g => ({ ...g, swimmers: [...g.swimmers] })),
+    pools: Array.isArray(club.pools) ? [...club.pools] : []
   };
   let nextActiveGroupId = activeGroupId;
   let nextSelectedGroupIds = [...selectedGroupIds];

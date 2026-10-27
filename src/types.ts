@@ -14,6 +14,14 @@ export interface Swimmer {
   notes: string;
 }
 
+export interface SwimmingPool {
+  id: string;
+  name: string;
+  laneCount: number;
+  length: PoolCourse;
+  notes?: string;
+}
+
 export interface SwimmerGroup {
   id: string;
   name: string;
@@ -26,6 +34,7 @@ export interface SwimmerGroup {
 export interface ClubData {
   clubName: string;
   groups: SwimmerGroup[];
+  pools: SwimmingPool[];
 }
 
 export interface LaneConfig {
@@ -38,6 +47,7 @@ export interface AppConfig {
   sessionName: string;
   sessionDate: string;
   sessionTime: string;
+  selectedPoolId?: string;
   presentSwimmerIds: string[];
   laneCount: number;
   setName: string;

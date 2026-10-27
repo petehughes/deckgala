@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo } from 'react';
+import React, { createContext, useContext, useMemo, useState, useCallback } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useToasts } from '../hooks/useToasts';
 import { useStopwatch } from '../hooks/useStopwatch';
@@ -9,6 +9,7 @@ import type {
   GroupColor,
   ImportOptions,
   PendingImport,
+  PoolCourse,
   StopwatchRuntime,
   SwimResult,
   Swimmer,
@@ -62,7 +63,17 @@ export interface AppContextValue {
     sessionDate?: string;
     sessionTime?: string;
     selectedGroupIds?: string[];
+    selectedPoolId?: string;
   }) => void;
+  selectPool: (poolId: string) => void;
+  savePool: (
+    poolData: { name: string; laneCount: number; length: PoolCourse; notes?: string },
+    editingPoolId?: string | null
+  ) => boolean;
+  deletePool: (poolId: string) => boolean;
+  isPoolModalOpen: boolean;
+  openPoolModal: () => void;
+  closePoolModal: () => void;
 }
 
 export interface StopwatchContextValue {
@@ -96,6 +107,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   } = usePersistentState();
 
   const { toasts, showToast, dismissToast } = useToasts();
+  const [isPoolModalOpen, setIsPoolModalOpen] = useState(false);
+  const openPoolModal = useCallback(() => setIsPoolModalOpen(true), []);
+  const closePoolModal = useCallback(() => setIsPoolModalOpen(false), []);
 
   const {
     stopwatch,
@@ -137,6 +151,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       toasts,
       showToast,
       dismissToast,
+      isPoolModalOpen,
+      openPoolModal,
+      closePoolModal,
       ...clubActions
     }),
     [
@@ -153,6 +170,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       toasts,
       showToast,
       dismissToast,
+      isPoolModalOpen,
+      openPoolModal,
+      closePoolModal,
       clubActions
     ]
   );

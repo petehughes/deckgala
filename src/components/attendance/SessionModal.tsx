@@ -15,6 +15,7 @@ export function SessionModal({ isOpen, onClose, isInitialPrompt = false }: Sessi
   const [sessionName, setSessionName] = useState(config.sessionName || 'Morning Training Session');
   const [sessionDate, setSessionDate] = useState(config.sessionDate || new Date().toISOString().slice(0, 10));
   const [sessionTime, setSessionTime] = useState(config.sessionTime || new Date().toTimeString().slice(0, 5));
+  const [selectedPoolId, setSelectedPoolId] = useState<string>(config.selectedPoolId || club.pools?.[0]?.id || 'pool-main-25m');
   const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>(config.selectedGroupIds || []);
 
   useEffect(() => {
@@ -22,9 +23,10 @@ export function SessionModal({ isOpen, onClose, isInitialPrompt = false }: Sessi
       setSessionName(config.sessionName || 'Morning Training Session');
       setSessionDate(config.sessionDate || new Date().toISOString().slice(0, 10));
       setSessionTime(config.sessionTime || new Date().toTimeString().slice(0, 5));
+      setSelectedPoolId(config.selectedPoolId || club.pools?.[0]?.id || 'pool-main-25m');
       setSelectedGroupIds(config.selectedGroupIds || []);
     }
-  }, [isOpen, config.sessionName, config.sessionDate, config.sessionTime, config.selectedGroupIds]);
+  }, [isOpen, config.sessionName, config.sessionDate, config.sessionTime, config.selectedPoolId, config.selectedGroupIds, club.pools]);
 
   const toggleGroup = (groupId: string) => {
     setSelectedGroupIds(prev =>
@@ -42,13 +44,17 @@ export function SessionModal({ isOpen, onClose, isInitialPrompt = false }: Sessi
       sessionName: sessionName.trim() || 'Training Session',
       sessionDate,
       sessionTime,
-      selectedGroupIds
+      selectedGroupIds,
+      selectedPoolId
     });
     onClose();
     if (isInitialPrompt) {
       setCurrentView('attendance');
     }
   };
+
+  const pools = club.pools || [];
+  const currentPool = pools.find(p => p.id === selectedPoolId) || pools[0];
 
   return (
     <Modal
@@ -72,7 +78,7 @@ export function SessionModal({ isOpen, onClose, isInitialPrompt = false }: Sessi
       <form id="session-details-form" className="modal-form" onSubmit={handleSubmit}>
         <p className="modal-desc">
           {isInitialPrompt
-            ? 'Set up today’s training session name, date, time, and active squads. These details will be recorded with all split times and can be changed later anytime.'
+            ? 'Set up today’s training session name, date, time, swimming pool, and active squads. These details will be recorded with all split times and can be changed later anytime.'
             : 'Update the session metadata used in exports, clipboard summaries, and recorded times.'}
         </p>
 
@@ -110,6 +116,29 @@ export function SessionModal({ isOpen, onClose, isInitialPrompt = false }: Sessi
               required
             />
           </div>
+        </div>
+
+        {/* Swimming Pool Selector */}
+        <div className="form-field">
+          <label htmlFor="sessionModalPool">Swimming Pool Facility</label>
+          <select
+            id="sessionModalPool"
+            value={selectedPoolId}
+            onChange={e => setSelectedPoolId(e.target.value)}
+            className="session-modal-pool-select"
+          >
+            {pools.map(p => (
+              <option key={p.id} value={p.id}>
+                {p.name} ({p.laneCount} Lanes · {p.length})
+              </option>
+            ))}
+          </select>
+          {currentPool && (
+            <div className="session-pool-preview-hint">
+              <Icon name="pool" size={14} />
+              <span>Configures session with {currentPool.laneCount} active lanes ({currentPool.length} course)</span>
+            </div>
+          )}
         </div>
 
         <div className="form-field">
@@ -152,4 +181,3 @@ export function SessionModal({ isOpen, onClose, isInitialPrompt = false }: Sessi
     </Modal>
   );
 }
-

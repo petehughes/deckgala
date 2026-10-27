@@ -5,7 +5,10 @@ import { DraftNumberInput } from '../common/DraftNumberInput';
 const QUICK_COUNTS = [4, 6, 8, 10];
 
 export function LaneCountPicker() {
-  const { config, updateConfig } = useApp();
+  const { club, config, updateConfig } = useApp();
+
+  const pools = club.pools || [];
+  const activePool = pools.find(p => p.id === config.selectedPoolId);
 
   const setLaneCount = (val: number) => {
     const count = Math.min(10, Math.max(1, Math.round(val)));
@@ -15,10 +18,12 @@ export function LaneCountPicker() {
   return (
     <div className="config-card">
       <div className="config-card-header">
-        <span className="config-tag">POOL</span>
+        <span className="config-tag">LANES</span>
         <h2>Active Lanes</h2>
       </div>
-      <p className="config-help">Select the number of lanes in use (1 – 10)</p>
+      <p className="config-help">
+        Select lanes in use for this session (1 – 10){activePool ? ` · Pool has ${activePool.laneCount} lanes` : ''}
+      </p>
       <div className="lane-count-picker" role="radiogroup" aria-label="Number of lanes">
         {QUICK_COUNTS.map(count => (
           <button
@@ -61,4 +66,3 @@ export function LaneCountPicker() {
     </div>
   );
 }
-
