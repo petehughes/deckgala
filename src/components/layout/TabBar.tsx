@@ -11,7 +11,7 @@ export function TabBar() {
 
   const tabs: { id: ViewName; label: string; icon: string; badge?: number }[] = [
     { id: 'attendance', label: 'Attendance', icon: 'attendance', badge: presentCount },
-    { id: 'setup', label: 'Setup', icon: 'setup' },
+    { id: 'session', label: 'Session', icon: 'session' },
     { id: 'swimmers', label: 'Swimmers', icon: 'users', badge: totalSwimmers },
     { id: 'deck', label: 'Pool Deck', icon: 'stopwatch' },
     { id: 'results', label: 'Results', icon: 'results', badge: results.length }

@@ -7,11 +7,11 @@ import { StopwatchModeSection } from './StopwatchModeSection';
 import { SessionSquadsSelector } from './SessionSquadsSelector';
 import { LaneAssignments } from './LaneAssignments';
 
-export function SetupView() {
+export function SessionView() {
   const { setCurrentView } = useApp();
 
   return (
-    <section className="view-panel active" aria-label="Setup View">
+    <section className="view-panel active" aria-label="Session View">
       <div className="setup-top-grid">
         <LaneCountPicker />
         <SetDetailsCard />
@@ -37,3 +37,4 @@ export function SetupView() {
   );
 }
 
+export const SetupView = SessionView;

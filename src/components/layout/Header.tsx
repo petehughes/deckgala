@@ -1,14 +1,28 @@
 import React from 'react';
 import { useStopwatchState } from '../../context/AppContext';
 import logoUrl from '../../assets/logo.svg';
+import { Icon } from '../common/Icon';
 import { TabBar } from './TabBar';
 
-export function Header() {
+export interface HeaderProps {
+  onOpenMenu?: () => void;
+}
+
+export function Header({ onOpenMenu }: HeaderProps = {}) {
   const { stopwatch } = useStopwatchState();
 
   return (
     <header className="app-header">
       <div className="brand-group">
+        <button
+          type="button"
+          className="hamburger-btn"
+          onClick={onOpenMenu}
+          aria-label="Open main menu"
+          title="Open Menu"
+        >
+          <Icon name="menu" size={20} />
+        </button>
         <div aria-hidden="true">
           <img src={logoUrl} alt="DeckGala" className="brand-logo-img" width="28" height="28" />
         </div>

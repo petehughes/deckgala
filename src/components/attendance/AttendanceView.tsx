@@ -138,9 +138,9 @@ export function AttendanceView() {
           <button
             type="button"
             className="btn btn-primary btn-sm"
-            onClick={() => setCurrentView('setup')}
+            onClick={() => setCurrentView('session')}
           >
-            <span>Proceed to Setup</span>
+            <span>Proceed to Session</span>
             <Icon name="play" size={14} />
           </button>
         </div>
@@ -298,9 +298,9 @@ export function AttendanceView() {
         <button
           type="button"
           className="btn btn-primary btn-lg"
-          onClick={() => setCurrentView('setup')}
+          onClick={() => setCurrentView('session')}
         >
-          <span>Continue to Lane Setup</span>
+          <span>Continue to Session</span>
           <Icon name="play" size={18} />
         </button>
       </div>

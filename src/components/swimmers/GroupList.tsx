@@ -68,7 +68,7 @@ export function GroupList({ onNewGroup, onEditGroup, onDeleteGroup }: GroupListP
                     {inSession && (
                       <span
                         className="group-session-tag"
-                        title="Selected for current session in Setup"
+                        title="Selected for current session"
                       >
                         In Session
                       </span>

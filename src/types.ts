@@ -2,7 +2,7 @@ export type GroupColor = 'cyan' | 'teal' | 'amber' | 'rose' | 'violet' | 'emeral
 export type Gender = '' | 'F' | 'M' | 'X';
 export type StopwatchMode = 'interval' | 'manual' | 'mass';
 export type PoolCourse = '25m' | '50m' | '25y';
-export type ViewName = 'attendance' | 'setup' | 'swimmers' | 'deck' | 'results';
+export type ViewName = 'attendance' | 'session' | 'swimmers' | 'deck' | 'results';
 
 export interface Swimmer {
   id: string;

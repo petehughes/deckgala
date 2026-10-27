@@ -121,8 +121,13 @@ export function loadPersistedState(): PersistedState {
       activeGroupId = club.groups[0]?.id || null;
     }
 
-    const validViews: ViewName[] = ['attendance', 'setup', 'swimmers', 'deck', 'results'];
-    const currentView: ViewName = validViews.includes(data.currentView) ? data.currentView : 'attendance';
+    const validViews: ViewName[] = ['attendance', 'session', 'swimmers', 'deck', 'results'];
+    let currentView: ViewName = 'attendance';
+    if (data.currentView === 'setup') {
+      currentView = 'session';
+    } else if (validViews.includes(data.currentView)) {
+      currentView = data.currentView;
+    }
 
     return {
       currentView,

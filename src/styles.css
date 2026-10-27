@@ -2373,3 +2373,765 @@ button {
   border-radius: 999px;
   letter-spacing: 0.04em;
 }
+
+
+/* ==========================================================================
+   Splash Screen — DeckGala Brand Design
+   ========================================================================== */
+.splash-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 999999;
+  background-color: var(--color-deep-abyss, #0B1528);
+  background: radial-gradient(circle at center, #162544 0%, var(--color-deep-abyss, #0B1528) 75%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: auto;
+}
+
+.splash-overlay.splash-fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.splash-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem;
+  max-width: 480px;
+  animation: splashPopIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes splashPopIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.splash-logo-container {
+  width: 104px;
+  height: 104px;
+  border-radius: 26px;
+  background: #0B1528;
+  border: 1.5px solid rgba(0, 229, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 28px rgba(0, 229, 255, 0.25);
+  margin-bottom: 1.5rem;
+  padding: 10px;
+  animation: splashPulse 2s infinite ease-in-out;
+}
+
+@keyframes splashPulse {
+  0%, 100% {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 24px rgba(0, 229, 255, 0.25);
+    border-color: rgba(0, 229, 255, 0.35);
+  }
+  50% {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7), 0 0 36px rgba(0, 229, 255, 0.45);
+    border-color: rgba(0, 229, 255, 0.6);
+  }
+}
+
+.splash-logo-img {
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+  display: block;
+}
+
+.splash-title {
+  font-family: var(--font-sans);
+  font-size: clamp(2.4rem, 6vw, 3.2rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  background: linear-gradient(135deg, var(--color-frost-white, #F4F7FB) 30%, var(--color-electric-cyan, #00E5FF) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.65rem;
+}
+
+.splash-tagline {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  color: var(--color-muted-deck, #8CA0BA);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  margin-bottom: 2rem;
+}
+
+.splash-loading-bar {
+  width: 140px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.splash-loading-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, var(--color-electric-cyan, #00E5FF), var(--color-start-coral, #FF5A36));
+  border-radius: 999px;
+  animation: splashFill 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes splashFill {
+  0% { transform: scaleX(0); transform-origin: left; }
+  100% { transform: scaleX(1); transform-origin: left; }
+}
+
+/* ==========================================================================
+   Pie Menu (Radial Screen Switcher) — DeckGala Olympic Timing Ergonomics
+   ========================================================================== */
+.pie-menu-fab {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 800;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: var(--color-deep-abyss, #0B1528);
+  border: 2px solid var(--color-electric-cyan, #00E5FF);
+  color: var(--color-electric-cyan, #00E5FF);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 16px rgba(0, 229, 255, 0.35);
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.pie-menu-fab:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.7), 0 0 24px rgba(0, 229, 255, 0.55);
+  border-color: #fff;
+  color: #fff;
+}
+
+.pie-menu-fab.active {
+  background: var(--color-start-coral, #FF5A36);
+  border-color: #fff;
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(255, 90, 54, 0.5);
+}
+
+.pie-fab-ripple {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  animation: pieRipple 2.5s infinite ease-out;
+  pointer-events: none;
+}
+
+.pie-menu-fab.active .pie-fab-ripple {
+  display: none;
+}
+
+@keyframes pieRipple {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+.pie-fab-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+/* Pie Menu Modal Overlay */
+.pie-menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99990;
+  background: rgba(11, 21, 40, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: pieOverlayFadeIn 0.25s ease-out forwards;
+}
+
+@keyframes pieOverlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.pie-menu-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pieScaleUp 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.2) forwards;
+}
+
+@keyframes pieScaleUp {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.pie-menu-track-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.pie-track-circle {
+  fill: none;
+  stroke: rgba(0, 229, 255, 0.15);
+  stroke-width: 38;
+}
+
+.pie-outer-bezel {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 6;
+}
+
+.pie-inner-hub-ring {
+  fill: rgba(11, 21, 40, 0.95);
+  stroke: rgba(0, 229, 255, 0.3);
+  stroke-width: 2;
+}
+
+.pie-spoke-line {
+  stroke: rgba(0, 229, 255, 0.12);
+  stroke-width: 1.5;
+  stroke-dasharray: 2 4;
+}
+
+/* Center Hub */
+.pie-center-hub {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: var(--color-deep-abyss, #0B1528);
+  border: 2px solid rgba(255, 90, 54, 0.6);
+  color: var(--color-frost-white, #F4F7FB);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+  transition: all 0.2s ease;
+}
+
+.pie-center-hub:hover {
+  transform: translate(-50%, -50%) scale(1.08);
+  border-color: var(--color-start-coral, #FF5A36);
+  background: rgba(255, 90, 54, 0.15);
+}
+
+.pie-hub-icon {
+  color: var(--color-start-coral, #FF5A36);
+}
+
+.pie-hub-title {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-top: 2px;
+}
+
+/* Radial Slice Buttons */
+.pie-slice-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 82px;
+  height: 82px;
+  border-radius: 20px;
+  background: var(--color-poolside-slate, #16233B);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  color: var(--color-frost-white, #F4F7FB);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  z-index: 5;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  transform: translate(calc(-50% + var(--slice-x)), calc(-50% + var(--slice-y)));
+  transition: transform 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.2), border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  animation: pieItemPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.25) backwards;
+}
+
+@keyframes pieItemPop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--slice-x)), calc(-50% + var(--slice-y))) scale(1);
+  }
+}
+
+.pie-slice-btn:hover {
+  transform: translate(calc(-50% + var(--slice-x)), calc(-50% + var(--slice-y))) scale(1.12);
+  border-color: var(--slice-color, var(--color-electric-cyan));
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.7), 0 0 20px var(--slice-color, rgba(0, 229, 255, 0.45));
+  background: var(--color-slate-elevated, #1E3152);
+}
+
+.pie-slice-btn.active {
+  border-color: var(--color-electric-cyan, #00E5FF);
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.22) 0%, rgba(22, 35, 59, 0.98) 100%);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.6), 0 0 24px rgba(0, 229, 255, 0.5);
+}
+
+.pie-slice-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--slice-color, var(--color-electric-cyan));
+}
+
+.pie-slice-label {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.pie-active-indicator {
+  position: absolute;
+  bottom: 5px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-electric-cyan, #00E5FF);
+  box-shadow: 0 0 8px var(--color-electric-cyan, #00E5FF);
+}
+
+.pie-slice-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: var(--color-slate-elevated, #1E3152);
+  border: 1px solid var(--color-electric-cyan, #00E5FF);
+  color: var(--color-frost-white, #F4F7FB);
+  font-family: var(--font-mono, monospace);
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 0.1rem 0.38rem;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.pie-slice-badge.live-badge {
+  background: var(--color-pace-green, #00E676);
+  color: #041410;
+  border-color: #fff;
+  animation: pulse 1.2s infinite;
+}
+
+.pie-menu-hint {
+  margin-top: 2rem;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  color: var(--color-muted-deck, #8CA0BA);
+  background: rgba(11, 21, 40, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  animation: pieOverlayFadeIn 0.4s ease-out;
+}
+
+
+/* ==========================================================================
+   Hamburger Button & Slide-Out Navigation Drawer
+   ========================================================================== */
+.hamburger-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(0, 229, 255, 0.22);
+  color: var(--color-frost-white, #F4F7FB);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+}
+
+.hamburger-btn:hover {
+  background: rgba(0, 229, 255, 0.14);
+  border-color: var(--color-electric-cyan, #00E5FF);
+  color: var(--color-electric-cyan, #00E5FF);
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.3);
+}
+
+.hamburger-btn:active {
+  transform: scale(0.95);
+}
+
+/* Drawer Backdrop Overlay */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99990;
+  background: rgba(8, 16, 30, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: drawerFadeIn 0.25s ease-out;
+}
+
+@keyframes drawerFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Slide-out Panel */
+.drawer-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(350px, 86vw);
+  background: var(--color-deep-abyss, #0B1528);
+  border-right: 1px solid rgba(0, 229, 255, 0.2);
+  box-shadow: 12px 0 48px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  animation: drawerSlideIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes drawerSlideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Drawer Header */
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.15rem 1.25rem;
+  border-bottom: 1px solid rgba(0, 229, 255, 0.15);
+  background: rgba(22, 35, 59, 0.6);
+}
+
+.drawer-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.drawer-brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.drawer-brand-title {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: 1.12rem;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--color-frost-white, #F4F7FB) 35%, var(--color-electric-cyan, #00E5FF) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.drawer-brand-sub {
+  font-size: 0.68rem;
+  color: var(--color-muted-deck, #8CA0BA);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.drawer-close-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--color-muted-deck, #8CA0BA);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.drawer-close-btn:hover {
+  background: rgba(255, 90, 54, 0.18);
+  border-color: var(--color-start-coral, #FF5A36);
+  color: var(--color-start-coral, #FF5A36);
+}
+
+/* Active Session Card inside Drawer */
+.drawer-session-card {
+  margin: 1rem 1rem 0.5rem 1rem;
+  padding: 0.9rem 1rem;
+  background: var(--color-poolside-slate, #16233B);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.drawer-session-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.drawer-section-title {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.64rem;
+  font-weight: 800;
+  color: var(--color-electric-cyan, #00E5FF);
+  letter-spacing: 0.08em;
+}
+
+.drawer-session-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(0, 229, 255, 0.12);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  color: var(--color-electric-cyan, #00E5FF);
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.drawer-session-edit-btn:hover {
+  background: var(--color-electric-cyan, #00E5FF);
+  color: #041019;
+}
+
+.drawer-session-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--color-frost-white, #F4F7FB);
+}
+
+.drawer-session-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.72rem;
+  color: var(--color-muted-deck, #8CA0BA);
+}
+
+.drawer-course-tag {
+  color: var(--color-start-coral, #FF5A36);
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+}
+
+.drawer-session-set {
+  font-size: 0.75rem;
+  color: var(--color-frost-white, #F4F7FB);
+  margin-top: 0.1rem;
+}
+
+.drawer-session-set .set-label {
+  color: var(--color-muted-deck, #8CA0BA);
+  font-weight: 600;
+}
+
+/* Navigation Section */
+.drawer-section-label {
+  padding: 0.9rem 1.25rem 0.4rem 1.25rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--color-muted-deck, #8CA0BA);
+  letter-spacing: 0.08em;
+}
+
+.drawer-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0 0.85rem;
+  flex: 1;
+}
+
+.drawer-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--color-frost-white, #F4F7FB);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-height: 52px;
+}
+
+.drawer-nav-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(0, 229, 255, 0.2);
+}
+
+.drawer-nav-item.active {
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.18) 0%, rgba(22, 35, 59, 0.9) 100%);
+  border-color: var(--color-electric-cyan, #00E5FF);
+  box-shadow: 0 4px 16px rgba(0, 229, 255, 0.2);
+}
+
+.drawer-nav-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-electric-cyan, #00E5FF);
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.drawer-nav-item.active .drawer-nav-icon {
+  background: var(--color-electric-cyan, #00E5FF);
+  border-color: var(--color-electric-cyan, #00E5FF);
+  color: #041019;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+}
+
+.drawer-nav-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.drawer-nav-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.drawer-nav-sub {
+  font-size: 0.7rem;
+  color: var(--color-muted-deck, #8CA0BA);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.drawer-nav-badge {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.15rem 0.48rem;
+  border-radius: 999px;
+  background: rgba(140, 160, 186, 0.18);
+  color: var(--color-frost-white, #F4F7FB);
+  border: 1px solid rgba(140, 160, 186, 0.3);
+  flex-shrink: 0;
+}
+
+.drawer-nav-badge.running {
+  background: rgba(0, 230, 118, 0.18);
+  color: var(--color-pace-green, #00E676);
+  border-color: var(--color-pace-green, #00E676);
+}
+
+/* Drawer Footer */
+.drawer-footer {
+  padding: 1.1rem 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(11, 21, 40, 0.95);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.drawer-mesh-info {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--color-start-coral, #FF5A36);
+}
+
+.mesh-dot-sm {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-start-coral, #FF5A36);
+  box-shadow: 0 0 6px var(--color-start-coral, #FF5A36);
+}
+
+.drawer-version-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.68rem;
+  color: var(--color-muted-deck, #8CA0BA);
+}

@@ -19,7 +19,7 @@ describe('DeckGala React App', () => {
     cleanup();
   });
 
-  it('prompts user for session details on start and opens Attendance screen before Setup', () => {
+  it('prompts user for session details on start and opens Attendance screen before Session', () => {
     const view = render(<App />);
 
     // Initial session prompt modal appears on start
@@ -38,7 +38,7 @@ describe('DeckGala React App', () => {
     expect(view.getByText('Marked Present')).toBeDefined();
 
     // Navigate to Setup tab
-    const setupTab = view.getByRole('tab', { name: /Setup/i });
+    const setupTab = view.getByRole('tab', { name: /^Session/i });
     fireEvent.click(setupTab);
     expect(view.getByText('Active Lanes')).toBeDefined();
     expect(view.getByText('Session Squads in the Water')).toBeDefined();
@@ -112,7 +112,7 @@ describe('DeckGala React App', () => {
     expect(view.getByText('Sarah Sjostrom')).toBeDefined();
 
     // Go back to Setup tab and verify the new group is selected and Sarah Sjostrom is in the lane dropdown
-    fireEvent.click(view.getByRole('tab', { name: /Setup/i }));
+    fireEvent.click(view.getByRole('tab', { name: /^Session/i }));
     expect(view.getByText('Regional Sprint Squad')).toBeDefined();
 
     const lane1Select = view.getByLabelText('Select swimmer for Lane 1') as HTMLSelectElement;
@@ -126,7 +126,7 @@ describe('DeckGala React App', () => {
     const view = render(<App />);
 
     // Navigate to Setup tab and select Coach Manual Push Release mode
-    fireEvent.click(view.getByRole('tab', { name: /Setup/i }));
+    fireEvent.click(view.getByRole('tab', { name: /^Session/i }));
     const manualModeCard = view.getByText(/Coach Manual Push Release/i);
     fireEvent.click(manualModeCard);
 
@@ -163,7 +163,7 @@ describe('DeckGala React App', () => {
     expect(alexToggle.textContent).toContain('ABSENT');
 
     // Go to Setup tab
-    fireEvent.click(view.getByRole('tab', { name: /Setup/i }));
+    fireEvent.click(view.getByRole('tab', { name: /^Session/i }));
 
     // Check Lane 1 dropdown options
     const lane1Select = view.getByLabelText('Select swimmer for Lane 1') as HTMLSelectElement;
@@ -181,7 +181,7 @@ describe('DeckGala React App', () => {
     const view = render(<App />);
 
     // Go to Setup tab and switch to Coach Manual Push Release mode
-    fireEvent.click(view.getByRole('tab', { name: /Setup/i }));
+    fireEvent.click(view.getByRole('tab', { name: /^Session/i }));
     fireEvent.click(view.getByText(/Coach Manual Push Release/i));
 
     // Go to Pool Deck
