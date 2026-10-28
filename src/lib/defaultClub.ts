@@ -1,3 +1,4 @@
+import { DEFAULT_ANNUAL_TARGETS } from './targets';
 import type {
   ClubData,
   SwimmingPool,
@@ -217,6 +218,7 @@ export function createDefaultClub(): ClubData {
     scheduledSessions: DEFAULT_SCHEDULED_SESSIONS,
     staffOverrides: DEFAULT_STAFF_OVERRIDES,
     clubClosures: DEFAULT_CLUB_CLOSURES,
+    annualTargets: DEFAULT_ANNUAL_TARGETS,
     groups: [
       {
         id: 'grp-senior-perf',
@@ -225,10 +227,62 @@ export function createDefaultClub(): ClubData {
         coach: 'Coach Sarah Jenkins',
         color: 'cyan',
         swimmers: [
-          { id: 'sw-1', name: 'Alex Rivera', age: 17, gender: 'M', pb50m: '24.10', pb100m: '52.40', notes: 'Strong underwater kick' },
-          { id: 'sw-2', name: 'Sam Chen', age: 16, gender: 'M', pb50m: '25.30', pb100m: '55.80', notes: 'Distance specialist' },
-          { id: 'sw-3', name: 'Jordan Taylor', age: 18, gender: 'F', pb50m: '27.80', pb100m: '59.50', notes: 'Fast tempo' },
-          { id: 'sw-4', name: 'Taylor Brooks', age: 17, gender: 'F', pb50m: '26.20', pb100m: '56.90', notes: 'Threshold specialist' },
+          {
+            id: 'sw-1',
+            name: 'Alex Rivera',
+            age: 17,
+            gender: 'M',
+            pb50m: '24.10',
+            pb100m: '52.40',
+            notes: 'Strong underwater kick',
+            personalBests: [
+              { id: 'pb-1-1', stroke: 'Freestyle', distance: 100, course: '25m', time: '52.40', timeMs: 52400, date: '2026-03-15', meetName: 'Regional Spring Meet' },
+              { id: 'pb-1-2', stroke: 'Freestyle', distance: 200, course: '25m', time: '1:56.20', timeMs: 116200, date: '2026-02-20', meetName: 'County Winter Championships' },
+              { id: 'pb-1-3', stroke: 'Freestyle', distance: 400, course: '25m', time: '4:12.50', timeMs: 252500 },
+              { id: 'pb-1-4', stroke: 'Butterfly', distance: 100, course: '25m', time: '57.80', timeMs: 57800 }
+            ]
+          },
+          {
+            id: 'sw-2',
+            name: 'Sam Chen',
+            age: 16,
+            gender: 'M',
+            pb50m: '25.30',
+            pb100m: '55.80',
+            notes: 'Distance specialist',
+            personalBests: [
+              { id: 'pb-2-1', stroke: 'Freestyle', distance: 100, course: '25m', time: '55.80', timeMs: 55800 },
+              { id: 'pb-2-2', stroke: 'Freestyle', distance: 200, course: '25m', time: '2:05.40', timeMs: 125400 },
+              { id: 'pb-2-3', stroke: 'Freestyle', distance: 400, course: '25m', time: '4:22.10', timeMs: 262100 },
+              { id: 'pb-2-4', stroke: 'Backstroke', distance: 100, course: '25m', time: '1:06.00', timeMs: 66000 }
+            ]
+          },
+          {
+            id: 'sw-3',
+            name: 'Jordan Taylor',
+            age: 18,
+            gender: 'F',
+            pb50m: '27.80',
+            pb100m: '59.50',
+            notes: 'Fast tempo',
+            personalBests: [
+              { id: 'pb-3-1', stroke: 'Freestyle', distance: 100, course: '25m', time: '59.50', timeMs: 59500 },
+              { id: 'pb-3-2', stroke: 'Freestyle', distance: 200, course: '25m', time: '2:11.40', timeMs: 131400 }
+            ]
+          },
+          {
+            id: 'sw-4',
+            name: 'Taylor Brooks',
+            age: 17,
+            gender: 'F',
+            pb50m: '26.20',
+            pb100m: '56.90',
+            notes: 'Threshold specialist',
+            personalBests: [
+              { id: 'pb-4-1', stroke: 'Freestyle', distance: 100, course: '25m', time: '56.90', timeMs: 56900 },
+              { id: 'pb-4-2', stroke: 'Freestyle', distance: 200, course: '25m', time: '2:04.80', timeMs: 124800 }
+            ]
+          },
           { id: 'sw-5', name: 'Riley Kim', age: 16, gender: 'M', pb50m: '29.40', pb100m: '1:04.20', notes: 'Watch pullout timing' },
           { id: 'sw-6', name: 'Jamie Patel', age: 17, gender: 'F', pb50m: '27.10', pb100m: '58.30', notes: 'Smooth transitions' }
         ]

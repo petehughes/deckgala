@@ -1,6 +1,7 @@
 import React from 'react';
 import { Icon } from '../common/Icon';
-import type { Swimmer, RosterSort } from '../../types';
+import { evaluateSwimmerTarget } from '../../lib/targets';
+import type { Swimmer, RosterSort, AnnualTarget } from '../../types';
 
 export interface SwimmerTableProps {
   swimmers: Swimmer[];
@@ -11,6 +12,8 @@ export interface SwimmerTableProps {
   onDeleteSwimmer: (swimmerId: string) => void;
   onAddSwimmer: () => void;
   onBulkAdd: () => void;
+  onOpenPBs?: (swimmer: Swimmer) => void;
+  annualTargets?: AnnualTarget[];
 }
 
 export function SwimmerTable({
@@ -21,7 +24,9 @@ export function SwimmerTable({
   onEditSwimmer,
   onDeleteSwimmer,
   onAddSwimmer,
-  onBulkAdd
+  onBulkAdd,
+  onOpenPBs,
+  annualTargets = []
 }: SwimmerTableProps) {
   const renderSortIndicator = (field: RosterSort['field']) => {
     if (sort.field !== field) return null;
@@ -41,6 +46,7 @@ export function SwimmerTable({
             </th>
             <th>50m PB</th>
             <th>100m PB</th>
+            <th>Annual Targets</th>
             <th>Coach Notes</th>
             <th aria-label="Actions" />
           </tr>
@@ -49,14 +55,49 @@ export function SwimmerTable({
           {swimmers.map(s => {
             const ageGen =
               [s.age ? `${s.age}y` : '', s.gender || ''].filter(Boolean).join(' · ') || '—';
+
+            // Target evaluations
+            const evals = annualTargets
+              .map(t => evaluateSwimmerTarget(s, t))
+              .filter((e): e is NonNullable<typeof e> => e !== null);
+            const qualified = evals.filter(e => e.status === 'qualified');
+            const close = evals.filter(e => e.status === 'close');
+
             return (
               <tr key={s.id}>
                 <td className="td-swimmer-name">{s.name}</td>
                 <td className="td-swimmer-meta">{ageGen}</td>
                 <td className="td-pb">{s.pb50m || '—'}</td>
                 <td className="td-pb">{s.pb100m || '—'}</td>
+                <td className="td-target-status">
+                  <div className="target-status-cell">
+                    {qualified.length > 0 && (
+                      <span className="badge-target badge-qualified" title={`${qualified.length} targets qualified!`}>
+                        🏆 {qualified.length} Qual
+                      </span>
+                    )}
+                    {close.length > 0 && (
+                      <span className="badge-target badge-close" title={`${close.length} targets close to qualification!`}>
+                        ⚡ {close.length} Close
+                      </span>
+                    )}
+                    {qualified.length === 0 && close.length === 0 && (
+                      <span className="badge-target badge-none">—</span>
+                    )}
+                  </div>
+                </td>
                 <td className="td-notes">{s.notes || '—'}</td>
                 <td className="td-row-actions">
+                  {onOpenPBs && (
+                    <button
+                      type="button"
+                      className="btn-row-pbs"
+                      title="View & Edit Personal Bests and Target Standards"
+                      onClick={() => onOpenPBs(s)}
+                    >
+                      PBs & Targets
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="btn-row-edit"
@@ -114,4 +155,3 @@ export function SwimmerTable({
     </div>
   );
 }
-

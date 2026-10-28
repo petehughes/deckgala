@@ -14,6 +14,7 @@ import { GroupFormModal } from './GroupFormModal';
 import { BulkAddModal } from './BulkAddModal';
 import { ExportModal } from './ExportModal';
 import { ImportModal } from './ImportModal';
+import { SwimmerPBModal } from './SwimmerPBModal';
 import type { RosterSort, Swimmer, SwimmerGroup } from '../../types';
 
 export function SwimmersView() {
@@ -31,6 +32,8 @@ export function SwimmersView() {
   // Modal states
   const [swimmerModalOpen, setSwimmerModalOpen] = useState(false);
   const [editingSwimmer, setEditingSwimmer] = useState<Swimmer | null>(null);
+  const [pbModalOpen, setPbModalOpen] = useState(false);
+  const [selectedSwimmerForPB, setSelectedSwimmerForPB] = useState<Swimmer | null>(null);
 
   const [groupModalOpen, setGroupModalOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<SwimmerGroup | null>(null);
@@ -241,6 +244,11 @@ export function SwimmersView() {
                   setSwimmerModalOpen(true);
                 }}
                 onBulkAdd={() => setBulkModalOpen(true)}
+                onOpenPBs={sw => {
+                  setSelectedSwimmerForPB(sw);
+                  setPbModalOpen(true);
+                }}
+                annualTargets={club.annualTargets || []}
               />
             </>
           ) : (
@@ -308,6 +316,14 @@ export function SwimmersView() {
             : ''
         }
         confirmLabel="Delete Group"
+      />
+      <SwimmerPBModal
+        isOpen={pbModalOpen}
+        onClose={() => {
+          setPbModalOpen(false);
+          setSelectedSwimmerForPB(null);
+        }}
+        swimmer={selectedSwimmerForPB}
       />
     </section>
   );

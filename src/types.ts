@@ -3,7 +3,7 @@ export type Gender = '' | 'F' | 'M' | 'X';
 export type StopwatchMode = 'interval' | 'manual' | 'mass';
 export type PoolCourse = '25m' | '50m' | '25y';
 export type ViewName = 'attendance' | 'session' | 'swimmers' | 'deck' | 'results' | 'club-setup';
-export type ClubSetupTab = 'profile' | 'calendar' | 'sessions' | 'staff' | 'pools';
+export type ClubSetupTab = 'profile' | 'calendar' | 'sessions' | 'staff' | 'pools' | 'targets';
 
 export type CoachRole = 'head_coach' | 'coach' | 'assistant_coach' | 'guest_coach';
 
@@ -80,6 +80,38 @@ export interface ClubClosure {
   reason?: string;
 }
 
+export type TargetCompetitionLevel = 'county' | 'regional' | 'national' | 'club';
+export type SwimStroke = 'Freestyle' | 'Backstroke' | 'Breaststroke' | 'Butterfly' | 'Individual Medley';
+
+export interface SwimmerPB {
+  id: string;
+  stroke: SwimStroke;
+  distance: number; // 100, 200, 400, 800, 1500
+  course: PoolCourse; // '25m' | '50m'
+  time: string; // e.g. "01:02.40"
+  timeMs: number;
+  date?: string; // YYYY-MM-DD
+  meetName?: string;
+}
+
+export interface AnnualTarget {
+  id: string;
+  competitionName: string; // e.g. "County Championships 2026"
+  level: TargetCompetitionLevel;
+  year: number; // 2026
+  stroke: SwimStroke;
+  distance: number; // 100, 200, 400, 800, 1500
+  course: PoolCourse; // '25m' | '50m'
+  gender: 'F' | 'M' | 'Open';
+  minAge?: number;
+  maxAge?: number;
+  qualifyingTime: string; // "01:04.50"
+  qualifyingTimeMs: number;
+  considerationTime?: string;
+  considerationTimeMs?: number;
+  notes?: string;
+}
+
 export interface Swimmer {
   id: string;
   name: string;
@@ -88,6 +120,7 @@ export interface Swimmer {
   pb50m: string;
   pb100m: string;
   notes: string;
+  personalBests?: SwimmerPB[];
 }
 
 export interface SwimmingPool {
@@ -125,6 +158,7 @@ export interface ClubData {
   scheduledSessions: ScheduledSession[];
   staffOverrides: SessionStaffOverride[];
   clubClosures: ClubClosure[];
+  annualTargets?: AnnualTarget[];
 }
 
 export interface LaneConfig {

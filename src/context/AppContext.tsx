@@ -17,6 +17,8 @@ import type {
   ClubClosure,
   SessionStaffOverride,
   ClubSetupTab,
+  AnnualTarget,
+  SwimmerPB,
   StopwatchRuntime,
   SwimResult,
   Swimmer,
@@ -107,6 +109,13 @@ export interface AppContextValue {
   deleteWeeklySessionPlan: (sessionId: string, weekKey: string) => boolean;
   cloneWeeklySessionPlan: (sessionId: string, fromWeekKey: string, toWeekKey: string) => boolean;
   loadSessionFromSchedule: (scheduledSession: ScheduledSession, targetDate?: string) => void;
+  saveAnnualTarget: (
+    targetData: Partial<AnnualTarget> & { competitionName: string },
+    editingTargetId?: string | null
+  ) => boolean;
+  deleteAnnualTarget: (targetId: string) => boolean;
+  resetAnnualTargetsToDefault: () => void;
+  saveSwimmerPBs: (swimmerId: string, pbs: SwimmerPB[]) => boolean;
 }
 
 export interface StopwatchContextValue {

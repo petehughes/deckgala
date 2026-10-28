@@ -4,6 +4,7 @@ import { parseBulkSwimmersText } from '../lib/roster';
 import { applyImportToClub } from '../lib/exporters';
 import { getSwimmerNamesForLane, distributeSwimmersAcrossLanes, getSessionPoolSwimmers } from '../lib/lanes';
 import { getISOWeek, formatSetItem, cloneWeeklyPlan } from '../lib/weeks';
+import { DEFAULT_ANNUAL_TARGETS, parseTimeToMs } from '../lib/targets';
 import type {
   AppConfig,
   ClubData,
@@ -21,6 +22,8 @@ import type {
   WeeklySessionPlan,
   ClubClosure,
   SessionStaffOverride,
+  AnnualTarget,
+  SwimmerPB,
   ToastItem
 } from '../types';
 
@@ -190,22 +193,35 @@ export function useClubActions({ club, activeGroupId, config, setPersisted, show
         let currentGrp = nextGroups.find(g => g.swimmers.some(s => s.id === editingSwimmerId));
         if (!currentGrp) currentGrp = nextGroups.find(g => g.id === prev.activeGroupId);
 
+        const existingSwimmer = currentGrp?.swimmers.find(s => s.id === editingSwimmerId);
+        const pbs = swimmerData.personalBests !== undefined ? swimmerData.personalBests : existingSwimmer?.personalBests;
+
+        const updatedSwimmer: Swimmer = {
+          id: editingSwimmerId,
+          ...payload,
+          ...(pbs ? { personalBests: pbs } : {})
+        };
+
         if (currentGrp && currentGrp.id !== groupId) {
           currentGrp.swimmers = currentGrp.swimmers.filter(s => s.id !== editingSwimmerId);
           const destGrp = nextGroups.find(g => g.id === groupId);
           if (destGrp) {
-            destGrp.swimmers.push({ id: editingSwimmerId, ...payload });
+            destGrp.swimmers.push(updatedSwimmer);
           }
         } else if (currentGrp) {
           currentGrp.swimmers = currentGrp.swimmers.map(s =>
-            s.id === editingSwimmerId ? { ...s, ...payload } : s
+            s.id === editingSwimmerId ? updatedSwimmer : s
           );
         }
       } else {
         const destGrp = nextGroups.find(g => g.id === groupId);
         if (destGrp) {
           const newId = uid('sw');
-          destGrp.swimmers.push({ id: newId, ...payload });
+          destGrp.swimmers.push({
+            id: newId,
+            ...payload,
+            ...(swimmerData.personalBests ? { personalBests: swimmerData.personalBests } : {})
+          });
           nextPresent = [...nextPresent, newId];
         }
       }
@@ -1036,6 +1052,121 @@ export function useClubActions({ club, activeGroupId, config, setPersisted, show
     showToast(`Loaded "${scheduledSession.title}" into Session`, 'success');
   }, [setPersisted, showToast]);
 
+  const saveAnnualTarget = useCallback((
+    targetData: Partial<AnnualTarget> & { competitionName: string },
+    editingTargetId: string | null = null
+  ) => {
+    const compName = (targetData.competitionName || '').trim();
+    if (!compName) {
+      showToast('Please enter the competition name', 'warning');
+      return false;
+    }
+    const qualTime = (targetData.qualifyingTime || '').trim();
+    if (!qualTime) {
+      showToast('Please enter a qualifying time (e.g. 1:02.50)', 'warning');
+      return false;
+    }
+
+    const qualMs = targetData.qualifyingTimeMs || parseTimeToMs(qualTime) || 0;
+    const consTime = (targetData.considerationTime || '').trim();
+    const consMs = consTime ? (targetData.considerationTimeMs || parseTimeToMs(consTime) || undefined) : undefined;
+
+    const payload: AnnualTarget = {
+      id: editingTargetId || uid('target'),
+      competitionName: compName,
+      level: targetData.level || 'county',
+      year: targetData.year || new Date().getFullYear(),
+      stroke: targetData.stroke || 'Freestyle',
+      distance: Number(targetData.distance) || 100,
+      course: targetData.course || 'SCM',
+      gender: targetData.gender || 'open',
+      minAge: targetData.minAge !== undefined && targetData.minAge !== null && targetData.minAge !== '' ? Number(targetData.minAge) : undefined,
+      maxAge: targetData.maxAge !== undefined && targetData.maxAge !== null && targetData.maxAge !== '' ? Number(targetData.maxAge) : undefined,
+      qualifyingTime: qualTime,
+      qualifyingTimeMs: qualMs,
+      considerationTime: consTime || undefined,
+      considerationTimeMs: consMs,
+      notes: (targetData.notes || '').trim()
+    };
+
+    setPersisted(prev => {
+      const currentTargets = prev.club.annualTargets || [];
+      let updated: AnnualTarget[];
+      if (editingTargetId) {
+        updated = currentTargets.map(t => (t.id === editingTargetId ? payload : t));
+      } else {
+        updated = [...currentTargets, payload];
+      }
+      return {
+        ...prev,
+        club: {
+          ...prev.club,
+          annualTargets: updated
+        }
+      };
+    });
+
+    showToast(
+      editingTargetId ? `Updated target for ${compName}` : `Added target standard for ${compName}`,
+      'success'
+    );
+    return true;
+  }, [setPersisted, showToast]);
+
+  const deleteAnnualTarget = useCallback((targetId: string) => {
+    setPersisted(prev => ({
+      ...prev,
+      club: {
+        ...prev.club,
+        annualTargets: (prev.club.annualTargets || []).filter(t => t.id !== targetId)
+      }
+    }));
+    showToast('Deleted annual target standard', 'info');
+    return true;
+  }, [setPersisted, showToast]);
+
+  const resetAnnualTargetsToDefault = useCallback(() => {
+    setPersisted(prev => ({
+      ...prev,
+      club: {
+        ...prev.club,
+        annualTargets: [...DEFAULT_ANNUAL_TARGETS]
+      }
+    }));
+    showToast('Reset annual targets to official default standards', 'success');
+  }, [setPersisted, showToast]);
+
+  const saveSwimmerPBs = useCallback((swimmerId: string, pbs: SwimmerPB[]) => {
+    setPersisted(prev => {
+      const nextGroups = prev.club.groups.map(g => ({
+        ...g,
+        swimmers: g.swimmers.map(s => {
+          if (s.id === swimmerId) {
+            // Also update legacy pb100m if a 100m Free PB exists
+            const free100 = pbs.find(p => p.stroke === 'Freestyle' && p.distance === 100);
+            return {
+              ...s,
+              personalBests: pbs,
+              ...(free100?.time ? { pb100m: free100.time } : {})
+            };
+          }
+          return s;
+        })
+      }));
+
+      return {
+        ...prev,
+        club: {
+          ...prev.club,
+          groups: nextGroups
+        }
+      };
+    });
+
+    showToast('Personal bests and target standards saved', 'success');
+    return true;
+  }, [setPersisted, showToast]);
+
   return {
     setClubName,
     updateClubProfile,
@@ -1073,7 +1204,11 @@ export function useClubActions({ club, activeGroupId, config, setPersisted, show
     saveWeeklySessionPlan,
     deleteWeeklySessionPlan,
     cloneWeeklySessionPlan,
-    loadSessionFromSchedule
+    loadSessionFromSchedule,
+    saveAnnualTarget,
+    deleteAnnualTarget,
+    resetAnnualTargetsToDefault,
+    saveSwimmerPBs
   };
 }
 

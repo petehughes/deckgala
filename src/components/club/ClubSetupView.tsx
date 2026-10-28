@@ -6,6 +6,7 @@ import { SessionScheduleList } from './SessionScheduleList';
 import { StaffListView } from './StaffListView';
 import { PoolSetupTab } from './PoolSetupTab';
 import { ClubProfileTab } from './ClubProfileTab';
+import { AnnualTargetsTab } from './AnnualTargetsTab';
 import type { ClubSetupTab } from '../../types';
 
 export interface ClubSetupViewProps {
@@ -117,6 +118,18 @@ export function ClubSetupView({ onOpenTour }: ClubSetupViewProps = {}) {
           <span>Pool Setup</span>
           <span className="tab-count-pill">{(club.pools || []).length}</span>
         </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={currentTab === 'targets'}
+          className={`setup-tab-btn ${currentTab === 'targets' ? 'active' : ''}`}
+          onClick={() => setActiveClubSetupTab('targets')}
+        >
+          <Icon name="trophy" size={18} />
+          <span>Annual Targets</span>
+          <span className="tab-count-pill">{(club.annualTargets || []).length}</span>
+        </button>
       </div>
 
       {/* Active Tab Content */}
@@ -126,6 +139,7 @@ export function ClubSetupView({ onOpenTour }: ClubSetupViewProps = {}) {
         {currentTab === 'sessions' && <SessionScheduleList />}
         {currentTab === 'staff' && <StaffListView />}
         {currentTab === 'pools' && <PoolSetupTab />}
+        {currentTab === 'targets' && <AnnualTargetsTab />}
       </div>
     </section>
   );

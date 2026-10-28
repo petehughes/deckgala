@@ -7,6 +7,7 @@ import {
   DEFAULT_CLUB_CLOSURES,
   DEFAULT_STAFF_OVERRIDES
 } from './defaultClub';
+import { DEFAULT_ANNUAL_TARGETS } from './targets';
 import { createDefaultLanes } from './lanes';
 import type {
   AppConfig,
@@ -18,6 +19,8 @@ import type {
   ScheduledSession,
   ClubClosure,
   SessionStaffOverride,
+  AnnualTarget,
+  SwimmerPB,
   ClubSetupTab
 } from '../types';
 
@@ -152,6 +155,26 @@ export function loadPersistedState(): PersistedState {
           }))
         : DEFAULT_CLUB_CLOSURES;
 
+      const parsedAnnualTargets: AnnualTarget[] = Array.isArray(data.club.annualTargets) && data.club.annualTargets.length > 0
+        ? data.club.annualTargets.map((t: Record<string, unknown>) => ({
+            id: String(t.id || `target-${Date.now()}`),
+            competitionName: String(t.competitionName || 'Target Competition'),
+            level: (t.level as AnnualTarget['level']) || 'county',
+            year: Number(t.year) || 2026,
+            stroke: (t.stroke as AnnualTarget['stroke']) || 'Freestyle',
+            distance: Number(t.distance) || 100,
+            course: (t.course as AnnualTarget['course']) || '25m',
+            gender: (t.gender as AnnualTarget['gender']) || 'Open',
+            minAge: typeof t.minAge === 'number' ? t.minAge : undefined,
+            maxAge: typeof t.maxAge === 'number' ? t.maxAge : undefined,
+            qualifyingTime: String(t.qualifyingTime || '01:00.00'),
+            qualifyingTimeMs: Number(t.qualifyingTimeMs) || 60000,
+            considerationTime: typeof t.considerationTime === 'string' ? t.considerationTime : undefined,
+            considerationTimeMs: typeof t.considerationTimeMs === 'number' ? t.considerationTimeMs : undefined,
+            notes: typeof t.notes === 'string' ? t.notes : ''
+          }))
+        : DEFAULT_ANNUAL_TARGETS;
+
       club = {
         clubName: data.club.clubName || 'DeckGala Swim Club',
         shortName: typeof data.club.shortName === 'string' ? data.club.shortName : 'DGSC',
@@ -169,6 +192,7 @@ export function loadPersistedState(): PersistedState {
         scheduledSessions: parsedScheduledSessions,
         staffOverrides: parsedStaffOverrides,
         clubClosures: parsedClubClosures,
+        annualTargets: parsedAnnualTargets,
         groups: data.club.groups.map((g: Record<string, unknown>) => ({
           id: String(g.id || `grp-${Date.now()}`),
           name: String(g.name || 'Unnamed Squad'),
@@ -183,7 +207,8 @@ export function loadPersistedState(): PersistedState {
                 gender: (s.gender as PersistedState['club']['groups'][0]['swimmers'][0]['gender']) || '',
                 pb50m: String(s.pb50m || ''),
                 pb100m: String(s.pb100m || ''),
-                notes: String(s.notes || '')
+                notes: String(s.notes || ''),
+                personalBests: Array.isArray(s.personalBests) ? (s.personalBests as SwimmerPB[]) : undefined
               }))
             : []
         }))

@@ -90,6 +90,12 @@ const CLUB_SETUP_ITEMS: ClubSetupItem[] = [
     label: 'Pool Setup',
     sublabel: 'Lanes & length facilities',
     icon: 'pool'
+  },
+  {
+    tab: 'targets',
+    label: 'Annual Targets & Standards',
+    sublabel: 'County, Regional & National quals',
+    icon: 'trophy'
   }
 ];
 

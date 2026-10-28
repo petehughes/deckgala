@@ -234,6 +234,30 @@ export function Icon({ name, size = 18, className = '' }: IconProps) {
           <polyline points="9 18 15 12 9 6" />
         </svg>
       );
+    case 'trophy':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={s} className={className}>
+          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+          <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+          <path d="M4 22h16" />
+          <path d="M10 14.66V17c0 .55-.45 1-1 1H7v4h10v-4h-2c-.55 0-1-.45-1-1v-2.34" />
+          <path d="M6 4h12v7a6 6 0 0 1-12 0V4Z" />
+        </svg>
+      );
+    case 'target':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={s} className={className}>
+          <circle cx="12" cy="12" r="10" />
+          <circle cx="12" cy="12" r="6" />
+          <circle cx="12" cy="12" r="2" />
+        </svg>
+      );
+    case 'star':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={s} className={className}>
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+        </svg>
+      );
     case 'badge':
     case 'award':
       return (
