@@ -1,0 +1,18 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+@theme inline {
+  --color-deck-abyss: var(--color-deep-abyss);
+  --color-deck-slate: var(--color-poolside-slate);
+  --color-deck-elevated: var(--color-slate-elevated);
+  --color-deck-cyan: var(--color-electric-cyan);
+  --color-deck-coral: var(--color-start-coral);
+  --color-deck-green: var(--color-pace-green);
+  --color-deck-amber: var(--color-caution-amber);
+  --color-deck-frost: var(--color-frost-white);
+  --color-deck-muted: var(--color-muted-deck);
+  --font-sans: var(--deck-font-sans);
+  --font-mono: var(--deck-font-mono);
+  --shadow-glow-cyan: var(--glow-cyan);
+  --shadow-glow-coral: var(--glow-coral);
+}
