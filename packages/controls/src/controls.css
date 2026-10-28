@@ -1,0 +1,90 @@
+.deckgala-lane-card {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 1rem;
+  color: var(--color-frost-white);
+  background: var(--color-poolside-slate);
+  border: 1px solid var(--color-slate-elevated);
+  border-radius: var(--radius-lg);
+}
+
+.deckgala-lane-card--active {
+  border-color: var(--color-electric-cyan);
+  box-shadow: var(--glow-cyan);
+}
+
+.deckgala-lane-card--finished {
+  border-color: var(--color-pace-green);
+}
+
+.deckgala-lane-card--disqualified {
+  border-color: var(--color-start-coral);
+}
+
+.deckgala-lane-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.deckgala-lane-card__heading {
+  margin: 0;
+  color: var(--color-electric-cyan);
+  font: 800 1.25rem/1.2 var(--deck-font-sans);
+}
+
+.deckgala-lane-card__status {
+  color: var(--color-muted-deck);
+  font: 600 0.75rem/1.2 var(--deck-font-sans);
+  text-transform: uppercase;
+}
+
+.deckgala-lane-card__swimmer {
+  margin: 0;
+  color: var(--color-frost-white);
+  font: 500 1rem/1.4 var(--deck-font-sans);
+}
+
+.deckgala-lane-card__content {
+  min-width: 0;
+}
+
+.deckgala-timer {
+  color: var(--color-frost-white);
+  font: 700 clamp(1.75rem, 8vw, 3rem)/1.1 var(--deck-font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.deckgala-stop-button {
+  display: inline-flex;
+  min-width: 4.5rem;
+  min-height: 3.5rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1rem;
+  color: #fff;
+  background: var(--color-start-coral);
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  font: 800 1rem/1.2 var(--deck-font-sans);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.deckgala-stop-button:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.deckgala-stop-button:focus-visible {
+  outline: 3px solid var(--color-electric-cyan);
+  outline-offset: 3px;
+}
+
+.deckgala-stop-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}

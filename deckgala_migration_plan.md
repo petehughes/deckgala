@@ -159,9 +159,9 @@ deckgala/
    Build, tests, and Capacitor Android sync pass. Typecheck runs but reports existing pool-course, gender, and personal-best type errors in the app; these are unrelated to the workspace migration and remain for a follow-up.
 
 ### Phase 2: Core Packages Implementation (`database`, `api-types`, `controls`)
-1. **`packages/database`**: Define Prisma schema for clubs, swimmers, galas, and race results; run initial migration.
-2. **`packages/api-types`**: Write shared Zod validation schemas for offline sync and WebSocket message payloads.
-3. **`packages/controls`**: Build core design system components (`LaneCard`, `StopButton`, `TimerDisplay`) using Tailwind v4 and Tailwind tokens.
+1. [x] **`packages/database`**: Define Prisma schema for clubs, swimmers, galas, and race results; generate and apply the initial migration to the local `deckgala` PostgreSQL database. `prisma migrate status` confirms the schema is up to date (12 tables).
+2. [x] **`packages/api-types`**: Write shared Zod validation schemas for offline sync and WebSocket message payloads.
+3. [x] **`packages/controls`**: Build core design system components (`LaneCard`, `StopButton`, `TimerDisplay`) using Tailwind v4 and Tailwind tokens.
 
 ### Phase 3: Backend (`api`) & Club Portal (`myclub`)
 1. Build `apps/api` using Bun's native HTTP server and WebSocket support for offline sync gateway and real-time relay.

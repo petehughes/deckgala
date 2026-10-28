@@ -1,0 +1,226 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ClubRole {
+  ADMIN
+  COACH
+  TIMEKEEPER
+  PARENT
+}
+
+enum PoolCourse {
+  SHORT_COURSE_METERS
+  LONG_COURSE_METERS
+  SHORT_COURSE_YARDS
+}
+
+enum Gender {
+  FEMALE
+  MALE
+  OPEN
+  OTHER
+}
+
+enum SwimStroke {
+  FREESTYLE
+  BACKSTROKE
+  BREASTSTROKE
+  BUTTERFLY
+  INDIVIDUAL_MEDLEY
+}
+
+enum ResultStatus {
+  OFFICIAL
+  UNOFFICIAL
+  DISQUALIFIED
+  DID_NOT_FINISH
+  DID_NOT_START
+}
+
+model Club {
+  id               String           @id @default(cuid())
+  name             String
+  shortName        String?
+  code             String?          @unique
+  subscriptionTier String?
+  customBranding   Json?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  memberships      ClubMembership[]
+  members          Member[]
+  swimmers         Swimmer[]
+  galas            Gala[]
+  deckSessions     DeckSession[]
+}
+
+model User {
+  id          String           @id @default(cuid())
+  email       String           @unique
+  name        String
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  memberships ClubMembership[]
+  member      Member?
+}
+
+model ClubMembership {
+  id        String   @id @default(cuid())
+  clubId    String
+  userId    String
+  role      ClubRole
+  createdAt DateTime @default(now())
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([clubId, userId])
+  @@index([userId])
+}
+
+model Member {
+  id                    String   @id @default(cuid())
+  clubId                String
+  userId                String?  @unique
+  firstName             String
+  lastName              String
+  email                 String?
+  phone                 String?
+  governingBodyId       String?
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  club                  Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user                  User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  swimmer               Swimmer?
+
+  @@unique([clubId, governingBodyId])
+  @@index([clubId, lastName, firstName])
+}
+
+model Swimmer {
+  id              String         @id @default(cuid())
+  clubId          String
+  memberId        String?        @unique
+  firstName       String
+  lastName        String
+  dateOfBirth     DateTime?      @db.Date
+  gender          Gender?
+  governingBodyId String?
+  squad           String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  club            Club           @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  member          Member?        @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  personalBests   PersonalBest[]
+  raceResults     RaceResult[]
+
+  @@unique([clubId, governingBodyId])
+  @@index([clubId, lastName, firstName])
+}
+
+model PersonalBest {
+  id         String     @id @default(cuid())
+  swimmerId  String
+  stroke     SwimStroke
+  distance   Int
+  course     PoolCourse
+  timeMs     Int
+  achievedAt DateTime?  @db.Date
+  meetName   String?
+  createdAt  DateTime   @default(now())
+  swimmer    Swimmer    @relation(fields: [swimmerId], references: [id], onDelete: Cascade)
+
+  @@index([swimmerId, stroke, distance, course])
+}
+
+model Gala {
+  id        String     @id @default(cuid())
+  clubId    String
+  name      String
+  venue     String?
+  course    PoolCourse
+  startsAt  DateTime
+  endsAt    DateTime?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  club      Club       @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  events    Event[]
+
+  @@index([clubId, startsAt])
+}
+
+model Event {
+  id          String       @id @default(cuid())
+  galaId      String
+  eventNumber Int
+  name        String
+  distance    Int
+  stroke      SwimStroke
+  gender      Gender?
+  ageGroup    String?
+  createdAt   DateTime     @default(now())
+  gala        Gala         @relation(fields: [galaId], references: [id], onDelete: Cascade)
+  results     RaceResult[]
+
+  @@unique([galaId, eventNumber])
+  @@index([galaId, eventNumber])
+}
+
+model DeckSession {
+  id        String       @id @default(cuid())
+  clubId    String
+  clientId  String
+  name      String
+  startedAt DateTime
+  endedAt   DateTime?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  club      Club         @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  results   RaceResult[]
+
+  @@unique([clubId, clientId])
+  @@index([clubId, startedAt])
+}
+
+model RaceResult {
+  id             String       @id @default(cuid())
+  eventId        String?
+  deckSessionId  String?
+  swimmerId      String?
+  clientId       String?
+  swimmerName    String
+  heat           Int?
+  lane           Int?
+  timeMs         Int?
+  seedTimeMs     Int?
+  status         ResultStatus @default(UNOFFICIAL)
+  infractionCode String?
+  notes          String?
+  recordedAt     DateTime     @default(now())
+  event          Event?       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  deckSession    DeckSession? @relation(fields: [deckSessionId], references: [id], onDelete: Cascade)
+  swimmer        Swimmer?     @relation(fields: [swimmerId], references: [id], onDelete: SetNull)
+  splits         RaceSplit[]
+
+  @@unique([deckSessionId, clientId])
+  @@index([eventId, heat, lane])
+  @@index([swimmerId, recordedAt])
+}
+
+model RaceSplit {
+  id           String     @id @default(cuid())
+  raceResultId String
+  splitNumber  Int
+  distance     Int?
+  timeMs       Int
+  recordedAt   DateTime?
+  raceResult   RaceResult @relation(fields: [raceResultId], references: [id], onDelete: Cascade)
+
+  @@unique([raceResultId, splitNumber])
+}
