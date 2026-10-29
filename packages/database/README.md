@@ -12,6 +12,7 @@ bun run --filter @deckgala/database db:migrate:deploy
 bun run --filter @deckgala/database db:generate
 ```
 
-The initial migration is in `prisma/migrations/`. It was generated and validated
-as part of Phase 2, but has not been applied: no PostgreSQL database or
-`DATABASE_URL` was available in the setup environment.
+The checked-in migrations include the initial schema, Phase 3 membership
+renewal and offline-sync result fields, and Phase 4's opt-in public-gala flag.
+They have been validated with Prisma but not applied in this environment because
+no PostgreSQL database or `DATABASE_URL` was available.

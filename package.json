@@ -11,7 +11,14 @@
     "build": "bun run --filter @deckgala/app build",
     "typecheck": "bun run --filter @deckgala/app typecheck",
     "test": "bun run --filter @deckgala/app test",
+    "lint": "eslint apps/api/src apps/myclub/src apps/results/src apps/www/src --ext .ts,.tsx",
     "sync": "bun run --filter @deckgala/app sync",
     "android": "bun run --filter @deckgala/app android"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.7",
+    "eslint": "9",
+    "eslint-config-next": "15.5.0",
+    "typescript": "6.0.3"
   }
 }

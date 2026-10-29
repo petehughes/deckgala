@@ -1,0 +1,328 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Lint, test, and build
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/deckgala
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+
+      - name: Set up Java for Android
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install workspace dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: bun run --filter @deckgala/database db:generate
+
+      - name: Validate database package
+        run: bun run --filter @deckgala/database typecheck
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Typecheck backend and web portals
+        run: |
+          bun run --filter @deckgala/api typecheck
+          bun run --filter @deckgala/myclub typecheck
+          bun run --filter @deckgala/results typecheck
+          bun run --filter @deckgala/www typecheck
+
+      - name: Test backend, portals, and shared packages
+        run: |
+          bun run --filter @deckgala/api test
+          bun run --filter @deckgala/myclub test
+          bun run --filter @deckgala/results test
+          bun run --filter @deckgala/api-types test
+          bun run --filter @deckgala/controls test
+          bun run --filter @deckgala/app test
+
+      - name: Build public and club websites
+        run: |
+          bun run --filter @deckgala/www build
+          bun run --filter @deckgala/myclub build
+          bun run --filter @deckgala/results build
+
+      - name: Build and sync Capacitor app
+        run: bun run --filter @deckgala/app sync
+
+      - name: Assemble Android debug app
+        working-directory: apps/app/android
+        run: ./gradlew --no-daemon assembleDebug
+
+      - name: Upload Android debug artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deckgala-android-debug
+          path: apps/app/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+  build-ios:
+    name: Build iOS simulator app
+    needs: validate
+    runs-on: macos-15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+
+      - name: Install workspace dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build and sync Capacitor app
+        run: bun run --filter @deckgala/app sync
+
+      - name: Build iOS simulator app
+        run: |
+          xcodebuild \
+            -project apps/app/ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+  publish-app-store:
+    name: Upload iOS app to App Store Connect
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.ENABLE_APP_STORE_PUBLISH == 'true'
+    needs: build-ios
+    runs-on: macos-15
+    env:
+      IOS_DISTRIBUTION_CERTIFICATE_BASE64: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_BASE64 }}
+      IOS_DISTRIBUTION_CERTIFICATE_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_CERTIFICATE_PASSWORD }}
+      IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+      IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+      APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      APP_STORE_CONNECT_API_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+
+      - name: Install workspace dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build and sync Capacitor app
+        run: bun run --filter @deckgala/app sync
+
+      - name: Validate App Store signing credentials
+        shell: bash
+        run: |
+          for name in IOS_DISTRIBUTION_CERTIFICATE_BASE64 IOS_DISTRIBUTION_CERTIFICATE_PASSWORD IOS_PROVISIONING_PROFILE_BASE64 IOS_TEAM_ID APP_STORE_CONNECT_API_KEY_ID APP_STORE_CONNECT_ISSUER_ID APP_STORE_CONNECT_API_PRIVATE_KEY; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::$name is required when App Store publishing is enabled."
+              exit 1
+            fi
+          done
+
+      - name: Install Apple signing assets
+        id: signing
+        shell: bash
+        run: |
+          keychain_path="$RUNNER_TEMP/deckgala-signing.keychain-db"
+          keychain_password="$(openssl rand -base64 32)"
+          printf '%s' "$IOS_DISTRIBUTION_CERTIFICATE_BASE64" | base64 --decode > "$RUNNER_TEMP/distribution.p12"
+          printf '%s' "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$RUNNER_TEMP/deckgala.mobileprovision"
+          security create-keychain -p "$keychain_password" "$keychain_path"
+          security set-keychain-settings -lut 21600 "$keychain_path"
+          security unlock-keychain -p "$keychain_password" "$keychain_path"
+          security import "$RUNNER_TEMP/distribution.p12" -P "$IOS_DISTRIBUTION_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$keychain_path"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$keychain_password" "$keychain_path"
+          security list-keychains -d user -s "$keychain_path"
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          profile_plist="$RUNNER_TEMP/profile.plist"
+          security cms -D -i "$RUNNER_TEMP/deckgala.mobileprovision" > "$profile_plist"
+          profile_uuid=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$profile_plist")
+          profile_name=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$profile_plist")
+          cp "$RUNNER_TEMP/deckgala.mobileprovision" "$HOME/Library/MobileDevice/Provisioning Profiles/$profile_uuid.mobileprovision"
+          echo "profile_name=$profile_name" >> "$GITHUB_OUTPUT"
+
+      - name: Archive signed iOS app
+        env:
+          PROFILE_NAME: ${{ steps.signing.outputs.profile_name }}
+        run: |
+          xcodebuild \
+            -project apps/app/ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/DeckGala.xcarchive" \
+            DEVELOPMENT_TEAM="$IOS_TEAM_ID" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
+            CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER" \
+            MARKETING_VERSION="1.0.$GITHUB_RUN_NUMBER" \
+            archive
+
+      - name: Export App Store IPA
+        env:
+          PROFILE_NAME: ${{ steps.signing.outputs.profile_name }}
+        run: |
+          cat > "$RUNNER_TEMP/export-options.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>teamID</key><string>$IOS_TEAM_ID</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>provisioningProfiles</key><dict>
+              <key>com.deckgala.app</key><string>$PROFILE_NAME</string>
+            </dict>
+          </dict></plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/DeckGala.xcarchive" \
+            -exportPath "$RUNNER_TEMP/DeckGalaExport" \
+            -exportOptionsPlist "$RUNNER_TEMP/export-options.plist"
+
+      - name: Upload build to TestFlight
+        uses: apple-actions/upload-testflight-build@v1
+        with:
+          app-path: ${{ runner.temp }}/DeckGalaExport/App.ipa
+          issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          api-key-id: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          api-private-key: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
+
+  deploy-web:
+    name: Deploy web apps to Vercel
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: validate
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID_WWW: ${{ secrets.VERCEL_PROJECT_ID_WWW }}
+      VERCEL_PROJECT_ID_MYCLUB: ${{ secrets.VERCEL_PROJECT_ID_MYCLUB }}
+      VERCEL_PROJECT_ID_RESULTS: ${{ secrets.VERCEL_PROJECT_ID_RESULTS }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+
+      - name: Deploy marketing site
+        if: env.VERCEL_TOKEN != '' && env.VERCEL_ORG_ID != '' && env.VERCEL_PROJECT_ID_WWW != ''
+        env:
+          PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_WWW }}
+        run: bash .github/scripts/deploy-vercel.sh apps/www
+
+      - name: Deploy club portal
+        if: env.VERCEL_TOKEN != '' && env.VERCEL_ORG_ID != '' && env.VERCEL_PROJECT_ID_MYCLUB != ''
+        env:
+          PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_MYCLUB }}
+        run: bash .github/scripts/deploy-vercel.sh apps/myclub
+
+      - name: Deploy spectator results
+        if: env.VERCEL_TOKEN != '' && env.VERCEL_ORG_ID != '' && env.VERCEL_PROJECT_ID_RESULTS != ''
+        env:
+          PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_RESULTS }}
+        run: bash .github/scripts/deploy-vercel.sh apps/results
+
+      - name: Note missing Vercel configuration
+        if: env.VERCEL_TOKEN == '' || env.VERCEL_ORG_ID == '' || env.VERCEL_PROJECT_ID_WWW == '' || env.VERCEL_PROJECT_ID_MYCLUB == '' || env.VERCEL_PROJECT_ID_RESULTS == ''
+        run: echo "Vercel deployment skipped; configure the token, organization, and all three project ID secrets."
+
+  publish-google-play:
+    name: Publish Android app to Google Play
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.ENABLE_GOOGLE_PLAY_PUBLISH == 'true'
+    needs: validate
+    runs-on: ubuntu-latest
+    env:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      PLAY_STORE_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+
+      - name: Set up Java for Android
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Validate publishing credentials
+        shell: bash
+        run: |
+          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD PLAY_STORE_SERVICE_ACCOUNT_JSON; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::$name is required when Google Play publishing is enabled."
+              exit 1
+            fi
+          done
+
+      - name: Install workspace dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build and sync Capacitor app
+        run: bun run --filter @deckgala/app sync
+
+      - name: Prepare release signing key
+        shell: bash
+        run: |
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/deckgala-release.jks"
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/deckgala-release.jks" >> "$GITHUB_ENV"
+
+      - name: Build signed Android bundle
+        working-directory: apps/app/android
+        env:
+          ANDROID_VERSION_CODE: ${{ github.run_number }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew --no-daemon bundleRelease
+
+      - name: Publish internal Play track
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
+          packageName: com.deckgala.app
+          releaseFiles: apps/app/android/app/build/outputs/bundle/release/app-release.aab
+          track: internal
+          status: completed

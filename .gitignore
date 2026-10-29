@@ -2,6 +2,9 @@
 # Node / Web Build
 # ==========================================
 node_modules/
+.next/
+**/.next/
+*.tsbuildinfo
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -25,6 +28,7 @@ dist/
 android/app/src/main/assets/public/
 ios/App/App/public/
 ios/App/public/
+**/ios/App/App/public/
 
 # Capacitor config backups & temporary files
 capacitor.config.json.bak
@@ -59,17 +63,17 @@ capacitor.config.ts.bak
 # iOS / macOS
 # ==========================================
 # Xcode user-specific data & schemes
-ios/App/*.xcodeproj/*xcuserdata/
-ios/App/*.xcodeproj/project.xcworkspace/xcuserdata/
-ios/App/*.xcworkspace/xcuserdata/
+**/ios/App/*.xcodeproj/*xcuserdata/
+**/ios/App/*.xcodeproj/project.xcworkspace/xcuserdata/
+**/ios/App/*.xcworkspace/xcuserdata/
 
 # Xcode build output & derived data
-ios/App/build/
-ios/App/DerivedData/
+**/ios/App/build/
+**/ios/App/DerivedData/
 *.moved-builder
 
 # CocoaPods artifacts (Pods folder is large; install via `pod install`)
-ios/App/Pods/
+**/ios/App/Pods/
 ios/App/Podfile.lock
 
 # Fastlane (if added later)

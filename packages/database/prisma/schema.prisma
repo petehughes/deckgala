@@ -93,6 +93,7 @@ model Member {
   governingBodyId       String?
   emergencyContactName  String?
   emergencyContactPhone String?
+  membershipExpiresAt   DateTime? @db.Date
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
   club                  Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
@@ -147,6 +148,7 @@ model Gala {
   course    PoolCourse
   startsAt  DateTime
   endsAt    DateTime?
+  isPublic  Boolean    @default(false)
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   club      Club       @relation(fields: [clubId], references: [id], onDelete: Cascade)
@@ -199,6 +201,12 @@ model RaceResult {
   lane           Int?
   timeMs         Int?
   seedTimeMs     Int?
+  sessionDate    DateTime?      @db.Date
+  sessionTime    String?
+  setName        String?
+  rep            Int?
+  targetTimeSec  Float?
+  finishWallMs   Int?
   status         ResultStatus @default(UNOFFICIAL)
   infractionCode String?
   notes          String?

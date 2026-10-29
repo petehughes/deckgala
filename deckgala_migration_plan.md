@@ -164,10 +164,10 @@ deckgala/
 3. [x] **`packages/controls`**: Build core design system components (`LaneCard`, `StopButton`, `TimerDisplay`) using Tailwind v4 and Tailwind tokens.
 
 ### Phase 3: Backend (`api`) & Club Portal (`myclub`)
-1. Build `apps/api` using Bun's native HTTP server and WebSocket support for offline sync gateway and real-time relay.
-2. Build `apps/myclub` using Next.js App Router, connecting to the database for member management, membership renewals, and gala meet creation.
+1. [x] Build `apps/api` using Bun's native HTTP server and WebSocket support for offline sync gateway and real-time relay. Implemented validated, authenticated session/result upserts and gala-scoped event relay.
+2. [x] Build `apps/myclub` using Next.js App Router, connecting to the database for member management, membership renewals, and gala meet creation. Implemented the club-scoped member register and renewals, gala/event management, and Basic Auth protection. Added a Prisma migration for renewal dates and complete offline-sync result metadata; apply migrations in the target environment before launch.
 
 ### Phase 4: Public Sites (`www`, `results`) & Deployment
-1. Build `apps/www` marketing landing page featuring the vector logo mark and brand guidelines.
-2. Build `apps/results` live spectator portal for real-time meet viewing.
-3. Configure CI/CD pipelines (GitHub Actions) to lint, test, build, and deploy apps across Vercel (web apps) and App Store Connect / Google Play Console (`app`).
+1. [x] Build `apps/www` marketing landing page featuring the vector logo mark and brand guidelines. Implemented the responsive DeckGala brand site with poolside timing visuals, product features, and club-focused content.
+2. [x] Build `apps/results` live spectator portal for real-time meet viewing. Published galas are opt-in; the read-only portal shows event results and consumes live heat and lane updates over SSE.
+3. [x] Configure CI/CD pipelines (GitHub Actions) to lint, test, build, and deploy apps across Vercel (web apps) and App Store Connect / Google Play Console (`app`). Vercel and store uploads are gated on repository configuration and secrets; no external deployment or store upload has been run.
