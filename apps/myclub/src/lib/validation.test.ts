@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   galaFormSchema,
   galaVisibilitySchema,
+  invitationFormSchema,
   memberFormSchema,
   parseUtcDateTime,
   renewalFormSchema,
@@ -55,6 +56,13 @@ describe("club portal form validation", () => {
   it("supports explicitly publishing and unpublishing a gala", () => {
     assert.equal(galaVisibilitySchema.parse({ galaId: "gala-1", isPublic: "true" }).isPublic, true);
     assert.equal(galaVisibilitySchema.parse({ galaId: "gala-1", isPublic: "false" }).isPublic, false);
+  });
+
+  it("allows only non-admin roles through club invitation links", () => {
+    assert.equal(invitationFormSchema.safeParse({ role: "COACH" }).success, true);
+    assert.equal(invitationFormSchema.safeParse({ role: "TIMEKEEPER" }).success, true);
+    assert.equal(invitationFormSchema.safeParse({ role: "PARENT" }).success, true);
+    assert.equal(invitationFormSchema.safeParse({ role: "ADMIN" }).success, false);
   });
 
   it("validates the meet form and interprets its schedule as UTC", () => {

@@ -18,6 +18,10 @@ export const renewalFormSchema = z.object({
   membershipExpiresAt: z.string().date(),
 });
 
+export const invitationFormSchema = z.object({
+  role: z.enum(["COACH", "TIMEKEEPER", "PARENT"]),
+});
+
 export const galaVisibilitySchema = z.object({
   galaId: z.string().trim().min(1).max(128),
   isPublic: z.enum(["true", "false"]).transform((value) => value === "true"),

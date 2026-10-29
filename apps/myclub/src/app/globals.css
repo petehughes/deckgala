@@ -53,6 +53,36 @@ td small { margin-top: 4px; color: var(--text-muted); font-size: 11px; }
 .status-expired, .status-due-soon, .status-renewal-date-needed { background: rgba(255, 179, 0, .1); color: var(--color-caution-amber); }
 .empty { padding: 22px 12px; color: var(--text-secondary); text-align: center; }
 .meet-form { margin-bottom: 8px; }
+.portal-toolbar { display: flex; justify-content: space-between; align-items: flex-end; gap: 18px; padding: 14px 18px; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: rgba(22, 35, 59, .65); }
+.club-switcher, .portal-links, .create-club-form, .platform-form { display: flex; align-items: flex-end; gap: 10px; }
+.club-switcher label, .create-club-form label, .platform-form label { min-width: 190px; }
+.portal-links { align-items: center; flex-wrap: wrap; }
+.portal-links a, .platform-link, .back-link, .upgrade-link, .invite-actions a { color: var(--accent-cyan); font-size: 12px; font-weight: 700; text-decoration: none; }
+.portal-links > span { color: var(--text-secondary); font-size: 12px; }
+.club-management { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.club-management .muted { margin: 8px 0 0; font-size: 12px; }
+.create-club-form input { min-width: 230px; }
+.auth-panel, .onboarding-panel, .billing-panel, .platform-panel, .invite-panel { width: min(100%, 620px); margin: 60px auto; }
+.auth-panel h1, .onboarding-panel h1, .billing-panel h1, .platform-panel h1, .invite-panel h1 { margin-bottom: 12px; }
+.auth-form { display: grid; gap: 16px; margin-top: 24px; }
+.auth-form input { height: 46px; }
+.auth-provider { width: 100%; margin-top: 12px; }
+.auth-divider { margin: 20px 0 0; color: var(--text-muted); font-size: 12px; text-align: center; }
+.auth-switch { margin: 20px 0 0; color: var(--text-secondary); font-size: 12px; }
+.auth-switch a, .invite-link input { color: var(--accent-cyan); }
+.notice-error { color: #ff9a87; font-size: 13px; }
+.create-club-form { margin-top: 24px; }
+.invite-panel .muted { margin-top: 14px; }
+.invite-actions { display: flex; gap: 20px; margin-top: 24px; }
+.invite-link { display: grid; gap: 8px; margin-top: 14px; }
+.invite-link input { margin-top: 6px; }
+.platform-link, .back-link { display: inline-block; margin: 18px 12px 0 0; }
+.platform-form { margin-top: 24px; }
+.billing-panel .status { margin-top: 22px; }
+.billing-panel form { margin-top: 20px; }
+.billing-panel .notice-error { margin-top: 20px; }
+.invite-panel form { margin-top: 22px; }
+.back-link { margin: 0 0 26px; }
 .meet-list { display: grid; gap: 14px; }
 .meet-card { padding: 18px; border: 1px solid rgba(140, 160, 186, .16); border-radius: var(--radius-md); background: rgba(8, 16, 30, .45); }
 .meet-header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
@@ -75,6 +105,11 @@ td small { margin-top: 4px; color: var(--text-muted); font-size: 11px; }
   .meet-form > button { grid-column: 1 / -1; }
   .event-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .event-form button { grid-column: 1 / -1; }
+  .portal-toolbar, .club-management { align-items: stretch; flex-direction: column; }
+  .club-switcher, .create-club-form, .platform-form { align-items: stretch; flex-direction: column; }
+  .club-switcher label, .create-club-form label, .platform-form label, .create-club-form input { min-width: 0; width: 100%; }
+  .portal-links { justify-content: space-between; }
+  .auth-panel, .onboarding-panel, .billing-panel, .platform-panel, .invite-panel { margin-top: 24px; }
 }
 
 @media (max-width: 420px) {
@@ -84,4 +119,5 @@ td small { margin-top: 4px; color: var(--text-muted); font-size: 11px; }
   .form-grid { grid-template-columns: 1fr; }
   .meet-form > button, .event-form button { grid-column: auto; }
   .meet-header { display: grid; }
+  .create-club-form { align-items: stretch; }
 }

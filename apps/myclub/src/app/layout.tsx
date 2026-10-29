@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "DeckGala MyClub",
-  description: "Club membership and gala administration",
+  title: "DeckGala Club Portal",
+  description: "One club portal for every swimming club",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -11,8 +11,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en">
       <body>
         <header className="topbar">
-          <a className="brand" href="/">DeckGala <span>MyClub</span></a>
-          <span className="topbar-note">Club administration</span>
+          <a className="brand" href="/">DeckGala <span>Club Portal</span></a>
+          <span className="topbar-note">One portal · many clubs</span>
         </header>
         <main className="page-shell">{children}</main>
       </body>

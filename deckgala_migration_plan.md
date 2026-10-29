@@ -165,7 +165,7 @@ deckgala/
 
 ### Phase 3: Backend (`api`) & Club Portal (`myclub`)
 1. [x] Build `apps/api` using Bun's native HTTP server and WebSocket support for offline sync gateway and real-time relay. Implemented validated, authenticated session/result upserts and gala-scoped event relay.
-2. [x] Build `apps/myclub` using Next.js App Router, connecting to the database for member management, membership renewals, and gala meet creation. Implemented the club-scoped member register and renewals, gala/event management, and Basic Auth protection. Added a Prisma migration for renewal dates and complete offline-sync result metadata; apply migrations in the target environment before launch.
+2. [x] Build `apps/myclub` using Next.js App Router, connecting to the shared database for member management, renewals, gala meets, and multi-club administration. Implemented account authentication, club membership authorization, club switching, invitations, configurable free-club limits, Stripe subscription workflows, and platform administration; apply migrations and configure provider credentials before launch.
 
 ### Phase 4: Public Sites (`www`, `results`) & Deployment
 1. [x] Build `apps/www` marketing landing page featuring the vector logo mark and brand guidelines. Implemented the responsive DeckGala brand site with poolside timing visuals, product features, and club-focused content.

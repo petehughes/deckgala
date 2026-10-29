@@ -20,9 +20,13 @@ deployments after successful CI on `main`:
 - `VERCEL_PROJECT_ID_RESULTS`
 
 Set `NEXT_PUBLIC_API_URL` and `CORS_ORIGIN` to the deployed API and results
-origins as appropriate. The MyClub project also needs `DATABASE_URL`,
-`MYCLUB_CLUB_ID`, and `MYCLUB_ACCESS_TOKEN`. The API deployment needs
-`DATABASE_URL` and `API_BEARER_TOKEN`.
+origins as appropriate. The MyClub project needs `DATABASE_URL`,
+`BETTER_AUTH_URL`, `BETTER_AUTH_SECRET`, `PLATFORM_ADMIN_EMAILS`,
+`STRIPE_SECRET_KEY`, `STRIPE_CLUBS_PRICE_ID`, and `STRIPE_WEBHOOK_SECRET`.
+Configure optional Google or Apple OAuth credentials to enable those sign-in
+buttons. Configure the Stripe billing portal and a webhook for checkout and
+subscription lifecycle events. The API deployment needs `DATABASE_URL` and
+`API_BEARER_TOKEN`.
 
 ## Google Play internal track
 
