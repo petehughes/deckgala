@@ -56,6 +56,7 @@ model Club {
   invitations      ClubInvitation[]
   members          Member[]
   swimmers         Swimmer[]
+  squads           Squad[]
   galas            Gala[]
   deckSessions     DeckSession[]
 }
@@ -188,6 +189,22 @@ model Member {
   @@index([clubId, lastName, firstName])
 }
 
+model Squad {
+  id          String    @id @default(cuid())
+  clubId      String
+  name        String
+  description String?
+  coachName   String?
+  schedule    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  club        Club      @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  swimmers    Swimmer[]
+
+  @@unique([clubId, name])
+  @@index([clubId])
+}
+
 model Swimmer {
   id              String         @id @default(cuid())
   clubId          String
@@ -197,16 +214,19 @@ model Swimmer {
   dateOfBirth     DateTime?      @db.Date
   gender          Gender?
   governingBodyId String?
+  squadId         String?
   squad           String?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   club            Club           @relation(fields: [clubId], references: [id], onDelete: Cascade)
   member          Member?        @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  squadRel        Squad?         @relation(fields: [squadId], references: [id], onDelete: SetNull)
   personalBests   PersonalBest[]
   raceResults     RaceResult[]
 
   @@unique([clubId, governingBodyId])
   @@index([clubId, lastName, firstName])
+  @@index([squadId])
 }
 
 model PersonalBest {

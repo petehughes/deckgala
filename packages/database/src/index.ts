@@ -15,5 +15,6 @@ export type {
   ResultStatus,
   SwimStroke,
   Swimmer,
+  Squad,
   User,
 } from "@prisma/client";

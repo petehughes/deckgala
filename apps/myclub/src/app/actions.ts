@@ -17,7 +17,9 @@ import { isPlatformAdmin, requireSession } from "../lib/session";
 import { getAccessibleUserClubs, requireClubRole } from "../lib/club-context";
 import { prisma } from "../lib/prisma";
 import { fetchSwimEnglandMemberDetails } from "../lib/swim-england-api";
+import { isPromotionDue } from "../lib/squad-service";
 import {
+  assignSwimmerSquadSchema,
   eventFormSchema,
   formString,
   galaFormSchema,
@@ -26,6 +28,9 @@ import {
   memberFormSchema,
   parseUtcDateTime,
   renewalFormSchema,
+  squadFormSchema,
+  updateMemberFormSchema,
+  updateSquadFormSchema,
 } from "../lib/validation";
 
 export async function selectClub(formData: FormData): Promise<void> {
@@ -321,6 +326,17 @@ export async function createMember(formData: FormData): Promise<void> {
 
     if (data.isSwimmer) {
       const dob = data.dateOfBirth ? new Date(`${data.dateOfBirth}T00:00:00.000Z`) : null;
+      let squadId: string | null = null;
+      let squadName: string | null = data.squad;
+      if (data.squad) {
+        const found = await tx.squad.findFirst({
+          where: { clubId: active.clubId, OR: [{ id: data.squad }, { name: data.squad }] },
+        });
+        if (found) {
+          squadId = found.id;
+          squadName = found.name;
+        }
+      }
       await tx.swimmer.create({
         data: {
           clubId: active.clubId,
@@ -330,7 +346,8 @@ export async function createMember(formData: FormData): Promise<void> {
           dateOfBirth: dob,
           gender: data.gender,
           governingBodyId: data.governingBodyId,
-          squad: data.squad,
+          squadId,
+          squad: squadName,
         },
       });
     }
@@ -338,6 +355,100 @@ export async function createMember(formData: FormData): Promise<void> {
 
   revalidatePath("/");
   revalidatePath("/roster");
+  revalidatePath("/swimmers");
+  revalidatePath("/squads");
+}
+
+export async function updateMember(formData: FormData): Promise<void> {
+  const active = await requireClubRole(["ADMIN", "COACH"]);
+  const data = updateMemberFormSchema.parse({
+    memberId: formString(formData, "memberId"),
+    firstName: formString(formData, "firstName"),
+    lastName: formString(formData, "lastName"),
+    email: formString(formData, "email"),
+    phone: formString(formData, "phone"),
+    governingBodyId: formString(formData, "governingBodyId"),
+    emergencyContactName: formString(formData, "emergencyContactName"),
+    emergencyContactPhone: formString(formData, "emergencyContactPhone"),
+    dateOfBirth: formString(formData, "dateOfBirth"),
+    gender: formString(formData, "gender"),
+    squad: formString(formData, "squad"),
+    isSwimmer: formString(formData, "isSwimmer") !== "false",
+  });
+
+  const member = await prisma.member.findFirst({
+    where: { id: data.memberId, clubId: active.clubId },
+    include: { swimmer: true },
+  });
+
+  if (!member) {
+    throw new Error("Member not found in this club");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.member.update({
+      where: { id: member.id },
+      data: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        governingBodyId: data.governingBodyId,
+        emergencyContactName: data.emergencyContactName,
+        emergencyContactPhone: data.emergencyContactPhone,
+      },
+    });
+
+    const dob = data.dateOfBirth ? new Date(`${data.dateOfBirth}T00:00:00.000Z`) : null;
+    let resolvedSquadId: string | null = null;
+    let resolvedSquadName: string | null = data.squad;
+    if (data.squad) {
+      const found = await tx.squad.findFirst({
+        where: { clubId: active.clubId, OR: [{ id: data.squad }, { name: data.squad }] },
+      });
+      if (found) {
+        resolvedSquadId = found.id;
+        resolvedSquadName = found.name;
+      }
+    }
+
+    if (member.swimmer) {
+      await tx.swimmer.update({
+        where: { id: member.swimmer.id },
+        data: {
+          firstName: data.firstName,
+          lastName: data.lastName,
+          governingBodyId: data.governingBodyId,
+          dateOfBirth: dob,
+          gender: data.gender,
+          squadId: resolvedSquadId,
+          squad: resolvedSquadName,
+        },
+      });
+    } else if (data.isSwimmer) {
+      await tx.swimmer.create({
+        data: {
+          clubId: active.clubId,
+          memberId: member.id,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          dateOfBirth: dob,
+          gender: data.gender,
+          governingBodyId: data.governingBodyId,
+          squadId: resolvedSquadId,
+          squad: resolvedSquadName,
+        },
+      });
+    }
+  });
+
+  revalidatePath("/");
+  revalidatePath("/roster");
+  revalidatePath("/swimmers");
+  revalidatePath("/squads");
+  if (member.swimmer) {
+    revalidatePath(`/swimmers/${member.swimmer.id}`);
+  }
 }
 
 export async function renewMembership(formData: FormData): Promise<void> {
@@ -545,4 +656,358 @@ export async function recordPersonalBest(formData: FormData): Promise<void> {
   }
 
   revalidatePath(`/swimmers/${swimmerId}`);
+}
+
+/**
+ * Schedules a future squad promotion (e.g. effective May 1st) or moves swimmer immediately.
+ */
+export async function scheduleSquadPromotion(formData: FormData): Promise<void> {
+  const active = await requireClubRole(["ADMIN", "COACH"]);
+  const swimmerId = formString(formData, "swimmerId");
+  const targetSquad = formString(formData, "targetSquad").trim();
+  const effectiveDate = formString(formData, "effectiveDate").trim();
+  const notes = formString(formData, "notes").trim() || null;
+
+  if (!swimmerId || !targetSquad || !effectiveDate) {
+    throw new Error("Swimmer, target squad, and effective date are required");
+  }
+
+  const swimmer = await prisma.swimmer.findFirst({
+    where: { id: swimmerId, clubId: active.clubId },
+    select: { id: true, firstName: true, lastName: true, squad: true },
+  });
+
+  if (!swimmer) {
+    throw new Error("Swimmer not found in this club");
+  }
+
+  const isDue = isPromotionDue(effectiveDate);
+
+  if (isDue) {
+    const matchedSquad = await prisma.squad.findFirst({
+      where: {
+        clubId: active.clubId,
+        OR: [{ id: targetSquad }, { name: targetSquad }],
+      },
+    });
+    await prisma.swimmer.update({
+      where: { id: swimmer.id },
+      data: {
+        squadId: matchedSquad ? matchedSquad.id : null,
+        squad: matchedSquad ? matchedSquad.name : targetSquad,
+      },
+    });
+  }
+
+  const club = await prisma.club.findUnique({
+    where: { id: active.clubId },
+    select: { customBranding: true },
+  });
+
+  const branding = (club?.customBranding as Record<string, unknown>) || {};
+  const promotions = Array.isArray(branding.scheduledPromotions)
+    ? [...branding.scheduledPromotions]
+    : [];
+
+  const newPromotion = {
+    id: `prom-${Date.now()}`,
+    swimmerId: swimmer.id,
+    swimmerName: `${swimmer.firstName} ${swimmer.lastName}`,
+    currentSquad: swimmer.squad || "Unassigned",
+    targetSquad,
+    effectiveDate,
+    status: isDue ? "APPLIED" : "SCHEDULED",
+    notes,
+    createdAt: new Date().toISOString(),
+  };
+
+  promotions.push(newPromotion);
+
+  await prisma.club.update({
+    where: { id: active.clubId },
+    data: {
+      customBranding: {
+        ...branding,
+        scheduledPromotions: promotions,
+      },
+    },
+  });
+
+  revalidatePath("/squads");
+  revalidatePath("/swimmers");
+  revalidatePath(`/swimmers/${swimmerId}`);
+  revalidatePath("/roster");
+}
+
+/**
+ * Cancels or removes a scheduled future promotion.
+ */
+export async function cancelSquadPromotion(formData: FormData): Promise<void> {
+  const active = await requireClubRole(["ADMIN", "COACH"]);
+  const promotionId = formString(formData, "promotionId");
+
+  const club = await prisma.club.findUnique({
+    where: { id: active.clubId },
+    select: { customBranding: true },
+  });
+
+  const branding = (club?.customBranding as Record<string, unknown>) || {};
+  if (!Array.isArray(branding.scheduledPromotions)) return;
+
+  const updatedPromotions = branding.scheduledPromotions.filter(
+    (p: any) => p.id !== promotionId,
+  );
+
+  await prisma.club.update({
+    where: { id: active.clubId },
+    data: {
+      customBranding: {
+        ...branding,
+        scheduledPromotions: updatedPromotions,
+      },
+    },
+  });
+
+  revalidatePath("/squads");
+  revalidatePath("/swimmers");
+}
+
+/**
+ * Creates a new first-class Squad object for the active club.
+ */
+export async function createSquad(formData: FormData): Promise<void> {
+  const active = await requireClubRole(["ADMIN", "COACH"]);
+  const data = squadFormSchema.parse({
+    name: formString(formData, "name"),
+    description: formString(formData, "description"),
+    coachName: formString(formData, "coachName"),
+    schedule: formString(formData, "schedule"),
+  });
+
+  const existing = await prisma.squad.findUnique({
+    where: {
+      clubId_name: {
+        clubId: active.clubId,
+        name: data.name,
+      },
+    },
+  });
+
+  if (existing) {
+    throw new Error(`A squad named "${data.name}" already exists in this club.`);
+  }
+
+  await prisma.squad.create({
+    data: {
+      clubId: active.clubId,
+      name: data.name,
+      description: data.description,
+      coachName: data.coachName,
+      schedule: data.schedule,
+    },
+  });
+
+  revalidatePath("/squads");
+  revalidatePath("/swimmers");
+}
+
+/**
+ * Updates an existing squad's details (name, coach, schedule, description).
+ */
+export async function updateSquad(formData: FormData): Promise<void> {
+  const active = await requireClubRole(["ADMIN", "COACH"]);
+  const data = updateSquadFormSchema.parse({
+    squadId: formString(formData, "squadId"),
+    name: formString(formData, "name"),
+    description: formString(formData, "description"),
+    coachName: formString(formData, "coachName"),
+    schedule: formString(formData, "schedule"),
+  });
+
+  const squad = await prisma.squad.findFirst({
+    where: { id: data.squadId, clubId: active.clubId },
+  });
+
+  if (!squad) {
+    throw new Error("Squad not found in this club");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.squad.update({
+      where: { id: squad.id },
+      data: {
+        name: data.name,
+        description: data.description,
+        coachName: data.coachName,
+        schedule: data.schedule,
+      },
+    });
+
+    if (squad.name !== data.name) {
+      await tx.swimmer.updateMany({
+        where: { clubId: active.clubId, squadId: squad.id },
+        data: { squad: data.name },
+      });
+    }
+  });
+
+  revalidatePath("/squads");
+  revalidatePath("/swimmers");
+}
+
+/**
+ * Deletes a squad and unassigns swimmers belonging to it.
+ */
+export async function deleteSquad(formData: FormData): Promise<void> {
+  const active = await requireClubRole(["ADMIN", "COACH"]);
+  const squadId = formString(formData, "squadId");
+
+  const squad = await prisma.squad.findFirst({
+    where: { id: squadId, clubId: active.clubId },
+  });
+
+  if (!squad) {
+    throw new Error("Squad not found in this club");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.swimmer.updateMany({
+      where: { clubId: active.clubId, squadId: squad.id },
+      data: { squadId: null, squad: null },
+    });
+
+    await tx.squad.delete({
+      where: { id: squad.id },
+    });
+  });
+
+  revalidatePath("/squads");
+  revalidatePath("/swimmers");
+}
+
+/**
+ * Assigns or moves a swimmer to a specific squad.
+ */
+export async function assignSwimmerToSquad(formData: FormData): Promise<void> {
+  const active = await requireClubRole(["ADMIN", "COACH"]);
+  const data = assignSwimmerSquadSchema.parse({
+    swimmerId: formString(formData, "swimmerId"),
+    squadId: formString(formData, "squadId"),
+  });
+
+  const swimmer = await prisma.swimmer.findFirst({
+    where: { id: data.swimmerId, clubId: active.clubId },
+  });
+
+  if (!swimmer) {
+    throw new Error("Swimmer not found in this club");
+  }
+
+  if (data.squadId) {
+    const squad = await prisma.squad.findFirst({
+      where: { id: data.squadId, clubId: active.clubId },
+    });
+
+    if (!squad) {
+      throw new Error("Target squad not found in this club");
+    }
+
+    await prisma.swimmer.update({
+      where: { id: swimmer.id },
+      data: {
+        squadId: squad.id,
+        squad: squad.name,
+      },
+    });
+  } else {
+    await prisma.swimmer.update({
+      where: { id: swimmer.id },
+      data: {
+        squadId: null,
+        squad: null,
+      },
+    });
+  }
+
+  revalidatePath("/squads");
+  revalidatePath("/swimmers");
+  revalidatePath(`/swimmers/${swimmer.id}`);
+}
+
+/**
+ * Removes / unassigns a swimmer from their current squad.
+ */
+export async function removeSwimmerFromSquad(formData: FormData): Promise<void> {
+  const active = await requireClubRole(["ADMIN", "COACH"]);
+  const swimmerId = formString(formData, "swimmerId");
+
+  const swimmer = await prisma.swimmer.findFirst({
+    where: { id: swimmerId, clubId: active.clubId },
+  });
+
+  if (!swimmer) {
+    throw new Error("Swimmer not found in this club");
+  }
+
+  await prisma.swimmer.update({
+    where: { id: swimmer.id },
+    data: {
+      squadId: null,
+      squad: null,
+    },
+  });
+
+  revalidatePath("/squads");
+  revalidatePath("/swimmers");
+  revalidatePath(`/swimmers/${swimmer.id}`);
+}
+
+/**
+ * Creates a swimmer directly in the club swimmer roster.
+ */
+export async function createSwimmer(formData: FormData): Promise<void> {
+  const active = await requireClubRole(["ADMIN", "COACH"]);
+  const firstName = formString(formData, "firstName").trim();
+  const lastName = formString(formData, "lastName").trim();
+  const dateOfBirthStr = formString(formData, "dateOfBirth").trim();
+  const genderStr = formString(formData, "gender").trim();
+  const governingBodyId = formString(formData, "governingBodyId").trim() || null;
+  const squadId = formString(formData, "squadId").trim() || null;
+
+  if (!firstName || !lastName) {
+    throw new Error("First and last names are required");
+  }
+
+  const dob = dateOfBirthStr ? new Date(`${dateOfBirthStr}T00:00:00.000Z`) : null;
+  const gender = genderStr ? (genderStr as any) : null;
+
+  let resolvedSquadName: string | null = null;
+  let resolvedSquadId: string | null = null;
+  if (squadId) {
+    const squad = await prisma.squad.findFirst({
+      where: { clubId: active.clubId, OR: [{ id: squadId }, { name: squadId }] },
+    });
+    if (squad) {
+      resolvedSquadId = squad.id;
+      resolvedSquadName = squad.name;
+    } else {
+      resolvedSquadName = squadId;
+    }
+  }
+
+  await prisma.swimmer.create({
+    data: {
+      clubId: active.clubId,
+      firstName,
+      lastName,
+      dateOfBirth: dob,
+      gender,
+      governingBodyId,
+      squadId: resolvedSquadId,
+      squad: resolvedSquadName,
+    },
+  });
+
+  revalidatePath("/swimmers");
+  revalidatePath("/squads");
 }

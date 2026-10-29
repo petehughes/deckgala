@@ -33,18 +33,26 @@ export default async function RosterPage({
 
   const { clubId, role, session } = await getActiveClub();
 
-  const club = await prisma.club.findUnique({
-    where: { id: clubId },
-    include: {
-      members: {
-        where: role === "PARENT" ? { userId: session.user.id } : {},
-        include: {
-          swimmer: true,
+  const [club, clubSquads] = await Promise.all([
+    prisma.club.findUnique({
+      where: { id: clubId },
+      include: {
+        members: {
+          where: role === "PARENT" ? { userId: session.user.id } : {},
+          include: {
+            swimmer: {
+              include: { squadRel: true },
+            },
+          },
+          orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
         },
-        orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
       },
-    },
-  });
+    }),
+    prisma.squad.findMany({
+      where: { clubId },
+      orderBy: { name: "asc" },
+    }),
+  ]);
 
   if (!club) notFound();
 
@@ -56,15 +64,18 @@ export default async function RosterPage({
     const govId = member.governingBodyId?.toLowerCase() || "";
     const matchesQuery = !search || fullName.includes(search) || govId.includes(search);
 
-    const swimmerSquad = member.swimmer?.squad || "";
+    const swimmerSquad = member.swimmer?.squadRel?.name || member.swimmer?.squad || "";
     const matchesSquad = !squadFilter || swimmerSquad === squadFilter;
 
     return matchesQuery && matchesSquad;
   });
 
-  // Extract distinct squads for filter dropdown
+  // Combine squads from squad entities and any legacy string squads
   const squads = Array.from(
-    new Set(club.members.map((m) => m.swimmer?.squad).filter(Boolean)),
+    new Set([
+      ...clubSquads.map((s) => s.name),
+      ...club.members.map((m) => m.swimmer?.squad).filter(Boolean),
+    ]),
   ) as string[];
 
   return (
@@ -141,6 +152,7 @@ export default async function RosterPage({
                 <th>Contact</th>
                 <th>Membership</th>
                 <th>Renew Through</th>
+                {canManage && <th>Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -209,11 +221,32 @@ export default async function RosterPage({
                       dateLabel(member.membershipExpiresAt)
                     )}
                   </td>
+                  {canManage && (
+                    <td>
+                      {member.swimmer ? (
+                        <a
+                          href={`/swimmers/${member.swimmer.id}#edit-member`}
+                          className="button-secondary"
+                          style={{
+                            textDecoration: "none",
+                            fontSize: "11px",
+                            padding: "6px 10px",
+                            display: "inline-block",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          Edit Details
+                        </a>
+                      ) : (
+                        <span className="muted">—</span>
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))}
               {filteredMembers.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="empty">
+                  <td colSpan={canManage ? 6 : 5} className="empty">
                     No swimmers match your search criteria.
                   </td>
                 </tr>

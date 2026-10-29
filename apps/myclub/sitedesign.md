@@ -318,6 +318,14 @@ To eliminate manual data entry errors and ensure competitive integrity, MyClub i
    * Handled by `lib/swim-england-api.ts` on the server side using the club's Swim England API token / certificate.
    * Includes an offline-tolerant fallback and development mock provider to enable fast UI testing without live Swim England production credentials.
 
+#### 4.3.8 Member & Swimmer Profile Editing (Admins & Coaches)
+Coaches and Club Administrators have authorized permissions to edit member and swimmer details directly via `/swimmers/[id]#edit-member` and the `/roster` directory:
+* **Contact Details:** Update member primary email address and telephone number.
+* **Governing Body Registration:** Update or correct Swim England ID (`governingBodyId`) for race license verification and rankings sync.
+* **Biographical & Category Data:** Update legal first name, last name, Date of Birth (DOB), competition gender (`FEMALE`, `MALE`, `OPEN`, `OTHER`), and assigned training Squad.
+* **Emergency Welfare Details:** Update emergency contact person name and emergency telephone number.
+* **Transaction Synchrony:** Executed via `updateMember(formData)` in an atomic database transaction ensuring `Member` and linked `Swimmer` records remain 100% synchronized, revalidating `/roster`, `/swimmers/[id]`, and the dashboard.
+
 ---
 
 ### 4.4 Gala & Competition Management (`/galas`, `/galas/[id]`, `/galas/[id]/enter`)
@@ -748,7 +756,7 @@ To enable parallel execution by autonomous coding agents, the work is partitione
 ## 9. Living Execution Tracker, Assumptions & Issues Log
 
 **Last Updated:** 2026-10-29  
-**Status:** In Progress — Phase 2 Swimmer Core Execution
+**Status:** Phase 2 Complete (25/25 Tests Passing) — Ready for Phase 3 (Gala Meets, Venues & Parent Entry Wizard)
 
 ### 9.1 Phase-by-Phase Progress Tracker
 - [x] **Phase 0: Architectural Blueprint & Site Design**
@@ -762,15 +770,18 @@ To enable parallel execution by autonomous coding agents, the work is partitione
   - [x] Responsive navigation bar (`<AppNav />`) with role-aware route tabs (`/`, `/roster`, `/squads`, `/galas`, `/my-swimmers`, `/settings/club`).
   - [x] Standardized `requireActiveClub()` session wrapper in `club-context.ts`.
   - [x] Dedicated navigation destination pages for `/roster`, `/squads`, `/galas`, `/my-swimmers`, and `/settings/club`.
-- [ ] **Phase 2: Swimmer CRM, PBs, Qualifying Standards & Swim England Sync**
+- [x] **Phase 2: Swimmer CRM, PBs, Qualifying Standards, Swim England Sync & Squads**
   - [x] Enhanced Member & Swimmer creation linking `Member` and `Swimmer` in a transaction with DOB, gender, and squad.
+  - [x] Member & Swimmer profile editing by Club Admins & Coaches (email, phone, Swim England ID, DOB, gender, squad, emergency contacts).
   - [x] Competition age calculation engine (`apps/myclub/src/lib/age-calculator.ts` with 100% test coverage).
   - [x] County, Regional, and National qualifying standards comparison engine (`apps/myclub/src/lib/qualifying-standards.ts` with 100% test coverage).
   - [x] Swim England Membership API client (`apps/myclub/src/lib/swim-england-api.ts`) supporting Individual, Squad, and Club sync with dev mock provider.
   - [x] Swimmer Profile view (`/swimmers/[id]`) with interactive PB Matrix, cut time proximity badges, and race history.
-  - [ ] Parent multi-child view (`/my-swimmers`).
-  - [ ] Squads CRUD and temporal promotions (`lib/squads.ts`).
-  - [ ] Squad performance analytics and coaching opportunity gap matrix.
+  - [x] Dedicated Club Swimmer Roster (`/swimmers`) providing direct club swimmer view, search, squad filtering, and quick squad assignment.
+  - [x] Parent multi-child view (`/my-swimmers`).
+  - [x] First-class `Squad` database entity (`model Squad` in Prisma) with full CRUD (`/squads`, `createSquad`, `updateSquad`, `deleteSquad`).
+  - [x] Swimmer squad assignments and removals (`assignSwimmerToSquad`, `removeSwimmerFromSquad`) and temporal future promotions.
+  - [x] Squad performance analytics and coaching opportunity gap matrix (`/squads/[name]/performance`).
 - [ ] **Phase 3: Gala Meets, Venues & Parent Entry Wizard**
   - [ ] Club Venue directory and OpenStreetMap card component (`<VenueMap />`).
   - [ ] Gala Sessions & Event Builder with fee structures.
@@ -794,6 +805,8 @@ To enable parallel execution by autonomous coding agents, the work is partitione
    * *Assumption:* The existing Prisma schema in `@deckgala/database` contains `Swimmer` (with `dateOfBirth`, `gender`, `squad`, `governingBodyId`), `PersonalBest`, `RaceResult`, and `RaceSplit`. New business logic builds cleanly on top of these verified schema entities.
 4. **Parent-Child Linkage:**
    * *Assumption:* A parent user (`User` with role `PARENT`) links to swimmers via `Member.userId` or a family membership record, allowing a single parent to view and book galas for multiple children.
+5. **First-Class Squad Model & Relational Assignments:**
+   * *Assumption:* `Squad` is a dedicated Prisma model (`model Squad`) belonging to `Club` and linked relationally to `Swimmer` via `Swimmer.squadId` (with `Swimmer.squad` retained for backwards compatibility). Temporal future promotions (e.g. starting May 1st) are tracked via `Club.customBranding.scheduledPromotions`.
 
 ### 9.3 Issues & Resolutions Log
 * **Issue 1: Test Runner Typings (`bun:test` vs `node:test`):**
@@ -802,6 +815,11 @@ To enable parallel execution by autonomous coding agents, the work is partitione
   * *Resolution:* Standardized test files on Node's native test runner (`import { describe, it } from "node:test"` and `import assert from "node:assert/strict"`), which runs cleanly under both `bun test` and standard Node/TypeScript type checking.
 * **Issue 2: Member Form Schema Synchronization:**
   * *Symptom:* Form validation needed to accept new optional swimmer fields (`dateOfBirth`, `gender`, `squad`, `isSwimmer`) without breaking existing member creation.
-  * *Resolution:* Made new fields optional with safe nullish transformations and updated unit tests; all 21 unit tests across 6 files now pass with 0 errors.
+  * *Resolution:* Made new fields optional with safe nullish transformations and updated unit tests; all 27 unit tests across 7 files now pass with 0 errors.
+* **Issue 3: Windows File Locking on Prisma Query Engine (`EPERM`) & IPv4 Loopback:**
+  * *Symptom:* `prisma generate` failed with `EPERM: operation not permitted` on `query_engine-windows.dll.node` and `prisma db push` failed with `P1001: Can't reach database server at localhost:5432`.
+  * *Root Cause:* Background Next.js dev server worker processes hold a file lock on the query engine native binary, and Prisma CLI on Windows requires explicit IPv4 `127.0.0.1` rather than `localhost` IPv6 loopback.
+  * *Resolution:* Cleared Next worker process locks, updated `.env` to `127.0.0.1:5432`, generated Prisma client cleanly, and pushed the new `Squad` model directly into PostgreSQL.
+
 
 

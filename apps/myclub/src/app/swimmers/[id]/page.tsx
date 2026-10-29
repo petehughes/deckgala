@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import type { PoolCourse, SwimStroke } from "@deckgala/database";
-import { recordPersonalBest, syncSwimmerWithSwimEngland } from "../../actions";
+import { recordPersonalBest, syncSwimmerWithSwimEngland, updateMember } from "../../actions";
 import { getActiveClub } from "../../../lib/club-context";
 import { prisma } from "../../../lib/prisma";
 import { calculateCompetitionAge, resolveStandardAgeGroup } from "../../../lib/age-calculator";
@@ -37,28 +37,35 @@ export default async function SwimmerProfilePage({
 
   const { clubId, role, session } = await getActiveClub();
 
-  const swimmer = await prisma.swimmer.findFirst({
-    where: { id: swimmerId, clubId },
-    include: {
-      member: true,
-      personalBests: {
-        orderBy: [{ stroke: "asc" }, { distance: "asc" }],
-      },
-      raceResults: {
-        include: {
-          event: {
-            include: {
-              gala: true,
+  const [swimmer, clubSquads] = await Promise.all([
+    prisma.swimmer.findFirst({
+      where: { id: swimmerId, clubId },
+      include: {
+        squadRel: true,
+        member: true,
+        personalBests: {
+          orderBy: [{ stroke: "asc" }, { distance: "asc" }],
+        },
+        raceResults: {
+          include: {
+            event: {
+              include: {
+                gala: true,
+              },
+            },
+            splits: {
+              orderBy: { splitNumber: "asc" },
             },
           },
-          splits: {
-            orderBy: { splitNumber: "asc" },
-          },
+          orderBy: { recordedAt: "desc" },
         },
-        orderBy: { recordedAt: "desc" },
       },
-    },
-  });
+    }),
+    prisma.squad.findMany({
+      where: { clubId },
+      orderBy: { name: "asc" },
+    }),
+  ]);
 
   if (!swimmer) notFound();
 
@@ -314,6 +321,122 @@ export default async function SwimmerProfilePage({
             </label>
 
             <button type="submit">Save Record</button>
+          </form>
+        </section>
+      )}
+
+      {/* Edit Member & Swimmer Details for Coaches and Admins */}
+      {canManage && swimmer.member && (
+        <section className="panel" id="edit-member" aria-labelledby="edit-member-title">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Administration</p>
+              <h2 id="edit-member-title">Edit Member & Swimmer Details</h2>
+            </div>
+          </div>
+          <form action={updateMember} className="form-grid">
+            <input type="hidden" name="memberId" value={swimmer.member.id} />
+            <input type="hidden" name="isSwimmer" value="true" />
+
+            <label>
+              First Name
+              <input name="firstName" defaultValue={swimmer.firstName} required maxLength={100} />
+            </label>
+
+            <label>
+              Last Name
+              <input name="lastName" defaultValue={swimmer.lastName} required maxLength={100} />
+            </label>
+
+            <label>
+              Email Address
+              <input
+                name="email"
+                type="email"
+                defaultValue={swimmer.member.email ?? ""}
+                placeholder="e.g. swimmer@example.com"
+              />
+            </label>
+
+            <label>
+              Contact Phone
+              <input
+                name="phone"
+                type="tel"
+                defaultValue={swimmer.member.phone ?? ""}
+                placeholder="e.g. 07700 900123"
+              />
+            </label>
+
+            <label>
+              Swim England ID
+              <input
+                name="governingBodyId"
+                defaultValue={swimmer.governingBodyId ?? ""}
+                placeholder="e.g. 1482931"
+              />
+            </label>
+
+            <label>
+              Date of Birth
+              <input
+                name="dateOfBirth"
+                type="date"
+                defaultValue={swimmer.dateOfBirth?.toISOString().slice(0, 10) ?? ""}
+              />
+            </label>
+
+            <label>
+              Gender
+              <select name="gender" defaultValue={swimmer.gender ?? "FEMALE"}>
+                <option value="FEMALE">Female</option>
+                <option value="MALE">Male</option>
+                <option value="OPEN">Open</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </label>
+
+            <label>
+              Squad
+              {clubSquads.length > 0 ? (
+                <select
+                  name="squad"
+                  defaultValue={swimmer.squadRel?.name ?? swimmer.squad ?? ""}
+                >
+                  <option value="">Unassigned</option>
+                  {clubSquads.map((sq) => (
+                    <option key={sq.id} value={sq.name}>
+                      {sq.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  name="squad"
+                  defaultValue={swimmer.squad ?? ""}
+                  placeholder="e.g. Senior Performance"
+                />
+              )}
+            </label>
+
+            <label>
+              Emergency Contact Name
+              <input
+                name="emergencyContactName"
+                defaultValue={swimmer.member.emergencyContactName ?? ""}
+              />
+            </label>
+
+            <label>
+              Emergency Contact Phone
+              <input
+                name="emergencyContactPhone"
+                type="tel"
+                defaultValue={swimmer.member.emergencyContactPhone ?? ""}
+              />
+            </label>
+
+            <button type="submit">Update Member Details</button>
           </form>
         </section>
       )}

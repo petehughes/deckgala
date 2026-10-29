@@ -13,8 +13,9 @@ export function AppNav({ role }: AppNavProps) {
 
   const navItems = [
     { href: "/", label: "Dashboard", icon: "📊" },
-    { href: "/roster", label: "Swimmers & Roster", icon: "🏊" },
+    { href: "/swimmers", label: "Swimmers", icon: "🏊" },
     { href: "/squads", label: "Squads", icon: "👥" },
+    { href: "/roster", label: "Members", icon: "📋" },
     { href: "/galas", label: "Gala Meets", icon: "⏱️" },
   ];
 

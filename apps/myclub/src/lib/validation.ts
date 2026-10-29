@@ -17,6 +17,10 @@ export const memberFormSchema = z.object({
   isSwimmer: z.boolean().or(z.enum(["true", "false", "on"]).transform((value) => value === "true" || value === "on")).optional().default(true),
 });
 
+export const updateMemberFormSchema = memberFormSchema.extend({
+  memberId: z.string().trim().min(1).max(128),
+});
+
 export const renewalFormSchema = z.object({
   memberId: z.string().trim().min(1).max(128),
   membershipExpiresAt: z.string().date(),
@@ -38,6 +42,22 @@ export const galaFormSchema = z.object({
   startsAt: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/),
   endsAt: z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/).or(z.literal("")),
   isPublic: z.boolean(),
+});
+
+export const squadFormSchema = z.object({
+  name: z.string().trim().min(1, "Squad name is required").max(100),
+  description: optionalText,
+  coachName: optionalText,
+  schedule: optionalText,
+});
+
+export const updateSquadFormSchema = squadFormSchema.extend({
+  squadId: z.string().trim().min(1),
+});
+
+export const assignSwimmerSquadSchema = z.object({
+  swimmerId: z.string().trim().min(1),
+  squadId: z.string().trim().optional().transform((value) => value || null),
 });
 
 export const eventFormSchema = z.object({

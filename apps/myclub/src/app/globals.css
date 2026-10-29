@@ -384,3 +384,293 @@ td small { margin-top: 4px; color: var(--text-muted); font-size: 11px; }
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
+
+/* Squad Performance & Coaching Intelligence Styles */
+.opportunity-list { display: grid; gap: 18px; margin-top: 14px; }
+.opportunity-card {
+  background: rgba(8, 16, 30, 0.6);
+  border: 1px solid rgba(0, 229, 255, 0.22);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  display: grid;
+  gap: 16px;
+}
+.opp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.opp-rank-badge {
+  display: inline-block;
+  font: 700 11px var(--deck-font-mono);
+  color: var(--accent-cyan);
+  background: rgba(0, 229, 255, 0.12);
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.opp-title { margin: 0; font-size: 18px; color: var(--color-frost-white); }
+.opp-cluster-tag {
+  background: rgba(255, 179, 0, 0.14);
+  color: var(--color-caution-amber);
+  border: 1px solid rgba(255, 179, 0, 0.3);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+.opp-cluster-tag strong { font-family: var(--deck-font-mono); font-size: 15px; }
+
+.opp-swimmers-list { display: grid; gap: 10px; }
+.opp-swimmer-row {
+  display: grid;
+  grid-template-columns: 1fr 180px;
+  gap: 16px;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(22, 35, 59, 0.5);
+  border-radius: var(--radius-sm);
+}
+@media (max-width: 640px) {
+  .opp-swimmer-row { grid-template-columns: 1fr; }
+}
+.opp-swimmer-info { display: flex; flex-direction: column; gap: 2px; }
+.opp-swimmer-link { text-decoration: none; color: var(--accent-cyan); font-size: 14px; }
+.opp-swimmer-times { font-size: 12px; color: var(--text-secondary); }
+.opp-delta { color: var(--color-caution-amber); font-weight: 700; font-family: var(--deck-font-mono); }
+
+.opp-progress-bar-container {
+  height: 20px;
+  background: rgba(8, 16, 30, 0.8);
+  border-radius: 99px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(140, 160, 186, 0.16);
+}
+.opp-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00B4D8, var(--accent-cyan));
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+.opp-progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font: 700 10px var(--deck-font-mono);
+  color: var(--color-frost-white);
+  white-space: nowrap;
+}
+
+.opp-coach-recommendation {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(0, 230, 118, 0.08);
+  border: 1px solid rgba(0, 230, 118, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--color-frost-white);
+}
+.coach-bulb-icon { font-size: 20px; }
+.opp-coach-recommendation p { margin: 0; }
+.opp-coach-recommendation strong { color: var(--color-pace-green); }
+
+.scheduled-promotions-panel { border-color: rgba(255, 179, 0, 0.3); }
+
+/* Squad Cards & Management */
+.squad-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
+  gap: 20px;
+}
+@media (max-width: 600px) {
+  .squad-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.squad-card {
+  padding: 22px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: rgba(22, 35, 59, 0.78);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.13);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+}
+.squad-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+.squad-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.squad-card-title h3 {
+  margin: 0;
+  font-size: 19px;
+  color: var(--text-primary);
+}
+.squad-coach-schedule {
+  margin-top: 6px;
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.squad-coach-schedule strong {
+  color: var(--text-primary);
+}
+.squad-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.squad-roster-box {
+  background: rgba(8, 16, 30, 0.45);
+  border: 1px solid rgba(140, 160, 186, 0.12);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+}
+.squad-roster-title {
+  font: 700 11px var(--deck-font-mono);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+.squad-member-list {
+  max-height: 180px;
+  overflow-y: auto;
+  display: grid;
+  gap: 6px;
+}
+.squad-member-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(140, 160, 186, 0.08);
+  font-size: 13px;
+}
+.squad-member-item:last-child {
+  border-bottom: none;
+}
+.squad-member-item a {
+  color: var(--text-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+.squad-member-item a:hover {
+  color: var(--accent-cyan);
+}
+.squad-assign-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(140, 160, 186, 0.12);
+}
+.squad-assign-bar select {
+  height: 34px;
+  font-size: 12px;
+}
+.squad-assign-bar button {
+  min-height: 34px;
+  height: 34px;
+  padding: 0 12px;
+  font-size: 11px;
+}
+.unassigned-panel {
+  border-color: rgba(255, 90, 54, 0.25);
+  background: rgba(255, 90, 54, 0.03);
+}
+.unassigned-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+.unassigned-card {
+  padding: 12px 14px;
+  border: 1px solid rgba(140, 160, 186, 0.16);
+  border-radius: var(--radius-sm);
+  background: rgba(8, 16, 30, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.unassigned-card a {
+  color: var(--text-primary);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 13px;
+}
+.unassigned-card a:hover {
+  color: var(--accent-cyan);
+}
+.inline-assign-form {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.inline-assign-form select {
+  height: 30px;
+  font-size: 11px;
+  min-width: 130px;
+}
+.inline-assign-form button {
+  min-height: 30px;
+  height: 30px;
+  padding: 0 8px;
+  font-size: 11px;
+}
+.remove-btn {
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  padding: 0 4px;
+  min-height: auto;
+  font-size: 13px;
+  cursor: pointer;
+}
+.remove-btn:hover {
+  color: var(--color-start-coral);
+}
+.squad-edit-box {
+  background: rgba(8, 16, 30, 0.7);
+  border: 1px solid var(--accent-cyan);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-top: 10px;
+}
+.squad-edit-box h4 {
+  margin: 0 0 12px;
+  color: var(--accent-cyan);
+  font: 700 11px var(--deck-font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.delete-link-btn {
+  background: transparent;
+  color: var(--color-start-coral);
+  border: none;
+  padding: 0;
+  min-height: auto;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+}
