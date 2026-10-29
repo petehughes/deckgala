@@ -121,3 +121,266 @@ td small { margin-top: 4px; color: var(--text-muted); font-size: 11px; }
   .meet-header { display: grid; }
   .create-club-form { align-items: stretch; }
 }
+
+/* Swimmer Profile & PB Matrix Styles */
+.swimmer-hero-panel { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 24px; }
+.swimmer-header-content { flex: 1; min-width: 280px; }
+.swimmer-meta-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.meta-tag { padding: 4px 10px; border-radius: 99px; background: rgba(140, 160, 186, 0.12); color: var(--text-secondary); font-size: 12px; }
+.squad-tag { background: rgba(0, 229, 255, 0.12); color: var(--accent-cyan); font-weight: 700; }
+.verified-tag { background: rgba(0, 230, 118, 0.12); color: var(--color-pace-green); font-weight: 700; }
+.unverified-tag { background: rgba(255, 179, 0, 0.12); color: var(--color-caution-amber); }
+
+.championship-tally-bar { display: flex; gap: 12px; flex-wrap: wrap; }
+.tally-card { min-width: 110px; padding: 14px 16px; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: rgba(8, 16, 30, 0.5); text-align: center; }
+.tally-card strong { display: block; font: 800 24px var(--deck-font-mono); color: var(--accent-cyan); }
+.tally-card span { display: block; margin-top: 4px; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+.sync-action-form { width: 100%; margin-top: 12px; border-top: 1px solid rgba(140, 160, 186, 0.12); padding-top: 14px; }
+
+.course-toggle-toolbar { display: flex; gap: 10px; margin-bottom: -10px; }
+.course-tab { padding: 10px 18px; border-radius: 8px; background: rgba(22, 35, 59, 0.6); color: var(--text-secondary); text-decoration: none; font-size: 13px; font-weight: 700; border: 1px solid transparent; }
+.course-tab-active { background: var(--color-slate-elevated); color: var(--accent-cyan); border-color: rgba(0, 229, 255, 0.3); }
+
+.pb-matrix-table td { padding: 12px 14px; }
+.pb-cell { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.pb-time { font: 700 14px var(--deck-font-mono); color: var(--accent-cyan); letter-spacing: -0.02em; }
+.cut-pill { font: 700 10px var(--deck-font-mono); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+.cut-achieved { background: rgba(0, 230, 118, 0.15); color: var(--color-pace-green); }
+.cut-within-reach { background: rgba(255, 179, 0, 0.15); color: var(--color-caution-amber); }
+.cut-target { background: rgba(140, 160, 186, 0.1); color: var(--text-muted); }
+.pb-empty { color: rgba(140, 160, 186, 0.3); font-family: var(--deck-font-mono); }
+.mono-time { font-family: var(--deck-font-mono); font-weight: 700; color: var(--accent-cyan); }
+
+/* Phase 1 Shell & Navigation Styles */
+.app-shell-header {
+  border-bottom: 1px solid var(--border-subtle);
+  background: rgba(11, 21, 40, 0.92);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-main-row {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.brand-group {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.brand-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+.brand-title {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.brand-title-deck { color: var(--color-frost-white); }
+.brand-title-gala { color: var(--color-start-coral); }
+.portal-sub-badge {
+  background: rgba(0, 229, 255, 0.14);
+  color: var(--accent-cyan);
+  font: 700 10px var(--deck-font-mono);
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.header-club-switcher {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.header-club-switcher select {
+  height: 36px;
+  font-size: 13px;
+  min-width: 180px;
+}
+.header-club-switcher button {
+  min-height: 36px;
+  height: 36px;
+  padding: 0 12px;
+  font-size: 11px;
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.header-utility-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.header-link {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.header-link:hover { color: var(--accent-cyan); }
+.platform-link-badge {
+  background: rgba(255, 90, 54, 0.12);
+  color: var(--color-start-coral);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+.user-profile-widget {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: 12px;
+  border-left: 1px solid rgba(140, 160, 186, 0.16);
+}
+.user-meta {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+}
+.user-name {
+  color: var(--color-frost-white);
+  font-size: 13px;
+  font-weight: 700;
+}
+.user-email {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+/* Role Badges */
+.role-badge {
+  font: 700 10px var(--deck-font-mono);
+  padding: 3px 8px;
+  border-radius: 99px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.role-badge-admin { background: rgba(255, 90, 54, 0.15); color: var(--color-start-coral); border: 1px solid rgba(255, 90, 54, 0.3); }
+.role-badge-coach { background: rgba(0, 229, 255, 0.15); color: var(--accent-cyan); border: 1px solid rgba(0, 229, 255, 0.3); }
+.role-badge-timekeeper { background: rgba(255, 179, 0, 0.15); color: var(--color-caution-amber); border: 1px solid rgba(255, 179, 0, 0.3); }
+.role-badge-parent { background: rgba(0, 230, 118, 0.15); color: var(--color-pace-green); border: 1px solid rgba(0, 230, 118, 0.3); }
+.role-badge-default { background: rgba(140, 160, 186, 0.15); color: var(--text-secondary); }
+
+/* Global Alert Banner */
+.global-alert-banner {
+  padding: 8px 20px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.alert-warning {
+  background: rgba(255, 179, 0, 0.15);
+  color: var(--color-caution-amber);
+  border-top: 1px solid rgba(255, 179, 0, 0.25);
+}
+.alert-action-link {
+  color: var(--color-frost-white);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+/* App Navigation Bar */
+.app-nav-bar {
+  background: rgba(16, 28, 48, 0.7);
+  border-bottom: 1px solid rgba(140, 160, 186, 0.12);
+}
+.app-nav-scroll {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.nav-item:hover {
+  color: var(--color-frost-white);
+  border-bottom-color: rgba(0, 229, 255, 0.3);
+}
+.nav-item-active {
+  color: var(--accent-cyan);
+  border-bottom-color: var(--accent-cyan);
+  font-weight: 700;
+}
+.nav-item-icon { font-size: 15px; }
+
+/* Roster Filter */
+.roster-filter-panel { margin-bottom: -10px; }
+.roster-filter-form {
+  display: grid;
+  grid-template-columns: 2fr 1fr auto;
+  gap: 14px;
+  align-items: flex-end;
+}
+
+/* Squads Grid */
+.squad-grid {
+  display: grid;
+  gap: 20px;
+}
+
+/* Family Portal */
+.swimmer-family-grid { display: grid; gap: 20px; }
+.swimmer-family-card { display: grid; gap: 20px; }
+.pb-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+.pb-mini-item {
+  background: rgba(8, 16, 30, 0.5);
+  border: 1px solid rgba(140, 160, 186, 0.12);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pb-mini-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-family: var(--deck-font-mono); }
+.recent-race-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(140, 160, 186, 0.08);
+}
+.settings-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}

@@ -743,3 +743,65 @@ To enable parallel execution by autonomous coding agents, the work is partitione
 4. **Type Safety:** 100% clean `bun run typecheck` (`tsc --noEmit`) with no `any` types.
 5. **Fast Load Performance:** Sub-100ms Server Component rendering for roster and meet schedules.
 
+---
+
+## 9. Living Execution Tracker, Assumptions & Issues Log
+
+**Last Updated:** 2026-10-29  
+**Status:** In Progress — Phase 2 Swimmer Core Execution
+
+### 9.1 Phase-by-Phase Progress Tracker
+- [x] **Phase 0: Architectural Blueprint & Site Design**
+  - [x] Complete domain modeling for MyClub, Swimmers, Galas, Venues, Squads, and Parents.
+  - [x] Full route map and navigation hierarchy specification.
+  - [x] Swim England Membership API integration specification.
+- [x] **Phase 1: Shell, Navigation & Tenancy**
+  - [x] Better Auth session validation and `requireClubRole` guard helpers.
+  - [x] Cookie-backed multi-tenant switcher (`deckgala_active_club`).
+  - [x] Full top navigation bar (`<AppHeader />`) with brand logo mark, user profile, billing/platform links, and alert banners.
+  - [x] Responsive navigation bar (`<AppNav />`) with role-aware route tabs (`/`, `/roster`, `/squads`, `/galas`, `/my-swimmers`, `/settings/club`).
+  - [x] Standardized `requireActiveClub()` session wrapper in `club-context.ts`.
+  - [x] Dedicated navigation destination pages for `/roster`, `/squads`, `/galas`, `/my-swimmers`, and `/settings/club`.
+- [ ] **Phase 2: Swimmer CRM, PBs, Qualifying Standards & Swim England Sync**
+  - [x] Enhanced Member & Swimmer creation linking `Member` and `Swimmer` in a transaction with DOB, gender, and squad.
+  - [x] Competition age calculation engine (`apps/myclub/src/lib/age-calculator.ts` with 100% test coverage).
+  - [x] County, Regional, and National qualifying standards comparison engine (`apps/myclub/src/lib/qualifying-standards.ts` with 100% test coverage).
+  - [x] Swim England Membership API client (`apps/myclub/src/lib/swim-england-api.ts`) supporting Individual, Squad, and Club sync with dev mock provider.
+  - [x] Swimmer Profile view (`/swimmers/[id]`) with interactive PB Matrix, cut time proximity badges, and race history.
+  - [ ] Parent multi-child view (`/my-swimmers`).
+  - [ ] Squads CRUD and temporal promotions (`lib/squads.ts`).
+  - [ ] Squad performance analytics and coaching opportunity gap matrix.
+- [ ] **Phase 3: Gala Meets, Venues & Parent Entry Wizard**
+  - [ ] Club Venue directory and OpenStreetMap card component (`<VenueMap />`).
+  - [ ] Gala Sessions & Event Builder with fee structures.
+  - [ ] Parent Multi-Child Gala Entry Wizard with smart qualification filtering and cost calculation.
+  - [ ] Seeding engine (`lib/seeding-engine.ts`) with spearhead and cyclic seeding.
+- [ ] **Phase 4: Results Adjudication & Hy-Tek Export**
+  - [ ] Deck session ingestion review table and split times display.
+  - [ ] Official vs Unofficial adjudication actions and DQ code logging.
+  - [ ] Hy-Tek `.hy3` format exporter route (`/api/export/hytek/[galaId]`).
+- [ ] **Phase 5: Club Branding, Staff Invites & Platform Superadmin**
+  - [ ] 7-day cryptographic invite token link generator.
+  - [ ] Club branding settings (custom crest and accent colors).
+  - [ ] Platform superadmin controls and Stripe subscription portal.
+
+### 9.2 Technical Assumptions Log
+1. **Swim England API Connectivity & Sandbox:**
+   * *Assumption:* The Swim England API (`https://api-membership.swimming.org`) requires client credentials (`SWIM_ENGLAND_API_KEY`). For local development, testing, and continuous integration, a robust mock provider is built into `lib/swim-england-api.ts` that provides realistic member verification data, DOBs, categories, and certified times when live credentials are not set.
+2. **Age Group Calculation Rules:**
+   * *Assumption:* Competition age for County and Regional championships is calculated as age as of December 31st of the meet year (`galaYear - birthYear`). For open invitational galas where "Age on the Day" is specified, age is computed as calendar years elapsed on `gala.startsAt`.
+3. **Database Schema Continuity:**
+   * *Assumption:* The existing Prisma schema in `@deckgala/database` contains `Swimmer` (with `dateOfBirth`, `gender`, `squad`, `governingBodyId`), `PersonalBest`, `RaceResult`, and `RaceSplit`. New business logic builds cleanly on top of these verified schema entities.
+4. **Parent-Child Linkage:**
+   * *Assumption:* A parent user (`User` with role `PARENT`) links to swimmers via `Member.userId` or a family membership record, allowing a single parent to view and book galas for multiple children.
+
+### 9.3 Issues & Resolutions Log
+* **Issue 1: Test Runner Typings (`bun:test` vs `node:test`):**
+  * *Symptom:* TypeScript compile failed with `error TS2307: Cannot find module 'bun:test'`.
+  * *Root Cause:* `@deckgala/myclub`'s `tsconfig.json` specifies `"types": ["node"]` rather than Bun runtime types.
+  * *Resolution:* Standardized test files on Node's native test runner (`import { describe, it } from "node:test"` and `import assert from "node:assert/strict"`), which runs cleanly under both `bun test` and standard Node/TypeScript type checking.
+* **Issue 2: Member Form Schema Synchronization:**
+  * *Symptom:* Form validation needed to accept new optional swimmer fields (`dateOfBirth`, `gender`, `squad`, `isSwimmer`) without breaking existing member creation.
+  * *Resolution:* Made new fields optional with safe nullish transformations and updated unit tests; all 21 unit tests across 6 files now pass with 0 errors.
+
+

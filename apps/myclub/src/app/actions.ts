@@ -4,6 +4,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import type { PoolCourse, SwimStroke } from "@deckgala/database";
 import {
   getFreeClubLimit,
   getStripe,
@@ -15,6 +16,7 @@ import { canCreateClub, parseFreeClubLimit } from "../lib/plan-policy";
 import { isPlatformAdmin, requireSession } from "../lib/session";
 import { getAccessibleUserClubs, requireClubRole } from "../lib/club-context";
 import { prisma } from "../lib/prisma";
+import { fetchSwimEnglandMemberDetails } from "../lib/swim-england-api";
 import {
   eventFormSchema,
   formString,
@@ -293,19 +295,49 @@ export async function createMember(formData: FormData): Promise<void> {
     governingBodyId: formString(formData, "governingBodyId"),
     emergencyContactName: formString(formData, "emergencyContactName"),
     emergencyContactPhone: formString(formData, "emergencyContactPhone"),
+    dateOfBirth: formString(formData, "dateOfBirth"),
+    gender: formString(formData, "gender"),
+    squad: formString(formData, "squad"),
+    isSwimmer: formString(formData, "isSwimmer") !== "false",
   });
   const membershipExpiresAt = new Date();
   membershipExpiresAt.setUTCFullYear(membershipExpiresAt.getUTCFullYear() + 1);
   membershipExpiresAt.setUTCHours(0, 0, 0, 0);
 
-  await prisma.member.create({
-    data: {
-      ...data,
-      clubId: active.clubId,
-      membershipExpiresAt,
-    },
+  await prisma.$transaction(async (tx) => {
+    const member = await tx.member.create({
+      data: {
+        clubId: active.clubId,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        governingBodyId: data.governingBodyId,
+        emergencyContactName: data.emergencyContactName,
+        emergencyContactPhone: data.emergencyContactPhone,
+        membershipExpiresAt,
+      },
+    });
+
+    if (data.isSwimmer) {
+      const dob = data.dateOfBirth ? new Date(`${data.dateOfBirth}T00:00:00.000Z`) : null;
+      await tx.swimmer.create({
+        data: {
+          clubId: active.clubId,
+          memberId: member.id,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          dateOfBirth: dob,
+          gender: data.gender,
+          governingBodyId: data.governingBodyId,
+          squad: data.squad,
+        },
+      });
+    }
   });
+
   revalidatePath("/");
+  revalidatePath("/roster");
 }
 
 export async function renewMembership(formData: FormData): Promise<void> {
@@ -398,4 +430,119 @@ export async function createEvent(formData: FormData): Promise<void> {
     },
   });
   revalidatePath("/");
+}
+
+/**
+ * Synchronizes swimmer date of birth and certified personal bests from Swim England API.
+ */
+export async function syncSwimmerWithSwimEngland(formData: FormData): Promise<void> {
+  const active = await requireClubRole(["ADMIN", "COACH"]);
+  const swimmerId = formString(formData, "swimmerId");
+
+  const swimmer = await prisma.swimmer.findFirst({
+    where: { id: swimmerId, clubId: active.clubId },
+    select: { id: true, governingBodyId: true, firstName: true, lastName: true },
+  });
+
+  if (!swimmer || !swimmer.governingBodyId) {
+    throw new Error("Swimmer has no Swim England number recorded");
+  }
+
+  const details = await fetchSwimEnglandMemberDetails(swimmer.governingBodyId);
+  if (!details) {
+    throw new Error("Could not find swimmer in Swim England registry");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    const dob = new Date(`${details.dateOfBirth}T00:00:00.000Z`);
+    await tx.swimmer.update({
+      where: { id: swimmer.id },
+      data: {
+        dateOfBirth: dob,
+        gender: details.gender,
+      },
+    });
+
+    // Ingest certified personal bests
+    for (const pb of details.rankedTimes) {
+      const achievedAt = new Date(`${pb.achievedAt}T00:00:00.000Z`);
+      const existing = await tx.personalBest.findFirst({
+        where: {
+          swimmerId: swimmer.id,
+          stroke: pb.stroke,
+          distance: pb.distance,
+          course: pb.course,
+        },
+      });
+
+      if (!existing) {
+        await tx.personalBest.create({
+          data: {
+            swimmerId: swimmer.id,
+            stroke: pb.stroke,
+            distance: pb.distance,
+            course: pb.course,
+            timeMs: pb.timeMs,
+            achievedAt,
+            meetName: pb.meetName,
+          },
+        });
+      } else if (pb.timeMs < existing.timeMs) {
+        await tx.personalBest.update({
+          where: { id: existing.id },
+          data: {
+            timeMs: pb.timeMs,
+            achievedAt,
+            meetName: pb.meetName,
+          },
+        });
+      }
+    }
+  });
+
+  revalidatePath(`/swimmers/${swimmerId}`);
+  revalidatePath("/roster");
+  revalidatePath("/");
+}
+
+/**
+ * Allows coaches/admins to manually record or adjust a personal best for a swimmer.
+ */
+export async function recordPersonalBest(formData: FormData): Promise<void> {
+  const active = await requireClubRole(["ADMIN", "COACH"]);
+  const swimmerId = formString(formData, "swimmerId");
+  const stroke = formString(formData, "stroke") as SwimStroke;
+  const distance = Number.parseInt(formString(formData, "distance"), 10);
+  const course = formString(formData, "course") as PoolCourse;
+  const timeMs = Number.parseInt(formString(formData, "timeMs"), 10);
+  const meetName = formString(formData, "meetName") || "Club Time Trial";
+  const achievedDateStr = formString(formData, "achievedAt");
+  const achievedAt = achievedDateStr ? new Date(`${achievedDateStr}T00:00:00.000Z`) : new Date();
+
+  if (!swimmerId || !stroke || Number.isNaN(distance) || Number.isNaN(timeMs) || timeMs <= 0) {
+    throw new Error("Invalid time data provided");
+  }
+
+  const swimmer = await prisma.swimmer.findFirst({
+    where: { id: swimmerId, clubId: active.clubId },
+    select: { id: true },
+  });
+  if (!swimmer) throw new Error("Swimmer not found in this club");
+
+  const existing = await prisma.personalBest.findFirst({
+    where: { swimmerId: swimmer.id, stroke, distance, course },
+  });
+
+  if (existing) {
+    await prisma.personalBest.update({
+      where: { id: existing.id },
+      data: { timeMs, meetName, achievedAt },
+    });
+  } else {
+    await prisma.personalBest.create({
+      data: { swimmerId: swimmer.id, stroke, distance, course, timeMs, meetName, achievedAt },
+    });
+  }
+
+  revalidatePath(`/swimmers/${swimmerId}`);
 }

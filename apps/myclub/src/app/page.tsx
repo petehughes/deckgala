@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClub, createEvent, createGala, createMember, renewMembership, setGalaVisibility } from "./actions";
-import { ClubSwitcher } from "./club-switcher";
 import { InviteForm } from "./invite-form";
 import { SignOutButton } from "./sign-out-button";
 import { getAccessibleUserClubs } from "../lib/club-context";
@@ -45,37 +44,45 @@ export default async function MyClubPage() {
   const session = await requireSession();
   const clubAccess = await getAccessibleUserClubs(session.user.id);
   const { memberships, accessible } = clubAccess;
+
   if (memberships.length === 0) {
     return (
-      <section className="panel onboarding-panel">
-        <p className="eyebrow">One portal. Every club.</p>
-        <h1>Welcome to DeckGala.</h1>
-        <p className="muted">Create a club workspace or accept an invitation from a club administrator.</p>
-        <form action={createClub} className="create-club-form">
-          <label>Club name<input name="name" required minLength={2} maxLength={120} /></label>
-          <button type="submit">Create your club</button>
-        </form>
-        {isPlatformAdmin(session.user.email) && <a className="platform-link" href="/platform">Platform settings</a>}
-        <SignOutButton />
-      </section>
+      <div className="page-shell">
+        <section className="panel onboarding-panel">
+          <p className="eyebrow">One portal. Every club.</p>
+          <h1>Welcome to DeckGala.</h1>
+          <p className="muted">Create a club workspace or accept an invitation from a club administrator.</p>
+          <form action={createClub} className="create-club-form">
+            <label>Club name<input name="name" required minLength={2} maxLength={120} /></label>
+            <button type="submit">Create your club</button>
+          </form>
+          {isPlatformAdmin(session.user.email) && <a className="platform-link" href="/platform">Platform settings</a>}
+          <SignOutButton />
+        </section>
+      </div>
     );
   }
+
   if (accessible.length === 0) {
     return (
-      <section className="panel onboarding-panel">
-        <p className="eyebrow">Subscription required</p>
-        <h1>Your club workspaces are locked.</h1>
-        <p className="muted">An active subscription is needed to access clubs above the free allowance.</p>
-        <a className="upgrade-link" href="/billing">Review billing</a>
-        <SignOutButton />
-      </section>
+      <div className="page-shell">
+        <section className="panel onboarding-panel">
+          <p className="eyebrow">Subscription required</p>
+          <h1>Your club workspaces are locked.</h1>
+          <p className="muted">An active subscription is needed to access clubs above the free allowance.</p>
+          <a className="upgrade-link" href="/billing">Review billing</a>
+          <SignOutButton />
+        </section>
+      </div>
     );
   }
+
   const cookieStore = await cookies();
   const selectedId = cookieStore.get("deckgala_active_club")?.value;
   const membership = accessible.find(({ clubId }) => clubId === selectedId) ?? accessible[0];
   if (!membership) notFound();
   const clubId = membership.clubId;
+
   const club = await prisma.club.findUnique({
     where: { id: clubId },
     include: {
@@ -83,6 +90,9 @@ export default async function MyClubPage() {
         where: membership.role === "PARENT"
           ? { userId: session.user.id }
           : {},
+        include: {
+          swimmer: true,
+        },
         orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
       },
       galas: {
@@ -93,6 +103,7 @@ export default async function MyClubPage() {
     },
   });
   if (!club) notFound();
+
   const { administratorClubCount: adminClubCount, freeClubLimit, subscriptionActive, lockedClubCount } = clubAccess;
   const canCreateClub = adminClubCount < freeClubLimit || subscriptionActive;
   const canManage = membership.role === "ADMIN" || membership.role === "COACH";
@@ -103,21 +114,12 @@ export default async function MyClubPage() {
   }).length;
 
   return (
-    <>
-      <section className="portal-toolbar">
-        <ClubSwitcher clubs={accessible} selectedClubId={clubId} />
-        <nav className="portal-links" aria-label="Account">
-          <a href="/billing">Billing</a>
-          {isPlatformAdmin(session.user.email) && <a href="/platform">Platform settings</a>}
-          <span>{session.user.email}</span>
-          <SignOutButton />
-        </nav>
-      </section>
+    <div className="page-shell">
       <section className="hero">
         <div>
-          <p className="eyebrow">Club workspace</p>
+          <p className="eyebrow">Club Workspace</p>
           <h1>{club.name}</h1>
-          <p className="muted">Manage your membership register and upcoming meets.</p>
+          <p className="muted">Overview of membership registrations, urgent actions, and upcoming meets.</p>
         </div>
         <div className="summary">
           <div><strong>{club.members.length}</strong><span>Members</span></div>
@@ -152,14 +154,29 @@ export default async function MyClubPage() {
 
       <section className="panel" aria-labelledby="members-title">
         <div className="section-heading">
-          <div><p className="eyebrow">People</p><h2 id="members-title">{membership.role === "PARENT" ? "Your swimmer" : "Members"}</h2></div>
+          <div>
+            <p className="eyebrow">People</p>
+            <h2 id="members-title">{membership.role === "PARENT" ? "Your Swimmer" : "Recent Members"}</h2>
+          </div>
+          <a href="/roster" className="button-secondary">
+            View All in Roster →
+          </a>
         </div>
         {canManage && <form action={createMember} className="form-grid">
           <label>First name<input name="firstName" required maxLength={100} /></label>
           <label>Last name<input name="lastName" required maxLength={100} /></label>
+          <label>Date of Birth<input name="dateOfBirth" type="date" /></label>
+          <label>Gender
+            <select name="gender" defaultValue="FEMALE">
+              <option value="FEMALE">Female</option>
+              <option value="MALE">Male</option>
+              <option value="OPEN">Open</option>
+            </select>
+          </label>
+          <label>Squad<input name="squad" placeholder="e.g. Senior Performance" /></label>
+          <label>Governing body ID<input name="governingBodyId" placeholder="Swim England #" /></label>
           <label>Email<input name="email" type="email" /></label>
           <label>Phone<input name="phone" type="tel" /></label>
-          <label>Governing body ID<input name="governingBodyId" /></label>
           <label>Emergency contact<input name="emergencyContactName" /></label>
           <label>Emergency phone<input name="emergencyContactPhone" type="tel" /></label>
           <button type="submit">Add member</button>
@@ -167,11 +184,24 @@ export default async function MyClubPage() {
 
         <div className="table-scroll">
           <table>
-            <thead><tr><th>Member</th><th>Contact</th><th>Membership</th><th>Renew through</th></tr></thead>
+            <thead><tr><th>Member / Swimmer</th><th>Squad / Age</th><th>Contact</th><th>Membership</th><th>Renew through</th></tr></thead>
             <tbody>
-              {club.members.map((member) => (
+              {club.members.slice(0, 10).map((member) => (
                 <tr key={member.id}>
-                  <td><strong>{member.firstName} {member.lastName}</strong><small>{member.governingBodyId ?? "No governing body ID"}</small></td>
+                  <td>
+                    {member.swimmer ? (
+                      <a href={`/swimmers/${member.swimmer.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+                        <strong style={{ color: "var(--accent-cyan)" }}>{member.firstName} {member.lastName} →</strong>
+                      </a>
+                    ) : (
+                      <strong>{member.firstName} {member.lastName}</strong>
+                    )}
+                    <small>{member.governingBodyId ? `Swim England: ${member.governingBodyId}` : "No governing body ID"}</small>
+                  </td>
+                  <td>
+                    {member.swimmer?.squad ? <strong>{member.swimmer.squad}</strong> : <span>—</span>}
+                    <small>{member.swimmer?.gender ?? ""}</small>
+                  </td>
                   <td>{member.email ?? member.phone ?? "No contact details"}</td>
                   <td><span className={`status status-${renewalStatus(member.membershipExpiresAt).toLowerCase().replaceAll(" ", "-")}`}>{renewalStatus(member.membershipExpiresAt)}</span></td>
                   <td>
@@ -183,14 +213,22 @@ export default async function MyClubPage() {
                   </td>
                 </tr>
               ))}
-              {club.members.length === 0 && <tr><td colSpan={4} className="empty">{membership.role === "PARENT" ? "No swimmer record is linked to this account yet." : "No members yet. Add the first member above."}</td></tr>}
+              {club.members.length === 0 && <tr><td colSpan={5} className="empty">{membership.role === "PARENT" ? "No swimmer record is linked to this account yet." : "No members yet. Add the first member above."}</td></tr>}
             </tbody>
           </table>
         </div>
       </section>
 
       <section className="panel" aria-labelledby="meets-title">
-        <div className="section-heading"><div><p className="eyebrow">Competition</p><h2 id="meets-title">Gala meets</h2></div></div>
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Competition</p>
+            <h2 id="meets-title">Gala Meets</h2>
+          </div>
+          <a href="/galas" className="button-secondary">
+            View All Galas →
+          </a>
+        </div>
         {canManage && <form action={createGala} className="form-grid meet-form">
           <label>Meet name<input name="name" required maxLength={200} /></label>
           <label>Venue<input name="venue" /></label>
@@ -250,6 +288,6 @@ export default async function MyClubPage() {
           {club.galas.length === 0 && <p className="empty">{membership.role === "PARENT" ? "No published meets are available." : "No meets scheduled. Create a gala above."}</p>}
         </div>
       </section>
-    </>
+    </div>
   );
 }

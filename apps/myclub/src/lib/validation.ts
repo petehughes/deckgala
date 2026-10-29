@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-const optionalText = z.string().trim().max(200).transform((value) => value || null);
-const email = z.string().trim().email().or(z.literal("")).transform((value) => value || null);
+const optionalText = z.string().trim().max(200).optional().transform((value) => value || null);
+const email = z.string().trim().email().or(z.literal("")).optional().transform((value) => value || null);
 
 export const memberFormSchema = z.object({
   firstName: z.string().trim().min(1).max(100),
@@ -11,6 +11,10 @@ export const memberFormSchema = z.object({
   governingBodyId: optionalText,
   emergencyContactName: optionalText,
   emergencyContactPhone: optionalText,
+  dateOfBirth: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal("")).optional().transform((value) => value || null),
+  gender: z.enum(["FEMALE", "MALE", "OPEN", "OTHER"]).or(z.literal("")).optional().transform((value) => (value ? (value as "FEMALE" | "MALE" | "OPEN" | "OTHER") : null)),
+  squad: optionalText,
+  isSwimmer: z.boolean().or(z.enum(["true", "false", "on"]).transform((value) => value === "true" || value === "on")).optional().default(true),
 });
 
 export const renewalFormSchema = z.object({

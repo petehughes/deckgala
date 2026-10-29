@@ -8,7 +8,7 @@ import { prisma } from "./prisma";
 export async function listUserClubs(userId: string) {
   return prisma.clubMembership.findMany({
     where: { userId },
-    include: { club: { select: { id: true, name: true } } },
+    include: { club: { select: { id: true, name: true, shortName: true } } },
     orderBy: { createdAt: "asc" },
   });
 }
@@ -54,6 +54,18 @@ export async function getActiveClub() {
     membership,
     clubId: membership.clubId,
     role: membership.role,
+  };
+}
+
+export async function requireActiveClub() {
+  const active = await getActiveClub();
+  const club = await prisma.club.findUnique({
+    where: { id: active.clubId },
+  });
+  if (!club) redirect("/");
+  return {
+    ...active,
+    club,
   };
 }
 
