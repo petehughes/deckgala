@@ -85,24 +85,18 @@ export default async function SignInPage({
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-          <button
-            type="button"
+          <a
+            href="/api/auth/signin/google"
             className="btn-secondary"
-            onClick={() => {
-              window.location.href = "/api/auth/signin/google";
-            }}
           >
             Google
-          </button>
-          <button
-            type="button"
+          </a>
+          <a
+            href="/api/auth/signin/apple"
             className="btn-secondary"
-            onClick={() => {
-              window.location.href = "/api/auth/signin/apple";
-            }}
           >
             Apple
-          </button>
+          </a>
         </div>
 
         <div className="auth-footer" style={{ marginTop: "24px" }}>
@@ -127,4 +121,3 @@ export default async function SignInPage({
     </main>
   );
 }
-

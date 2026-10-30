@@ -276,11 +276,6 @@ export default async function SquadsPage({
                             <button
                               type="submit"
                               className="delete-link-btn"
-                              onClick={(e) => {
-                                if (!confirm(`Are you sure you want to delete "${squad.name}"? Swimmers will be unassigned.`)) {
-                                  e.preventDefault();
-                                }
-                              }}
                             >
                               Delete Squad
                             </button>

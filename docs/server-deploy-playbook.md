@@ -199,37 +199,66 @@ sudo tee /etc/caddy/Caddyfile >/dev/null <<'EOF'
   }
 }
 
+# Holding page: active while /var/www/maintenance/ACTIVE exists (checked per request, no reload needed)
+(maintenance) {
+  @maintenance file /var/www/maintenance/ACTIVE
+  handle @maintenance {
+    root * /var/www/maintenance
+    rewrite * /maintenance.html
+    header Cache-Control "no-store"
+    header Retry-After "120"
+    file_server {
+      status 503
+    }
+  }
+}
+
+(maintenance_api) {
+  @maintenance file /var/www/maintenance/ACTIVE
+  handle @maintenance {
+    header Cache-Control "no-store"
+    header Retry-After "120"
+    respond `{"error":"maintenance","message":"Service is being updated, please retry shortly"}` 503
+  }
+}
+
 aquateamhub.com {
   redir https://www.aquateamhub.com{uri} permanent
 }
 
 www.aquateamhub.com {
   import common
+  import maintenance
   reverse_proxy 127.0.0.1:3004
 }
 
 auth.aquateamhub.com {
   import common
+  import maintenance
   reverse_proxy 127.0.0.1:3001
 }
 
 my.aquateamhub.com {
   import common
+  import maintenance
   reverse_proxy 127.0.0.1:3002
 }
 
 myclub.aquateamhub.com {
   import common
+  import maintenance
   reverse_proxy 127.0.0.1:3000
 }
 
 results.aquateamhub.com {
   import common
+  import maintenance
   reverse_proxy 127.0.0.1:3003
 }
 
 api.aquateamhub.com {
   import common
+  import maintenance_api
   reverse_proxy 127.0.0.1:8080
 }
 EOF
@@ -237,6 +266,44 @@ sudo caddy fmt --overwrite /etc/caddy/Caddyfile
 sudo caddy validate --config /etc/caddy/Caddyfile
 sudo systemctl reload caddy
 ```
+### 6.1 Holding page
+Create the page in a world-readable directory (not under `/srv`, so the `caddy` user can always read it). Do this **before** reloading Caddy with the config above.
+```bash
+sudo mkdir -p /var/www/maintenance
+sudo chown aquateamhub:aquateamhub /var/www/maintenance
+sudo -u aquateamhub tee /var/www/maintenance/maintenance.html >/dev/null <<'EOF'
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="refresh" content="30">
+<title>AquaTeamHub - updating</title>
+<style>
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif;background:#0b2a4a;color:#fff;text-align:center}
+  main{padding:2rem;max-width:32rem}
+  h1{margin:0 0 .75rem;font-size:1.75rem}
+  p{margin:0;opacity:.85;line-height:1.5}
+</style>
+</head>
+<body>
+<main>
+  <h1>We'll be right back</h1>
+  <p>AquaTeamHub is being updated. This page refreshes automatically, and the site will return in a few minutes.</p>
+</main>
+</body>
+</html>
+EOF
+```
+Test it manually (no deploy needed):
+```bash
+sudo -u aquateamhub touch /var/www/maintenance/ACTIVE
+curl -si https://www.aquateamhub.com | head -n 5      # HTTP/2 503, holding page
+curl -si https://api.aquateamhub.com                  # 503 JSON
+sudo -u aquateamhub rm /var/www/maintenance/ACTIVE
+curl -sI https://www.aquateamhub.com                  # back to normal
+```
+
 **Verify:** `curl -I https://www.aquateamhub.com`, and the same for `auth`, `my`, `myclub`, `results` and `api`. Then sign in through the browser and confirm the session cookie (domain `.aquateamhub.com`) is shared across `my` and `myclub`.
 
 ## 7. Deploy script (updates)
@@ -248,7 +315,16 @@ cd /srv/aquateamhub/repo
 set -a; source /etc/aquateamhub/env; set +a
 source /srv/aquateamhub/build.env
 
+FLAG=/var/www/maintenance/ACTIVE
+
+# Fetch first, so a network or auth failure never takes the site down
 git fetch --prune origin
+
+touch "$FLAG"
+echo "Holding page ON"
+# On failure the holding page stays up on purpose (the half-built apps should not be served)
+trap 'echo "Deploy FAILED - holding page left ON. Fix, rerun, or remove it: rm $FLAG" >&2' ERR
+
 git checkout "${1:-main}"
 git pull --ff-only
 
@@ -258,6 +334,21 @@ bun run --filter @aquateamhub/database db:migrate:deploy
 for a in auth my myclub results www; do bun run --filter @aquateamhub/$a build; done
 
 sudo /bin/systemctl restart aquateamhub-api 'aquateamhub-next@auth' 'aquateamhub-next@my' 'aquateamhub-next@myclub' 'aquateamhub-next@results' 'aquateamhub-next@www'
+
+# Wait until every app answers before lifting the holding page (max ~60s each)
+for p in 3000 3001 3002 3003 3004 8080; do
+  ok=0
+  for i in $(seq 1 30); do
+    code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$p/" || true)
+    if [ "$code" != "000" ]; then ok=1; break; fi
+    sleep 2
+  done
+  [ "$ok" = 1 ] || { echo "Port $p did not come up" >&2; false; }
+done
+
+rm -f "$FLAG"
+trap - ERR
+echo "Holding page OFF"
 echo "Deployed $(git rev-parse --short HEAD)"
 EOF
 sudo chown aquateamhub:aquateamhub /srv/aquateamhub/deploy.sh && sudo chmod 750 /srv/aquateamhub/deploy.sh
@@ -270,7 +361,7 @@ EOF
 sudo chmod 440 /etc/sudoers.d/91-aquateamhub-deploy && sudo visudo -c
 ```
 Because the service account has `nologin`, run it with: `sudo -u aquateamhub /srv/aquateamhub/deploy.sh`.
-Building in place means each app is briefly unavailable while restarting. That is acceptable at this scale. Take a database dump before any deploy that includes a migration:
+While the script runs, every site shows the holding page (HTTP 503, auto-refreshing every 30s) and the API returns a 503 JSON response, so search engines and clients know it is temporary. The page is removed only after all six services respond. If the deploy fails, the holding page stays up deliberately; fix the problem and rerun, or lift it manually with `sudo -u aquateamhub rm /var/www/maintenance/ACTIVE`. To show the page manually at any time (e.g. for database maintenance), `touch` that file. Take a database dump before any deploy that includes a migration:
 `sudo -u postgres pg_dump -Fc aquateamhub > /var/backups/aquateamhub/pre-deploy-$(date +%F-%H%M).dump`
 
 ## 8. Automating from GitHub Actions (optional)
