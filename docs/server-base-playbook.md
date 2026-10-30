@@ -74,6 +74,7 @@ maxretry = 5
 
 [sshd]
 enabled = true
+backend = systemd
 EOF
 sudo systemctl enable --now fail2ban
 sudo fail2ban-client status sshd
@@ -100,13 +101,13 @@ sudo sysctl --system
 
 ## 8. Service user and directories
 ```bash
-sudo adduser --system --group --home /srv/deckgala --shell /usr/sbin/nologin deckgala
+sudo adduser --system --group --home /srv/deckgala --shell /usr/sbin/nologin aquateamhub
 sudo mkdir -p /srv/deckgala/repo /etc/deckgala /var/backups/deckgala
-sudo chown -R deckgala:deckgala /srv/deckgala
-sudo chown root:deckgala /etc/deckgala && sudo chmod 750 /etc/deckgala
+sudo chown -R aquateamhub:aquateamhub /srv/deckgala
+sudo chown root:aquateamhub /etc/deckgala && sudo chmod 750 /etc/deckgala
 sudo chown postgres:postgres /var/backups/deckgala 2>/dev/null || true   # re-run after Postgres is installed
 ```
-Add your admin user to the group so you can deploy: `sudo usermod -aG deckgala ph` (re-login to apply).
+Add your admin user to the group so you can deploy: `sudo usermod -aG aquateamhub ph` (re-login to apply).
 
 ## 9. Journald log limits
 ```bash
