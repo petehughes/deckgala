@@ -15,7 +15,7 @@ ssh root@<VPS_IP>
 apt update && apt full-upgrade -y
 apt install -y curl git unzip ufw fail2ban unattended-upgrades ca-certificates gnupg htop
 timedatectl set-timezone UTC
-hostnamectl set-hostname deckgala
+hostnamectl set-hostname aquateamhub
 reboot
 ```
 Reconnect after the reboot.
@@ -101,11 +101,11 @@ sudo sysctl --system
 
 ## 8. Service user and directories
 ```bash
-sudo adduser --system --group --home /srv/deckgala --shell /usr/sbin/nologin aquateamhub
-sudo mkdir -p /srv/deckgala/repo /etc/deckgala /var/backups/deckgala
-sudo chown -R aquateamhub:aquateamhub /srv/deckgala
-sudo chown root:aquateamhub /etc/deckgala && sudo chmod 750 /etc/deckgala
-sudo chown postgres:postgres /var/backups/deckgala 2>/dev/null || true   # re-run after Postgres is installed
+sudo adduser --system --group --home /srv/aquateamhub --shell /usr/sbin/nologin aquateamhub
+sudo mkdir -p /srv/aquateamhub/repo /etc/aquateamhub /var/backups/aquateamhub
+sudo chown -R aquateamhub:aquateamhub /srv/aquateamhub
+sudo chown root:aquateamhub /etc/aquateamhub && sudo chmod 750 /etc/aquateamhub
+sudo chown postgres:postgres /var/backups/aquateamhub 2>/dev/null || true   # re-run after Postgres is installed
 ```
 Add your admin user to the group so you can deploy: `sudo usermod -aG aquateamhub ph` (re-login to apply).
 
@@ -117,7 +117,7 @@ sudo systemctl restart systemd-journald
 ```
 
 ## 10. DNS at one.com
-In the one.com DNS settings for `deckgala.com`, add (TTL 300 while setting up, raise later):
+In the one.com DNS settings for `aquateamhub.com`, add (TTL 300 while setting up, raise later):
 
 | Type | Host | Value |
 |---|---|---|
@@ -131,18 +131,18 @@ In the one.com DNS settings for `deckgala.com`, add (TTL 300 while setting up, r
 | AAAA | same hosts | `<VPS_IPV6>` (only if you have IPv6) |
 
 Remove any conflicting existing A/AAAA/CNAME records for these hosts (e.g. one.com parking page).
-**Verify:** `nslookup www.deckgala.com` (or `dig +short`) returns `<VPS_IP>`. Caddy cannot issue certificates until this resolves.
+**Verify:** `nslookup www.aquateamhub.com` (or `dig +short`) returns `<VPS_IP>`. Caddy cannot issue certificates until this resolves.
 
 ## 11. Final checklist
 - [ ] `ssh ph@<VPS_IP>` works with key; root and password login refused
 - [ ] `sudo ufw status` shows only 22, 80, 443
 - [ ] `sudo fail2ban-client status sshd` is active
 - [ ] `free -h` shows swap
-- [ ] `/srv/deckgala`, `/etc/deckgala` exist with correct ownership
+- [ ] `/srv/aquateamhub`, `/etc/aquateamhub` exist with correct ownership
 - [ ] All six hostnames plus apex resolve to the VPS
 - [ ] Take a one.com VPS snapshot, labelled "base-hardened"
 
 ## Next
-1. Install PostgreSQL (use the version in the 26.04 repo; check with `apt policy postgresql`) and create the `deckgala` role and database.
+1. Install PostgreSQL (use the version in the 26.04 repo; check with `apt policy postgresql`) and create the `aquateamhub` role and database.
 2. Install Caddy, then Node 22 LTS and Bun.
 3. Deploy the apps as systemd services.
