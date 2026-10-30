@@ -4,8 +4,11 @@ export type {
   ClubMembership,
   ClubRole,
   DeckSession,
+  EntryStatus,
   Event,
+  EventEntry,
   Gala,
+  GalaEntry,
   Gender,
   Member,
   PersonalBest,
@@ -17,4 +20,5 @@ export type {
   Swimmer,
   Squad,
   User,
+  Venue,
 } from "@prisma/client";

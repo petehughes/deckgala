@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
   assignSwimmerSquadSchema,
+  eventFormSchema,
   galaFormSchema,
   galaVisibilitySchema,
   invitationFormSchema,
@@ -11,6 +12,10 @@ import {
   squadFormSchema,
   updateMemberFormSchema,
   updateSquadFormSchema,
+  updateVenueFormSchema,
+  venueFormSchema,
+  updateGalaFormSchema,
+  updateEventFormSchema,
 } from "./validation";
 
 describe("club portal form validation", () => {
@@ -174,5 +179,93 @@ describe("club portal form validation", () => {
       squadId: "",
     });
     assert.equal(unassigned.squadId, null);
+  });
+
+  it("validates venue creation and update schemas", () => {
+    const venue = venueFormSchema.parse({
+      name: "Ponds Forge International",
+      addressLine1: "Sheaf Street",
+      city: "Sheffield",
+      postcode: "S1 2BP",
+      country: "United Kingdom",
+      latitude: "53.3831",
+      longitude: "-1.4627",
+      notes: "Parking discount at Q-Park",
+    });
+
+    assert.equal(venue.name, "Ponds Forge International");
+    assert.equal(venue.city, "Sheffield");
+    assert.equal(venue.latitude, 53.3831);
+    assert.equal(venue.longitude, -1.4627);
+
+    const updated = updateVenueFormSchema.parse({
+      venueId: "v-123",
+      name: "Sheffield Pool",
+    });
+    assert.equal(updated.venueId, "v-123");
+    assert.equal(updated.name, "Sheffield Pool");
+  });
+
+  it("validates event form with session numbers, qualifying cutoffs and fees", () => {
+    const event = eventFormSchema.parse({
+      galaId: "gala-100",
+      eventNumber: "101",
+      sessionNumber: "2",
+      sessionEventNumber: "3",
+      name: "Boys 11-12 100m Freestyle",
+      distance: "100",
+      stroke: "FREESTYLE",
+      gender: "MALE",
+      ageGroup: "11-12",
+      feePence: "850",
+      qualifyingTimeMs: "72000",
+      cutoffTimeMs: "62000",
+      allowNoTime: "true",
+    });
+
+    assert.equal(event.sessionNumber, 2);
+    assert.equal(event.sessionEventNumber, 3);
+    assert.equal(event.feePence, 850);
+    assert.equal(event.qualifyingTimeMs, 72000);
+    assert.equal(event.cutoffTimeMs, 62000);
+    assert.equal(event.allowNoTime, true);
+  });
+
+  it("validates gala and event update schemas", () => {
+    const updatedGala = updateGalaFormSchema.parse({
+      galaId: "gala-456",
+      name: "Preston Autumn Gala 2026",
+      venue: "Preston Pool",
+      course: "LONG_COURSE_METERS",
+      startsAt: "2026-10-15T09:00",
+      endsAt: "2026-10-15T18:00",
+      entryFeePence: "500",
+      defaultEventFeePence: "750",
+      ageRule: "AGE_DEC_31",
+      isPublic: true,
+    });
+    assert.equal(updatedGala.galaId, "gala-456");
+    assert.equal(updatedGala.name, "Preston Autumn Gala 2026");
+    assert.equal(updatedGala.entryFeePence, 500);
+    assert.equal(updatedGala.ageRule, "AGE_DEC_31");
+
+    const updatedEvent = updateEventFormSchema.parse({
+      eventId: "ev-789",
+      galaId: "gala-456",
+      eventNumber: "12",
+      sessionNumber: "1",
+      name: "Girls 50m Butterfly",
+      distance: "50",
+      stroke: "BUTTERFLY",
+      gender: "FEMALE",
+      ageGroup: "Open",
+      feePence: "800",
+      qualifyingTimeMs: "34500",
+      allowNoTime: "false",
+    });
+    assert.equal(updatedEvent.eventId, "ev-789");
+    assert.equal(updatedEvent.stroke, "BUTTERFLY");
+    assert.equal(updatedEvent.feePence, 800);
+    assert.equal(updatedEvent.allowNoTime, false);
   });
 });

@@ -214,7 +214,7 @@ export default async function SquadsPage({
                           )}
                           {squad.description && (
                             <div className="muted" style={{ fontStyle: "italic", marginTop: "4px" }}>
-                              "{squad.description}"
+                              &ldquo;{squad.description}&rdquo;
                             </div>
                           )}
                         </div>
@@ -277,7 +277,6 @@ export default async function SquadsPage({
                               type="submit"
                               className="delete-link-btn"
                               onClick={(e) => {
-                                // eslint-disable-next-line no-alert
                                 if (!confirm(`Are you sure you want to delete "${squad.name}"? Swimmers will be unassigned.`)) {
                                   e.preventDefault();
                                 }

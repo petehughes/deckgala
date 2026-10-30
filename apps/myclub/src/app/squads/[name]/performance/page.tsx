@@ -15,30 +15,25 @@ export default async function SquadPerformancePage({
 
   const { clubId } = await getActiveClub();
 
-  const [club, squad] = await Promise.all([
-    prisma.club.findUnique({
-      where: { id: clubId },
-      include: {
-        swimmers: {
-          where: {
-            OR: [
-              { squad: squadName === "Unassigned" ? null : squadName },
-              { squadRel: { name: squadName } },
-            ],
-          },
-          include: {
-            personalBests: {
-              orderBy: [{ stroke: "asc" }, { distance: "asc" }],
-            },
-          },
-          orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+  const club = await prisma.club.findUnique({
+    where: { id: clubId },
+    include: {
+      swimmers: {
+        where: {
+          OR: [
+            { squad: squadName === "Unassigned" ? null : squadName },
+            { squadRel: { name: squadName } },
+          ],
         },
+        include: {
+          personalBests: {
+            orderBy: [{ stroke: "asc" }, { distance: "asc" }],
+          },
+        },
+        orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
       },
-    }),
-    prisma.squad.findFirst({
-      where: { clubId, name: squadName },
-    }),
-  ]);
+    },
+  });
 
   if (!club) notFound();
 

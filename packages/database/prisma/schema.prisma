@@ -57,6 +57,7 @@ model Club {
   members          Member[]
   swimmers         Swimmer[]
   squads           Squad[]
+  venues           Venue[]
   galas            Gala[]
   deckSessions     DeckSession[]
 }
@@ -223,10 +224,32 @@ model Swimmer {
   squadRel        Squad?         @relation(fields: [squadId], references: [id], onDelete: SetNull)
   personalBests   PersonalBest[]
   raceResults     RaceResult[]
+  galaEntries     GalaEntry[]
 
   @@unique([clubId, governingBodyId])
   @@index([clubId, lastName, firstName])
   @@index([squadId])
+}
+
+model Venue {
+  id           String   @id @default(cuid())
+  clubId       String
+  name         String
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  postcode     String?
+  country      String?  @default("United Kingdom")
+  latitude     Float?
+  longitude    Float?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  club         Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  galas        Gala[]
+
+  @@unique([clubId, name])
+  @@index([clubId])
 }
 
 model PersonalBest {
@@ -245,37 +268,101 @@ model PersonalBest {
 }
 
 model Gala {
-  id        String     @id @default(cuid())
-  clubId    String
-  name      String
-  venue     String?
-  course    PoolCourse
-  startsAt  DateTime
-  endsAt    DateTime?
-  isPublic  Boolean    @default(false)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  club      Club       @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  events    Event[]
+  id                   String       @id @default(cuid())
+  clubId               String
+  name                 String
+  venue                String?
+  venueId              String?
+  course               PoolCourse
+  startsAt             DateTime
+  endsAt               DateTime?
+  entryFeePence        Int          @default(0)
+  defaultEventFeePence Int          @default(0)
+  ageRule              String       @default("AGE_DAY_OF_MEET")
+  isPublic             Boolean      @default(false)
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  club                 Club         @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  venueRef             Venue?       @relation(fields: [venueId], references: [id], onDelete: SetNull)
+  events               Event[]
+  entries              GalaEntry[]
 
   @@index([clubId, startsAt])
+  @@index([venueId])
 }
 
 model Event {
-  id          String       @id @default(cuid())
-  galaId      String
-  eventNumber Int
-  name        String
-  distance    Int
-  stroke      SwimStroke
-  gender      Gender?
-  ageGroup    String?
-  createdAt   DateTime     @default(now())
-  gala        Gala         @relation(fields: [galaId], references: [id], onDelete: Cascade)
-  results     RaceResult[]
+  id                 String       @id @default(cuid())
+  galaId             String
+  eventNumber        Int
+  sessionNumber      Int          @default(1)
+  sessionEventNumber Int?
+  name               String
+  distance           Int
+  stroke             SwimStroke
+  gender             Gender?
+  ageGroup           String?
+  minAge             Int?
+  maxAge             Int?
+  feePence           Int?
+  qualifyingTimeMs   Int?
+  cutoffTimeMs       Int?
+  allowNoTime        Boolean      @default(true)
+  createdAt          DateTime     @default(now())
+  gala               Gala         @relation(fields: [galaId], references: [id], onDelete: Cascade)
+  results            RaceResult[]
+  entries            EventEntry[]
 
   @@unique([galaId, eventNumber])
   @@index([galaId, eventNumber])
+  @@index([galaId, sessionNumber])
+}
+
+enum EntryStatus {
+  SUBMITTED
+  CONFIRMED
+  PENDING_PAYMENT
+  PAID
+  WITHDRAWN
+}
+
+model GalaEntry {
+  id            String       @id @default(cuid())
+  galaId        String
+  swimmerId     String
+  userId        String?
+  status        EntryStatus  @default(SUBMITTED)
+  totalFeePence Int          @default(0)
+  isPaid        Boolean      @default(false)
+  paymentMethod String?
+  notes         String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  gala          Gala         @relation(fields: [galaId], references: [id], onDelete: Cascade)
+  swimmer       Swimmer      @relation(fields: [swimmerId], references: [id], onDelete: Cascade)
+  eventEntries  EventEntry[]
+
+  @@unique([galaId, swimmerId])
+  @@index([galaId])
+  @@index([swimmerId])
+}
+
+model EventEntry {
+  id          String      @id @default(cuid())
+  galaEntryId String
+  eventId     String
+  swimmerId   String
+  seedTimeMs  Int?
+  feePence    Int         @default(0)
+  status      EntryStatus @default(SUBMITTED)
+  heat        Int?
+  lane        Int?
+  createdAt   DateTime    @default(now())
+  galaEntry   GalaEntry   @relation(fields: [galaEntryId], references: [id], onDelete: Cascade)
+  event       Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([galaEntryId, eventId])
+  @@index([eventId])
 }
 
 model DeckSession {

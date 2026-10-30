@@ -94,6 +94,8 @@ apps/myclub/src/
 │   │   │   └── [id]/
 │   │   │       ├── layout.tsx           # Gala Sub-navigation (Overview, Events, Entries, Heats, Results)
 │   │   │       ├── page.tsx             # Gala Overview & Event Schedule
+│   │   │       ├── edit/
+│   │   │       │   └── page.tsx         # Gala Meet & Event Schedule Editor
 │   │   │       ├── entries/
 │   │   │       │   └── page.tsx         # Swimmer Entry Manager & Seeding Setup
 │   │   │       ├── heats/
@@ -325,6 +327,18 @@ Coaches and Club Administrators have authorized permissions to edit member and s
 * **Biographical & Category Data:** Update legal first name, last name, Date of Birth (DOB), competition gender (`FEMALE`, `MALE`, `OPEN`, `OTHER`), and assigned training Squad.
 * **Emergency Welfare Details:** Update emergency contact person name and emergency telephone number.
 * **Transaction Synchrony:** Executed via `updateMember(formData)` in an atomic database transaction ensuring `Member` and linked `Swimmer` records remain 100% synchronized, revalidating `/roster`, `/swimmers/[id]`, and the dashboard.
+
+#### 4.3.9 Gala Program Builder & Default Events Populator
+In both the Gala Detail view (`/galas/[id]`) and Gala Editor (`/galas/[id]/edit`), coaches and admins can rapidly build out race programs:
+* **Pool Size-Aware "Add All Default Events" Button:** One-click generation of standard competitive programs based on pool course:
+  * **25m Short Course (`SHORT_COURSE_METERS`):** 36 events (18 Girls + 18 Boys: 50/100/200/400/800/1500m Free, 50/100/200m Back/Breast/Fly, 100/200/400m IM).
+  * **50m Long Course (`LONG_COURSE_METERS`):** 34 events (17 Girls + 17 Boys: excludes 100m IM which cannot be contested in a 50m pool).
+  * **25y Short Course Yards (`SHORT_COURSE_YARDS`):** 36 events with yard-unit distance formatting.
+  * **Conflict-Free Population:** Preserves existing events and calculates non-colliding `eventNumber` sequence.
+* **Flexible Program Reordering:**
+  * **Instant Move Up (▲) / Move Down (▼):** Safe atomic swap of event numbers using temporary sequence keys to prevent `@@unique([galaId, eventNumber])` collisions.
+  * **Sequential Renumbering (`renumberGalaEvents`):** Normalizes all events into neat sequential numbers 1..N.
+  * **Collision-Safe Manual Edits:** Modifying `eventNumber` in the editor swaps with the conflicting event rather than throwing duplicate key errors.
 
 ---
 
@@ -756,7 +770,7 @@ To enable parallel execution by autonomous coding agents, the work is partitione
 ## 9. Living Execution Tracker, Assumptions & Issues Log
 
 **Last Updated:** 2026-10-29  
-**Status:** Phase 2 Complete (25/25 Tests Passing) — Ready for Phase 3 (Gala Meets, Venues & Parent Entry Wizard)
+**Status:** Phase 3 Complete (34/34 Tests Passing) — Ready for Phase 4 (Results Sync, Adjudication & Hy-Tek Export)
 
 ### 9.1 Phase-by-Phase Progress Tracker
 - [x] **Phase 0: Architectural Blueprint & Site Design**
@@ -782,11 +796,15 @@ To enable parallel execution by autonomous coding agents, the work is partitione
   - [x] First-class `Squad` database entity (`model Squad` in Prisma) with full CRUD (`/squads`, `createSquad`, `updateSquad`, `deleteSquad`).
   - [x] Swimmer squad assignments and removals (`assignSwimmerToSquad`, `removeSwimmerFromSquad`) and temporal future promotions.
   - [x] Squad performance analytics and coaching opportunity gap matrix (`/squads/[name]/performance`).
-- [ ] **Phase 3: Gala Meets, Venues & Parent Entry Wizard**
-  - [ ] Club Venue directory and OpenStreetMap card component (`<VenueMap />`).
-  - [ ] Gala Sessions & Event Builder with fee structures.
-  - [ ] Parent Multi-Child Gala Entry Wizard with smart qualification filtering and cost calculation.
-  - [ ] Seeding engine (`lib/seeding-engine.ts`) with spearhead and cyclic seeding.
+- [x] **Phase 3: Gala Meets, Venues, Parent Entry Wizard & Sportsystems Ingestion**
+  - [x] Club Venue directory (`Venue` model) and OpenStreetMap card component (`<VenueMap />`).
+  - [x] Gala Sessions & Event Builder with fee structures (`/galas/[id]`).
+  - [x] Gala Fixture & Event Schedule Editor (`/galas/[id]/edit`) allowing club coaches and admins to edit gala parameters (venue, pool course, schedule dates, fee policies, age calculation rules, visibility) and modify individual race events (distances, strokes, genders, age categories, qualification cuts, fee overrides, deletions).
+  - [x] Parent Multi-Child Gala Entry Wizard with smart qualification filtering, live cost calculation, and skip payment toggle (`/galas/[id]/enter`).
+  - [x] Seeding engine (`lib/seeding-engine.ts` with 100% test coverage for spearhead and cyclic seeding) and poolside heat sheets (`/galas/[id]/heats`).
+  - [x] SPORTSYSTEMS Entry File Ingestion Engine (`lib/sportsys-parser.ts` with 100% test coverage for `.sef`, `.set`, `.sed`, CSV, and text export formats).
+  - [x] Bulk entry ingestion server action (`importSportsysGalaEntries`) with automatic event creation, swimmer resolution by Swim England ASA number, seed time lock-in, and gala entry fees.
+  - [x] Poolside Entry Importer UI (`<SportsysEntryUploader />`) with drag-and-drop, raw text paste, live preview cards, and feedback alerts on `/galas/[id]`.
 - [ ] **Phase 4: Results Adjudication & Hy-Tek Export**
   - [ ] Deck session ingestion review table and split times display.
   - [ ] Official vs Unofficial adjudication actions and DQ code logging.
@@ -807,6 +825,12 @@ To enable parallel execution by autonomous coding agents, the work is partitione
    * *Assumption:* A parent user (`User` with role `PARENT`) links to swimmers via `Member.userId` or a family membership record, allowing a single parent to view and book galas for multiple children.
 5. **First-Class Squad Model & Relational Assignments:**
    * *Assumption:* `Squad` is a dedicated Prisma model (`model Squad`) belonging to `Club` and linked relationally to `Swimmer` via `Swimmer.squadId` (with `Swimmer.squad` retained for backwards compatibility). Temporal future promotions (e.g. starting May 1st) are tracked via `Club.customBranding.scheduledPromotions`.
+6. **OpenStreetMap Tile Embedding with Zero API Keys:**
+   * *Assumption:* Interactive and dark-mode styled competition maps embed standard OpenStreetMap tiles (`openstreetmap.org/export/embed.html`) without requiring paid third-party mapping API keys or credentials.
+7. **Multi-Child Cart Model & Lock-In Seed Times:**
+   * *Assumption:* When parents submit gala entries for multiple children, personal best seed times are queried and locked in at submission time, while permitting "NT" (No Time) when allowed by the event's `allowNoTime` configuration.
+8. **SPORTSYSTEMS Entry File Interchange & Resilience:**
+   * *Assumption:* Meet entry files created by SPORTSYSTEMS Meet Organisation & Entry Manager (`.sef`, `.set`, `.sed`, and tabular CSV/TSV entry exports) can be directly uploaded to populate gala entries. Events not yet present in the gala program are automatically created. Swimmers are resolved by their Swim England membership number or name, existing profiles are updated, new club swimmers are provisioned if absent, and entries are recorded as confirmed with locked seed times.
 
 ### 9.3 Issues & Resolutions Log
 * **Issue 1: Test Runner Typings (`bun:test` vs `node:test`):**
@@ -815,11 +839,11 @@ To enable parallel execution by autonomous coding agents, the work is partitione
   * *Resolution:* Standardized test files on Node's native test runner (`import { describe, it } from "node:test"` and `import assert from "node:assert/strict"`), which runs cleanly under both `bun test` and standard Node/TypeScript type checking.
 * **Issue 2: Member Form Schema Synchronization:**
   * *Symptom:* Form validation needed to accept new optional swimmer fields (`dateOfBirth`, `gender`, `squad`, `isSwimmer`) without breaking existing member creation.
-  * *Resolution:* Made new fields optional with safe nullish transformations and updated unit tests; all 27 unit tests across 7 files now pass with 0 errors.
+  * *Resolution:* Made new fields optional with safe nullish transformations and updated unit tests; all 34 unit tests across 8 files now pass with 0 errors.
 * **Issue 3: Windows File Locking on Prisma Query Engine (`EPERM`) & IPv4 Loopback:**
   * *Symptom:* `prisma generate` failed with `EPERM: operation not permitted` on `query_engine-windows.dll.node` and `prisma db push` failed with `P1001: Can't reach database server at localhost:5432`.
   * *Root Cause:* Background Next.js dev server worker processes hold a file lock on the query engine native binary, and Prisma CLI on Windows requires explicit IPv4 `127.0.0.1` rather than `localhost` IPv6 loopback.
-  * *Resolution:* Cleared Next worker process locks, updated `.env` to `127.0.0.1:5432`, generated Prisma client cleanly, and pushed the new `Squad` model directly into PostgreSQL.
+  * *Resolution:* Cleared Next worker process locks, updated `.env` to `127.0.0.1:5432`, generated Prisma client cleanly, and pushed the new `Squad`, `Venue`, `GalaEntry`, and `EventEntry` models directly into PostgreSQL.
 
 
 

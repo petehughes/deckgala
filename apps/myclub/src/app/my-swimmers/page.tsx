@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import { getActiveClub } from "../../lib/club-context";
 import { prisma } from "../../lib/prisma";
 import { calculateCompetitionAge, resolveStandardAgeGroup } from "../../lib/age-calculator";
