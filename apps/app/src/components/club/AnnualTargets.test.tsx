@@ -89,7 +89,10 @@ describe('Annual Targets & Swimmer Personal Bests', () => {
       id: 'sw-test-1',
       name: 'Alex Rivera',
       age: 14,
-      gender: 'male',
+      gender: 'M',
+      pb50m: '',
+      pb100m: '',
+      notes: '',
       personalBests: []
     };
 

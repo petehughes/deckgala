@@ -34,8 +34,8 @@ export default async function LinkSwimmerPage({
   return (
     <main className="auth-shell" style={{ maxWidth: "560px" }}>
       <div className="auth-header">
-        <Link href="https://www.deckgala.com" className="auth-brand">
-          Deck<span>Gala</span>
+        <Link href="https://www.aquateamhub.com" className="auth-brand">
+          AquaTeam<span>Hub</span>
         </Link>
         <p className="muted" style={{ fontSize: "12px", margin: 0 }}>
           Parent &amp; Swimmer Profile Linking Hub
@@ -137,7 +137,7 @@ export default async function LinkSwimmerPage({
         </form>
 
         <div className="auth-footer" style={{ marginTop: "20px" }}>
-          <Link href="https://my.deckgala.com/my-swimmers">
+          <Link href="https://my.aquateamhub.com/my-swimmers">
             ← Continue to Parent &amp; Swimmer PWA
           </Link>
         </div>

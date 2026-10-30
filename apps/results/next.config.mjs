@@ -1,5 +1,5 @@
 const nextConfig = {
-  transpilePackages: ["@deckgala/controls", "@deckgala/api-types"],
+  transpilePackages: ["@aquateamhub/controls", "@aquateamhub/api-types"],
 };
 
 export default nextConfig;

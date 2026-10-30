@@ -14,8 +14,8 @@ export default async function SignInPage({
   return (
     <main className="auth-shell">
       <div className="auth-header">
-        <Link href="https://www.deckgala.com" className="auth-brand">
-          Deck<span>Gala</span>
+        <Link href="https://www.aquateamhub.com" className="auth-brand">
+          AquaTeam<span>Hub</span>
         </Link>
         <p className="muted" style={{ fontSize: "12px", margin: 0 }}>
           Central Identity &amp; Cross-Subdomain Authentication
@@ -76,7 +76,7 @@ export default async function SignInPage({
           </div>
 
           <button type="submit" className="btn-primary" style={{ marginTop: "8px" }}>
-            Sign In to DeckGala →
+            Sign In to AquaTeamHub →
           </button>
         </form>
 
@@ -114,13 +114,13 @@ export default async function SignInPage({
       </div>
 
       <div className="portal-pills">
-        <Link href="https://my.deckgala.com" className="portal-pill">
+        <Link href="https://my.aquateamhub.com" className="portal-pill">
           🏊 Parents &amp; Swimmers PWA (my)
         </Link>
-        <Link href="https://myclub.deckgala.com" className="portal-pill">
+        <Link href="https://myclub.aquateamhub.com" className="portal-pill">
           📋 Club Staff Admin (myclub)
         </Link>
-        <Link href="https://results.deckgala.com" className="portal-pill">
+        <Link href="https://results.aquateamhub.com" className="portal-pill">
           ⏱ Live Results
         </Link>
       </div>

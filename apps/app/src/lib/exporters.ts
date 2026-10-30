@@ -144,7 +144,7 @@ export function normalizeGroupObj(raw: Record<string, unknown> = {}): SwimmerGro
   };
 }
 
-export function parseImportFileText(text: string, fileName: string, defaultClubName: string = 'DeckGala Swim Club'): PendingImport {
+export function parseImportFileText(text: string, fileName: string, defaultClubName: string = 'AquaTeamHub Swim Club'): PendingImport {
   const trimmed = String(text || '').trim();
   if (!trimmed) {
     throw new Error('File is empty');

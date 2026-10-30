@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   webSocketEventSchema,
   type WebSocketEvent,
-} from "@deckgala/api-types";
+} from "@aquateamhub/api-types";
 import { apiBaseUrl, formatMeetDate, formatRaceTime } from "../lib/results";
 
 interface PublicRaceResult {

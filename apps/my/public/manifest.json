@@ -1,6 +1,6 @@
 {
-  "name": "DeckGala Swimmer & Parent Portal",
-  "short_name": "DeckGala",
+  "name": "AquaTeamHub Swimmer & Parent Portal",
+  "short_name": "AquaTeamHub",
   "description": "Progressive Web App for swimming families: personal bests, training schedules, and gala meet entries.",
   "start_url": "/",
   "display": "standalone",

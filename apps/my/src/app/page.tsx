@@ -11,12 +11,12 @@ export default async function HomePage() {
     return (
       <main className="page-shell">
         <section className="panel" style={{ textAlign: "center", padding: "60px 20px" }}>
-          <p className="eyebrow">Welcome to DeckGala</p>
+          <p className="eyebrow">Welcome to AquaTeamHub</p>
           <h1>Welcome, {user.name}!</h1>
           <p className="muted" style={{ maxWidth: "480px", margin: "0 auto 24px" }}>
             You haven&apos;t linked any swimmer profiles to your family account yet. Connect your children&apos;s club profiles to view personal bests, training timetables, and submit meet entries.
           </p>
-          <Link href="https://auth.deckgala.com/link-swimmer" className="btn-primary" style={{ display: "inline-flex" }}>
+          <Link href="https://auth.aquateamhub.com/link-swimmer" className="btn-primary" style={{ display: "inline-flex" }}>
             🔗 Link Your Swimmer →
           </Link>
         </section>

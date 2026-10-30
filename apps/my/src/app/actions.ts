@@ -8,7 +8,7 @@ import { auth } from "../lib/auth";
 import {
   pwaGalaEntrySchema,
   pushSubscriptionInputSchema,
-} from "@deckgala/api-types";
+} from "@aquateamhub/api-types";
 
 function formString(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -24,7 +24,7 @@ export async function setActiveSwimmerAction(formData: FormData): Promise<void> 
 
   if (swimmerId) {
     const cookieStore = await cookies();
-    cookieStore.set("deckgala_active_swimmer", swimmerId, {
+    cookieStore.set("aquateamhub_active_swimmer", swimmerId, {
       path: "/",
       maxAge: 60 * 60 * 24 * 365,
     });
@@ -43,7 +43,7 @@ export async function submitGalaEntryAction(formData: FormData): Promise<void> {
   });
 
   if (!session || !session.user) {
-    redirect("https://auth.deckgala.com/sign-in");
+    redirect("https://auth.aquateamhub.com/sign-in");
   }
 
   const galaId = formString(formData, "galaId");

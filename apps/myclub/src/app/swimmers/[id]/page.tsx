@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import type { PoolCourse, SwimStroke } from "@deckgala/database";
+import type { PoolCourse, SwimStroke } from "@aquateamhub/database";
 import { recordPersonalBest, syncSwimmerWithSwimEngland, updateMember } from "../../actions";
 import { getActiveClub } from "../../../lib/club-context";
 import { prisma } from "../../../lib/prisma";

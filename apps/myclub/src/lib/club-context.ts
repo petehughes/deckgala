@@ -1,11 +1,11 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { isStaffRole, type ClubRole } from "@deckgala/database";
+import { isStaffRole, type ClubRole } from "@aquateamhub/database";
 import { getFreeClubLimit, isSubscriptionActive } from "./billing";
 import { requireSession } from "./session";
 import { prisma } from "./prisma";
 
-const MY_URL = process.env.MY_URL || "https://my.deckgala.com";
+const MY_URL = process.env.MY_URL || "https://my.aquateamhub.com";
 
 export async function listUserClubs(userId: string) {
   return prisma.clubMembership.findMany({
@@ -55,7 +55,7 @@ export async function getActiveClub() {
   if (memberships.length === 0) redirect("/");
 
   const cookieStore = await cookies();
-  const selectedId = cookieStore.get("deckgala_active_club")?.value;
+  const selectedId = cookieStore.get("aquateamhub_active_club")?.value;
   const membership = accessible.find(({ clubId }) => clubId === selectedId) ?? accessible[0];
   if (!membership) redirect("/");
   return {

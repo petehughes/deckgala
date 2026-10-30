@@ -54,7 +54,7 @@ export default function HomePage() {
         <div className="hero-grid" aria-hidden="true" />
       </section>
 
-      <section className="workflow-strip" id="workflow" aria-label="DeckGala workflow">
+      <section className="workflow-strip" id="workflow" aria-label="AquaTeamHub workflow">
         <div><span className="step-count">01</span><span>Set the pace</span><span className="step-line" /></div>
         <div><span className="step-count">02</span><span>Capture every touch</span><span className="step-line" /></div>
         <div><span className="step-count">03</span><span>Share the results</span></div>
@@ -64,7 +64,7 @@ export default function HomePage() {
         <div className="section-intro">
           <p className="eyebrow">PURPOSE-BUILT FOR THE POOLSIDE</p>
           <h2>Less setup.<br /><span>More swimming.</span></h2>
-          <p>Wet hands. Busy lanes. Unreliable Wi-Fi. DeckGala keeps the important things clear and the session moving.</p>
+          <p>Wet hands. Busy lanes. Unreliable Wi-Fi. AquaTeamHub keeps the important things clear and the session moving.</p>
         </div>
         <div className="feature-list">
           {features.map((feature) => (
@@ -95,7 +95,7 @@ export default function HomePage() {
       <section className="closing section-shell">
         <p className="eyebrow">READY WHEN THE WHISTLE BLOWS</p>
         <h2>Make every session<br /><span>count.</span></h2>
-        <a className="button" href="#platform">Meet DeckGala <span aria-hidden="true">↗</span></a>
+        <a className="button" href="#platform">Meet AquaTeamHub <span aria-hidden="true">↗</span></a>
       </section>
     </main>
   );

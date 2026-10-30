@@ -1,5 +1,5 @@
-// DeckGala Swimmer & Parent PWA Service Worker
-const CACHE_NAME = "deckgala-my-v1";
+// AquaTeamHub Swimmer & Parent PWA Service Worker
+const CACHE_NAME = "aquateamhub-my-v1";
 const OFFLINE_URLS = [
   "/",
   "/my-swimmers",
@@ -60,7 +60,7 @@ self.addEventListener("fetch", (event) => {
 // Web Push Notification Listener
 self.addEventListener("push", (event) => {
   let data = {
-    title: "DeckGala Notification",
+    title: "AquaTeamHub Notification",
     body: "New update on your swimmer or upcoming gala.",
     url: "/",
   };

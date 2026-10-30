@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FoldableSplitPane } from "@deckgala/controls";
+import { FoldableSplitPane } from "@aquateamhub/controls";
 import { getActiveClub } from "../../lib/club-context";
 import { prisma } from "../../lib/prisma";
 import { createTrainingSchedule, deleteTrainingSchedule } from "../actions";

@@ -168,7 +168,7 @@ describe('Club Setup, Calendar, Staffing & Head Coach Briefing', () => {
     );
 
     // In SessionView, HeadCoachBriefingCard should be present
-    expect(screen.getByText('HEAD COACH BRIEFING')).toBeDefined();
+    expect(screen.getAllByText('HEAD COACH BRIEFING').length).toBeGreaterThan(0);
     expect(screen.getByText(/Session Expectations & Focus/i)).toBeDefined();
     expect(screen.getByText(/LEAD COACH:/i)).toBeDefined();
   });

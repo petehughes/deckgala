@@ -85,10 +85,10 @@ describe("sportsys-parser > parsing Sportsystems file structures", () => {
   it("parses tagged section-based .sef files", () => {
     const sefContent = `
 [MEET]
-MeetName=Deckgala Spring Festival 2026
+MeetName=AquaTeamHub Spring Festival 2026
 Course=25m
 MeetDate=2026-05-18
-Venue=Deckgala Aquatics Centre
+Venue=AquaTeamHub Aquatics Centre
 
 [EVENTS]
 1,1,Girls,50,Free,9/10,38.50,32.00,6.50
@@ -107,10 +107,10 @@ Venue=Deckgala Aquatics Centre
 
     const result = parseSportsysEntryFile(sefContent);
 
-    assert.equal(result.meet.meetName, "Deckgala Spring Festival 2026");
+    assert.equal(result.meet.meetName, "AquaTeamHub Spring Festival 2026");
     assert.equal(result.meet.course, "SHORT_COURSE_METERS");
     assert.equal(result.meet.meetDate, "2026-05-18");
-    assert.equal(result.meet.venue, "Deckgala Aquatics Centre");
+    assert.equal(result.meet.venue, "AquaTeamHub Aquatics Centre");
 
     assert.equal(result.events.length, 3);
     assert.equal(result.events[0].eventNumber, 1);

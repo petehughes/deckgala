@@ -1,4 +1,4 @@
-import type { ClubRole } from "@deckgala/database";
+import type { ClubRole } from "@aquateamhub/database";
 import { ClubSwitcher } from "../../app/club-switcher";
 import { SignOutButton } from "../../app/sign-out-button";
 import { RoleBadge } from "./role-badge";
@@ -30,7 +30,7 @@ export function AppHeader({
       <div className="header-main-row">
         {/* Brand identity */}
         <div className="brand-group">
-          <a href="/" className="brand-link" aria-label="DeckGala Home">
+          <a href="/" className="brand-link" aria-label="AquaTeamHub Home">
             {/* Precision chronometer split icon */}
             <svg
               className="brand-logo-svg"
@@ -57,8 +57,8 @@ export function AppHeader({
               <circle cx="16" cy="16" r="3" fill="#FF5A36" />
             </svg>
             <div className="brand-title">
-              <span className="brand-title-deck">Deck</span>
-              <span className="brand-title-gala">Gala</span>
+              <span className="brand-title-deck">AquaTeam</span>
+              <span className="brand-title-gala">Hub</span>
               <span className="portal-sub-badge">MyClub</span>
             </div>
           </a>

@@ -1,4 +1,4 @@
-# `@deckgala/api-types`
+# `@aquateamhub/api-types`
 
 Shared runtime-validated Zod contracts for versioned offline session uploads and
 real-time start, lane-touch, and disqualification events. Import the schemas to

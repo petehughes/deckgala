@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ClubRole } from "@deckgala/database";
+import type { ClubRole } from "@aquateamhub/database";
 
 interface AppNavProps {
   role: ClubRole;

@@ -4,7 +4,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import type { Gender, PoolCourse, SwimStroke } from "@deckgala/database";
+import type { Gender, PoolCourse, SwimStroke } from "@aquateamhub/database";
 import {
   getFreeClubLimit,
   getStripe,
@@ -46,7 +46,7 @@ export async function selectClub(formData: FormData): Promise<void> {
   const membership = access.accessible.find(({ clubId: id }) => id === clubId);
   if (!membership) throw new Error("This club is unavailable to your account");
   const cookieStore = await cookies();
-  cookieStore.set("deckgala_active_club", membership.clubId, {
+  cookieStore.set("aquateamhub_active_club", membership.clubId, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -101,7 +101,7 @@ export async function createClub(formData: FormData): Promise<void> {
       await syncClubSubscriptionQuantity(
         result.subscriptionId,
         result.administratorClubCount - result.freeClubLimit,
-        `deckgala-clubs-${session.user.id}-${result.administratorClubCount}-${result.freeClubLimit}`,
+        `aquateamhub-clubs-${session.user.id}-${result.administratorClubCount}-${result.freeClubLimit}`,
       );
     } catch (error) {
       console.error("Could not update Stripe club quantity; rolling back club creation", error);
@@ -113,7 +113,7 @@ export async function createClub(formData: FormData): Promise<void> {
     }
   }
   const cookieStore = await cookies();
-  cookieStore.set("deckgala_active_club", club.id, {
+  cookieStore.set("aquateamhub_active_club", club.id, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -186,7 +186,7 @@ export async function acceptClubInvitation(formData: FormData): Promise<void> {
     return invitation.clubId;
   });
   const cookieStore = await cookies();
-  cookieStore.set("deckgala_active_club", clubId, {
+  cookieStore.set("aquateamhub_active_club", clubId, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -256,7 +256,7 @@ export async function createStripeCheckoutSession(): Promise<void> {
   if (!customerId) {
     const customer = await stripe.customers.create(
       { email: session.user.email, name: session.user.name, metadata: { userId: session.user.id } },
-      { idempotencyKey: `deckgala-customer-${session.user.id}` },
+      { idempotencyKey: `aquateamhub-customer-${session.user.id}` },
     );
     customerId = customer.id;
   }

@@ -5,7 +5,7 @@ import { prisma } from "./prisma";
 
 const cookieDomain =
   process.env.COOKIE_DOMAIN ||
-  (process.env.NODE_ENV === "production" ? ".deckgala.com" : undefined);
+  (process.env.NODE_ENV === "production" ? ".aquateamhub.com" : undefined);
 
 const socialProviders = {
   ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
@@ -27,9 +27,9 @@ const socialProviders = {
 };
 
 export const auth = betterAuth({
-  appName: "DeckGala Auth",
-  baseURL: process.env.BETTER_AUTH_URL || "https://auth.deckgala.com",
-  secret: process.env.BETTER_AUTH_SECRET || "deckgala-central-auth-secret-key-32-chars-min",
+  appName: "AquaTeamHub Auth",
+  baseURL: process.env.BETTER_AUTH_URL || "https://auth.aquateamhub.com",
+  secret: process.env.BETTER_AUTH_SECRET || "aquateamhub-central-auth-secret-key-32-chars-min",
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   emailAndPassword: {
     enabled: true,

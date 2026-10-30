@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">DeckGala</string>
-    <string name="title_activity_main">DeckGala</string>
-    <string name="package_name">com.deckgala.app</string>
-    <string name="custom_url_scheme">com.deckgala.app</string>
+    <string name="app_name">AquaTeamHub</string>
+    <string name="title_activity_main">AquaTeamHub</string>
+    <string name="package_name">com.aquateamhub.app</string>
+    <string name="custom_url_scheme">com.aquateamhub.app</string>
 </resources>

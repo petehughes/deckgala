@@ -1,4 +1,4 @@
-import { FoldableSplitPane } from "@deckgala/controls";
+import { FoldableSplitPane } from "@aquateamhub/controls";
 import { getParentContext } from "../../lib/parent-context";
 import { prisma } from "../../lib/prisma";
 

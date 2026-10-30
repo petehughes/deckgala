@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 import { prisma } from "../lib/prisma";
 import { auth } from "../lib/auth";
 import { resolveAuthRedirect, isSafeCallbackUrl } from "../lib/redirect-resolver";
-import { parentSwimmerLinkInputSchema } from "@deckgala/api-types";
+import { parentSwimmerLinkInputSchema } from "@aquateamhub/api-types";
 
 function formString(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -205,12 +205,12 @@ export async function linkSwimmerProfile(formData: FormData): Promise<void> {
     });
   }
 
-  const myUrl = process.env.MY_URL || "https://my.deckgala.com";
+  const myUrl = process.env.MY_URL || "https://my.aquateamhub.com";
   redirect(`${myUrl}/my-swimmers?linked=true`);
 }
 
 /**
- * Server Action: Sign out of all DeckGala subdomains.
+ * Server Action: Sign out of all AquaTeamHub subdomains.
  */
 export async function handleSignOut(): Promise<void> {
   await auth.api.signOut({

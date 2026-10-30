@@ -10,7 +10,7 @@ function navigateTo(view: RenderResult, label: string) {
   fireEvent.click(navBtn);
 }
 
-describe('DeckGala React App', () => {
+describe('AquaTeamHub React App', () => {
   beforeEach(() => {
     localStorage.clear();
     sessionStorage.clear();
@@ -24,7 +24,7 @@ describe('DeckGala React App', () => {
     const view = render(<App />);
 
     // Verify initial SessionModal is shown on startup
-    expect(view.getByText('Welcome to DeckGala — Start Session')).toBeDefined();
+    expect(view.getByText('Welcome to AquaTeamHub — Start Session')).toBeDefined();
 
     // Confirm session details
     const beginBtn = view.getByText(/Begin Session & Attendance/i);
@@ -256,7 +256,7 @@ describe('DeckGala React App', () => {
     const sampleGroupPayload = JSON.stringify({
       schema: 'deckgala_group_v1',
       scope: 'group',
-      clubName: 'DeckGala Test Club',
+      clubName: 'AquaTeamHub Test Club',
       group: {
         name: 'Sprint Elite',
         coach: 'Coach Mark',
@@ -311,7 +311,7 @@ describe('DeckGala React App', () => {
     const view = render(<App />);
 
     // 1st load Welcome Page & Guided Tour Modal should open
-    expect(view.getByText('Welcome to DeckGala — Start Session')).toBeDefined();
+    expect(view.getByText('Welcome to AquaTeamHub — Start Session')).toBeDefined();
     expect(view.getByText('Club Setup')).toBeDefined();
 
     // Step 1: Set Club Name, Acronym, and Head Coach
@@ -330,7 +330,7 @@ describe('DeckGala React App', () => {
 
     // Advance to Step 3: Deck Features Tour
     fireEvent.click(view.getByRole('button', { name: /Next: Deck Tour/i }));
-    expect(view.getByText('DeckGala Poolside Features & Tour')).toBeDefined();
+    expect(view.getByText('AquaTeamHub Poolside Features & Tour')).toBeDefined();
     expect(view.getByText('Multi-Lane Stopwatch')).toBeDefined();
     expect(view.getByText('Poolside Gesture Menus')).toBeDefined();
 

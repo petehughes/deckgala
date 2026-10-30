@@ -1,4 +1,4 @@
-import type { WebSocketEvent } from "@deckgala/api-types";
+import type { WebSocketEvent } from "@aquateamhub/api-types";
 
 type StartGunEvent = Extract<WebSocketEvent, { type: "start_gun" }>;
 

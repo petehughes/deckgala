@@ -23,7 +23,7 @@ export function WelcomeTourModal({
   const [step, setStep] = useState<TourStep>(1);
 
   // Step 1: Club Setup
-  const [clubName, setClubName] = useState(club.clubName || 'DeckGala Swim Club');
+  const [clubName, setClubName] = useState(club.clubName || 'AquaTeamHub Swim Club');
   const [shortName, setShortName] = useState(club.shortName || 'DGSC');
   const [city, setCity] = useState(club.city || 'Manchester');
   const [headCoachName, setHeadCoachName] = useState(club.headCoachName || 'Coach Sarah Jenkins');
@@ -47,7 +47,7 @@ export function WelcomeTourModal({
   useEffect(() => {
     if (isOpen) {
       setStep(1);
-      setClubName(club.clubName || 'DeckGala Swim Club');
+      setClubName(club.clubName || 'AquaTeamHub Swim Club');
       setShortName(club.shortName || 'DGSC');
       setCity(club.city || 'Manchester');
       setHeadCoachName(club.headCoachName || 'Coach Sarah Jenkins');
@@ -75,7 +75,7 @@ export function WelcomeTourModal({
   };
 
   const handleSaveAndFinish = () => {
-    const finalClubName = clubName.trim() || 'DeckGala Swim Club';
+    const finalClubName = clubName.trim() || 'AquaTeamHub Swim Club';
 
     // Save Club Profile
     updateClubProfile({
@@ -136,7 +136,7 @@ export function WelcomeTourModal({
     <Modal
       isOpen={isOpen}
       onClose={handleSaveAndFinish}
-      title="Welcome to DeckGala — Start Session"
+      title="Welcome to AquaTeamHub — Start Session"
       size="lg"
       footer={
         <div className="wizard-footer-actions">
@@ -260,10 +260,10 @@ export function WelcomeTourModal({
         >
           <div className="tour-welcome-banner">
             <div className="tour-logo-col">
-              <img src={logoUrl} alt="DeckGala" className="brand-logo-img" width="42" height="42" />
+              <img src={logoUrl} alt="AquaTeamHub" className="brand-logo-img" width="42" height="42" />
             </div>
             <div className="tour-header-text">
-              <h3>Welcome to DeckGala!</h3>
+              <h3>Welcome to AquaTeamHub!</h3>
               <p>
                 Professional offline deck timing, attendance tracking, and club management. Let's personalize your club name and details.
               </p>
@@ -287,7 +287,7 @@ export function WelcomeTourModal({
                 setClubName(e.target.value);
                 if (e.target.value.trim()) setClubNameError(false);
               }}
-              placeholder="e.g. DeckGala Swim Club"
+              placeholder="e.g. AquaTeamHub Swim Club"
               required
               autoFocus
             />
@@ -354,7 +354,7 @@ export function WelcomeTourModal({
           <div className="tour-step-intro">
             <h4>Select Your Home Pool Facility</h4>
             <p>
-              DeckGala supports 25m, 50m Olympic long course, and 25-yard pools with custom lane numbers. You can add more pools anytime in Club Setup.
+              AquaTeamHub supports 25m, 50m Olympic long course, and 25-yard pools with custom lane numbers. You can add more pools anytime in Club Setup.
             </p>
           </div>
 
@@ -401,7 +401,7 @@ export function WelcomeTourModal({
           style={{ display: step === 3 ? 'flex' : 'none' }}
         >
           <div className="tour-step-intro">
-            <h4>DeckGala Poolside Features & Tour</h4>
+            <h4>AquaTeamHub Poolside Features & Tour</h4>
             <p>Built specifically for wet pool decks and fast coaching workflows:</p>
           </div>
 

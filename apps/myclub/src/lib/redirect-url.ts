@@ -1,4 +1,4 @@
-const callbackOrigin = "https://portal.deckgala.invalid";
+const callbackOrigin = "https://portal.aquateamhub.invalid";
 
 export function safeCallbackPath(value: string | undefined): string {
   if (!value) return "/";

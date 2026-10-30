@@ -27,7 +27,7 @@ export default async function BillingPage() {
   return (
     <section className="panel billing-panel">
       <a className="back-link" href="/">← Back to clubs</a>
-      <p className="eyebrow">DeckGala subscription</p>
+      <p className="eyebrow">AquaTeamHub subscription</p>
       <h1>One account. More clubs.</h1>
       <p className="muted">
         {adminClubCount} club{adminClubCount === 1 ? "" : "s"} managed · {freeClubLimit} free club{freeClubLimit === 1 ? "" : "s"} included
@@ -48,7 +48,7 @@ export default async function BillingPage() {
           {stripeReady ? (
             <form action={createStripeCheckoutSession}><button type="submit">Subscribe with Stripe</button></form>
           ) : (
-            <p className="notice-error">Billing is not configured yet. Contact the DeckGala platform administrator.</p>
+            <p className="notice-error">Billing is not configured yet. Contact the AquaTeamHub platform administrator.</p>
           )}
         </>
       )}

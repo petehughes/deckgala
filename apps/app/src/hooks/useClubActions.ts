@@ -37,7 +37,7 @@ interface UseClubActionsParams {
 
 export function useClubActions({ club, activeGroupId, config, setPersisted, showToast }: UseClubActionsParams) {
   const setClubName = useCallback((clubName: string) => {
-    const name = clubName.trim() || 'DeckGala Swim Club';
+    const name = clubName.trim() || 'AquaTeamHub Swim Club';
     setPersisted(prev => ({
       ...prev,
       club: {
@@ -60,7 +60,7 @@ export function useClubActions({ club, activeGroupId, config, setPersisted, show
     motto?: string;
     primaryPoolId?: string;
   }) => {
-    const clubName = (profile.clubName || '').trim() || 'DeckGala Swim Club';
+    const clubName = (profile.clubName || '').trim() || 'AquaTeamHub Swim Club';
     setPersisted(prev => ({
       ...prev,
       club: {
@@ -1078,10 +1078,10 @@ export function useClubActions({ club, activeGroupId, config, setPersisted, show
       year: targetData.year || new Date().getFullYear(),
       stroke: targetData.stroke || 'Freestyle',
       distance: Number(targetData.distance) || 100,
-      course: targetData.course || 'SCM',
-      gender: targetData.gender || 'open',
-      minAge: targetData.minAge !== undefined && targetData.minAge !== null && targetData.minAge !== '' ? Number(targetData.minAge) : undefined,
-      maxAge: targetData.maxAge !== undefined && targetData.maxAge !== null && targetData.maxAge !== '' ? Number(targetData.maxAge) : undefined,
+      course: targetData.course || '25m',
+      gender: targetData.gender || 'Open',
+      minAge: targetData.minAge !== undefined && targetData.minAge !== null && (targetData.minAge as unknown) !== '' ? Number(targetData.minAge) : undefined,
+      maxAge: targetData.maxAge !== undefined && targetData.maxAge !== null && (targetData.maxAge as unknown) !== '' ? Number(targetData.maxAge) : undefined,
       qualifyingTime: qualTime,
       qualifyingTimeMs: qualMs,
       considerationTime: consTime || undefined,

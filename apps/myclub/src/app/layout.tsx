@@ -7,7 +7,7 @@ import { AppHeader } from "../components/shell/app-header";
 import { AppNav } from "../components/shell/app-nav";
 
 export const metadata: Metadata = {
-  title: "DeckGala Club Portal",
+  title: "AquaTeamHub Club Portal",
   description: "One club portal for every swimming club",
 };
 
@@ -21,7 +21,7 @@ export default async function RootLayout({
   let headerElement = (
     <header className="topbar">
       <a className="brand" href="/">
-        DeckGala <span>Club Portal</span>
+        AquaTeamHub <span>Club Portal</span>
       </a>
       <span className="topbar-note">One portal · many clubs</span>
     </header>
@@ -34,7 +34,7 @@ export default async function RootLayout({
       session.user.id,
     );
     const cookieStore = await cookies();
-    const selectedId = cookieStore.get("deckgala_active_club")?.value;
+    const selectedId = cookieStore.get("aquateamhub_active_club")?.value;
     const membership = accessible.find(({ clubId }) => clubId === selectedId) ?? accessible[0];
 
     if (membership) {

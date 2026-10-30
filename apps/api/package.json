@@ -1,5 +1,5 @@
 {
-  "name": "@deckgala/api",
+  "name": "@aquateamhub/api",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -10,8 +10,8 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@deckgala/api-types": "workspace:*",
-    "@deckgala/database": "workspace:*"
+    "@aquateamhub/api-types": "workspace:*",
+    "@aquateamhub/database": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "^1.4.4",

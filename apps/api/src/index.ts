@@ -1,9 +1,9 @@
-import { PrismaClient } from "@deckgala/database";
+import { PrismaClient } from "@aquateamhub/database";
 import {
   syncPayloadSchema,
   webSocketEventSchema,
   type SyncPayload,
-} from "@deckgala/api-types";
+} from "@aquateamhub/api-types";
 import type { Server, ServerWebSocket } from "bun";
 import { PublicEventStreams } from "./public-stream";
 

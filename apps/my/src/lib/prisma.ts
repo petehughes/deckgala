@@ -1,4 +1,4 @@
-import { PrismaClient } from "@deckgala/database";
+import { PrismaClient } from "@aquateamhub/database";
 
 const globalForPrisma = globalThis as typeof globalThis & {
   deckgalaPrisma?: PrismaClient;

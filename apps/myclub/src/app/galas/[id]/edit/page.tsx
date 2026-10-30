@@ -123,7 +123,7 @@ export default async function EditGalaPage({
             <input
               name="venue"
               defaultValue={gala.venue || ""}
-              placeholder="e.g. Deckgala Aquatics Centre"
+              placeholder="e.g. AquaTeamHub Aquatics Centre"
             />
           </label>
 
