@@ -11,12 +11,12 @@ describe("isSafeCallbackUrl", () => {
   it("rejects protocol-relative and malicious open redirects", () => {
     assert.equal(isSafeCallbackUrl("//evil.com"), false);
     assert.equal(isSafeCallbackUrl("javascript:alert(1)"), false);
-    assert.equal(isSafeCallbackUrl("https://phishing.com/deckgala"), false);
+    assert.equal(isSafeCallbackUrl("https://phishing.com/aquateamhub"), false);
   });
 
-  it("accepts official DeckGala subdomains and localhost ports", () => {
-    assert.equal(isSafeCallbackUrl("https://myclub.deckgala.com/roster"), true);
-    assert.equal(isSafeCallbackUrl("https://my.deckgala.com/swimmers"), true);
+  it("accepts official AquaTeamHub subdomains and localhost ports", () => {
+    assert.equal(isSafeCallbackUrl("https://myclub.aquateamhub.com/roster"), true);
+    assert.equal(isSafeCallbackUrl("https://my.aquateamhub.com/swimmers"), true);
     assert.equal(isSafeCallbackUrl("http://localhost:3000/"), true);
     assert.equal(isSafeCallbackUrl("http://localhost:3002/my-swimmers"), true);
   });
@@ -24,10 +24,10 @@ describe("isSafeCallbackUrl", () => {
 
 describe("resolveAuthRedirect", () => {
   const envUrls = {
-    myclubUrl: "https://myclub.deckgala.com",
-    myUrl: "https://my.deckgala.com",
-    resultsUrl: "https://results.deckgala.com",
-    wwwUrl: "https://www.deckgala.com",
+    myclubUrl: "https://myclub.aquateamhub.com",
+    myUrl: "https://my.aquateamhub.com",
+    resultsUrl: "https://results.aquateamhub.com",
+    wwwUrl: "https://www.aquateamhub.com",
   };
 
   it("routes verified staff (Coaches, Admins, Officials) to myclub", () => {
@@ -38,7 +38,7 @@ describe("resolveAuthRedirect", () => {
     });
 
     assert.equal(res.portal, "MYCLUB");
-    assert.equal(res.targetUrl, "https://myclub.deckgala.com");
+    assert.equal(res.targetUrl, "https://myclub.aquateamhub.com");
     assert.ok(res.reason.includes("Verified club staff"));
   });
 
@@ -51,18 +51,18 @@ describe("resolveAuthRedirect", () => {
     });
 
     assert.equal(res.portal, "MY");
-    assert.equal(res.targetUrl, "https://my.deckgala.com");
+    assert.equal(res.targetUrl, "https://my.aquateamhub.com");
   });
 
   it("respects safe explicit callback URLs", () => {
     const res = resolveAuthRedirect({
       user: { id: "u3", email: "user@aquatics.org" },
       memberships: [{ role: "COACH", clubId: "c1" }],
-      callbackUrl: "https://results.deckgala.com/live",
+      callbackUrl: "https://results.aquateamhub.com/live",
       envUrls,
     });
 
-    assert.equal(res.targetUrl, "https://results.deckgala.com/live");
+    assert.equal(res.targetUrl, "https://results.aquateamhub.com/live");
     assert.equal(res.portal, "RESULTS");
   });
 
@@ -75,6 +75,6 @@ describe("resolveAuthRedirect", () => {
     });
 
     assert.equal(res.portal, "MY");
-    assert.equal(res.targetUrl, "https://my.deckgala.com");
+    assert.equal(res.targetUrl, "https://my.aquateamhub.com");
   });
 });

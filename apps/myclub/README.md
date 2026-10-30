@@ -1,4 +1,4 @@
-# `@deckgala/myclub`
+# `@aquateamhub/myclub`
 
 The DeckGala club portal is a shared SaaS workspace: one deployment and one
 PostgreSQL database serve many clubs. Accounts can create clubs, switch between
@@ -62,9 +62,9 @@ administrator shares each link directly with the intended person.
 Apply migrations and generate Prisma Client from the repository root:
 
 ```powershell
-bun run --filter @deckgala/database db:migrate:deploy
-bun run --filter @deckgala/database db:generate
-bun run --filter @deckgala/myclub dev
+bun run --filter @aquateamhub/database db:migrate:deploy
+bun run --filter @aquateamhub/database db:generate
+bun run --filter @aquateamhub/myclub dev
 ```
 
 After migrating an existing single-club deployment, sign in with an address

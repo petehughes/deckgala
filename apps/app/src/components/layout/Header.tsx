@@ -23,10 +23,10 @@ export function Header({ onOpenMenu }: HeaderProps = {}) {
           <Icon name="menu" size={20} />
         </button>
         <div aria-hidden="true">
-          <img src={logoUrl} alt="DeckGala" className="brand-logo-img" width="28" height="28" />
+          <img src={logoUrl} alt="AquaTeamHub" className="brand-logo-img" width="28" height="28" />
         </div>
         <div className="brand-text">
-          <span className="brand-title">DeckGala</span>
+          <span className="brand-title">AquaTeamHub</span>
           <span className="brand-subtitle">Offline Deck Timing</span>
         </div>
       </div>

@@ -67,8 +67,8 @@ describe('Annual Targets & Swimmer PB Utilities', () => {
       year: 2026,
       stroke: 'Freestyle',
       distance: 100,
-      course: 'SCM',
-      gender: 'open',
+      course: '25m',
+      gender: 'Open',
       minAge: 13,
       maxAge: 14,
       qualifyingTime: '1:04.00',
@@ -82,13 +82,16 @@ describe('Annual Targets & Swimmer PB Utilities', () => {
         id: 'sw-1',
         name: 'Alex Rivera',
         age: 14,
-        gender: 'male',
+        gender: 'M',
+        pb50m: '',
+        pb100m: '',
+        notes: '',
         personalBests: [
           {
             id: 'pb-1',
             stroke: 'Freestyle',
             distance: 100,
-            course: 'SCM',
+            course: '25m',
             time: '1:02.50',
             timeMs: 62500
           }
@@ -109,13 +112,16 @@ describe('Annual Targets & Swimmer PB Utilities', () => {
         id: 'sw-2',
         name: 'Jordan Taylor',
         age: 14,
-        gender: 'female',
+        gender: 'F',
+        pb50m: '',
+        pb100m: '',
+        notes: '',
         personalBests: [
           {
             id: 'pb-2',
             stroke: 'Freestyle',
             distance: 100,
-            course: 'SCM',
+            course: '25m',
             time: '1:04.60',
             timeMs: 64600 // +0.60s away from 1:04.00 (<1.5s and within CT 1:06.00)
           }
@@ -135,13 +141,16 @@ describe('Annual Targets & Swimmer PB Utilities', () => {
         id: 'sw-3',
         name: 'New Swimmer',
         age: 14,
-        gender: 'open',
+        gender: 'X',
+        pb50m: '',
+        pb100m: '',
+        notes: '',
         personalBests: [
           {
             id: 'pb-3',
             stroke: 'Freestyle',
             distance: 100,
-            course: 'SCM',
+            course: '25m',
             time: '1:12.00',
             timeMs: 72000 // 8s away
           }
@@ -160,13 +169,16 @@ describe('Annual Targets & Swimmer PB Utilities', () => {
         id: 'sw-4',
         name: 'Breaststroke Specialist',
         age: 14,
-        gender: 'female',
+        gender: 'F',
+        pb50m: '',
+        pb100m: '',
+        notes: '',
         personalBests: [
           {
             id: 'pb-4',
             stroke: 'Breaststroke',
             distance: 100,
-            course: 'SCM',
+            course: '25m',
             time: '1:18.00',
             timeMs: 78000
           }
@@ -184,7 +196,10 @@ describe('Annual Targets & Swimmer PB Utilities', () => {
         id: 'sw-5',
         name: 'Senior Swimmer',
         age: 17, // Target is 13-14
-        gender: 'female'
+        gender: 'F',
+        pb50m: '',
+        pb100m: '',
+        notes: ''
       };
 
       const result = evaluateSwimmerTarget(swimmerWrongAge, countyTarget100Free);
@@ -196,7 +211,9 @@ describe('Annual Targets & Swimmer PB Utilities', () => {
         id: 'sw-legacy',
         name: 'Legacy Swimmer',
         age: 14,
-        gender: 'open',
+        gender: 'X',
+        pb50m: '',
+        notes: '',
         pb100m: '1:03.50'
       };
 
@@ -213,13 +230,16 @@ describe('Annual Targets & Swimmer PB Utilities', () => {
         id: 'sw-top',
         name: 'Top Competitor',
         age: 15,
-        gender: 'open',
+        gender: 'M',
+        pb50m: '',
+        pb100m: '',
+        notes: '',
         personalBests: [
           {
             id: 'pb-1',
             stroke: 'Freestyle',
             distance: 100,
-            course: 'SCM',
+            course: '25m',
             time: '56.50',
             timeMs: 56500
           },
@@ -227,7 +247,7 @@ describe('Annual Targets & Swimmer PB Utilities', () => {
             id: 'pb-2',
             stroke: 'Freestyle',
             distance: 200,
-            course: 'SCM',
+            course: '25m',
             time: '2:04.00',
             timeMs: 124000
           }

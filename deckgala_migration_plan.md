@@ -151,7 +151,7 @@ All DeckGala web portals and apps are fully responsive across mobile, tablet, an
 
 ### 3.3 Shared Packages
 
-#### 1. `@deckgala/controls` (`packages/controls/`)
+#### 1. `@aquateamhub/controls` (`packages/controls/`)
 * **Purpose:** Reusable UI component library adhering strictly to the DeckGala design system and fold-aware UX patterns.
 * **Components:**
   * `LaneCard`: High-contrast slate card (`#16233B`) with cyan lane headers and monospaced tabular timers.
@@ -161,7 +161,7 @@ All DeckGala web portals and apps are fully responsive across mobile, tablet, an
   * `FoldableSplitPane`: Responsive wrapper that automatically transitions between standard responsive stacks and hinge-padded dual-pane views when viewport segments $> 1$.
   * `TabletopContainer`: Half-fold container allocating passive display to the upper segment and interaction controls to the lower segment.
 
-#### 2. `@deckgala/database` (`packages/database/`)
+#### 2. `@aquateamhub/database` (`packages/database/`)
 * **Purpose:** Single source of truth for data models and migrations.
 * **Schema Entities:**
   * `Club`: Organization details, subscription tier, custom branding.
@@ -173,7 +173,7 @@ All DeckGala web portals and apps are fully responsive across mobile, tablet, an
   * `GalaEntry`: Swimmer event entries, seed times, payment and approval status.
   * `RaceResult`: Splits, net times, disqualification (DQ) infraction codes.
 
-#### 3. `@deckgala/api-types` (`packages/api-types/`)
+#### 3. `@aquateamhub/api-types` (`packages/api-types/`)
 * **Purpose:** Shared TypeScript contracts and runtime validation schemas.
 * **Contents:**
   * Zod schemas for auth sessions, token claims, and cross-subdomain redirection payloads.
@@ -208,19 +208,19 @@ All DeckGala web portals and apps are fully responsive across mobile, tablet, an
      "version": "0.1.0",
      "workspaces": ["apps/*", "packages/*"],
      "scripts": {
-       "dev": "bun run --filter @deckgala/app dev",
-       "build": "bun run --filter @deckgala/app build",
-       "typecheck": "bun run --filter @deckgala/app typecheck",
-       "test": "bun run --filter @deckgala/app test",
-       "sync": "bun run --filter @deckgala/app sync",
-       "android": "bun run --filter @deckgala/app android"
+       "dev": "bun run --filter @aquateamhub/app dev",
+       "build": "bun run --filter @aquateamhub/app build",
+       "typecheck": "bun run --filter @aquateamhub/app typecheck",
+       "test": "bun run --filter @aquateamhub/app test",
+       "sync": "bun run --filter @aquateamhub/app sync",
+       "android": "bun run --filter @aquateamhub/app android"
      }
    }
    ```
    Keep the root manifest private; do not add a publishable root package.
-5. [x] Add a `package.json` to every app and package directory so Bun discovers each workspace. Use unique names (`@deckgala/www`, `@deckgala/myclub`, `@deckgala/results`, `@deckgala/api`, `@deckgala/app`, `@deckgala/controls`, `@deckgala/database`, and `@deckgala/api-types`), mark internal packages private, and add the appropriate `typecheck` and `test` scripts as each workspace is scaffolded. Add package-specific dependencies only to the workspace that uses them.
+5. [x] Add a `package.json` to every app and package directory so Bun discovers each workspace. Use unique names (`@aquateamhub/www`, `@aquateamhub/myclub`, `@aquateamhub/results`, `@aquateamhub/api`, `@aquateamhub/app`, `@aquateamhub/controls`, `@aquateamhub/database`, and `@aquateamhub/api-types`), mark internal packages private, and add the appropriate `typecheck` and `test` scripts as each workspace is scaffolded. Add package-specific dependencies only to the workspace that uses them.
 6. [x] Add the root `tsconfig.json` with shared compiler options and path conventions. Give each TypeScript workspace its own `tsconfig.json` extending the root config; keep framework-specific configuration in the corresponding app.
-7. [x] Add shared brand variables in `packages/controls/src/tokens.css` and Tailwind CSS v4 theme mappings in `packages/controls/src/tailwind.css`; import the variables in the existing app. Configure new web apps and `@deckgala/controls` to consume them as those apps are scaffolded; avoid duplicating brand values.
+7. [x] Add shared brand variables in `packages/controls/src/tokens.css` and Tailwind CSS v4 theme mappings in `packages/controls/src/tailwind.css`; import the variables in the existing app. Configure new web apps and `@aquateamhub/controls` to consume them as those apps are scaffolded; avoid duplicating brand values.
 8. [x] Move the active app source, tests, Capacitor configuration, and Android platform project into `apps/app`; retain the older standalone timer source in `apps/app/legacy-web/`. Update paths, scripts, and imports to reflect the new location.
 9. [x] Run `bun install` from the monorepo root to link workspaces and generate the Bun lockfile (`bun.lock`). Confirm that all eight workspace package names resolve, then run the available typecheck and test scripts. Fix any broken imports or paths before beginning Phase 2.
 
@@ -241,23 +241,23 @@ All DeckGala web portals and apps are fully responsive across mobile, tablet, an
 3. [x] Configure CI/CD pipelines (GitHub Actions) to lint, test, build, and deploy apps across Vercel (web apps) and App Store Connect / Google Play Console (`app`). Vercel and store uploads are gated on repository configuration and secrets; no external deployment or store upload has been run.
 
 ### Phase 5: Domain Refactoring, Centralized Auth, Swimmer/Parent PWA (`my`), Staff Specialization (`myclub`), & Foldable UX
-1. [x] **Centralized Auth Hub (`apps/auth` - `@deckgala/auth`):**
+1. [x] **Centralized Auth Hub (`apps/auth` - `@aquateamhub/auth`):**
    * Scaffold `apps/auth` using Next.js App Router to serve as the unified authentication domain (`auth.deckgala.com`).
    * Implement shared authentication session handling with cross-subdomain cookies (`Domain=.deckgala.com`).
    * Add intelligent role-based redirection logic: send verified staff members to `myclub.deckgala.com`, parents and swimmers to `my.deckgala.com`, and spectators/public to `results` or `www`. Tested and passing in `redirect-resolver.test.ts`.
    * Support email/password, magic links, OAuth providers, and parent-swimmer account linking (`/link-swimmer`). Build passing with exit code 0.
-2. [x] **Swimmer & Parent PWA (`apps/my` - `@deckgala/my`):**
+2. [x] **Swimmer & Parent PWA (`apps/my` - `@aquateamhub/my`):**
    * Scaffold `apps/my` using Next.js App Router configured as a Progressive Web App (PWA) with install manifest (`manifest.json`), service workers (`sw.js`), and offline asset caching.
    * Build swimmer profile views supporting multiple swimmers per parent/family account (`/my-swimmers`, active swimmer switcher pill bar).
    * Implement Gala Meet Entry workflow: view available club galas (`/galas`), verify event eligibility against qualifying cuts and cutoff times (`checkEventEligibility`), submit entries, and store offline digital entry receipts (`/galas/[id]/enter`).
    * Implement interactive Personal Bests (PB) charts (`/personal-bests`) and training timetable schedule views (`/schedule`) featuring foldable-aware dual-pane master-detail via `FoldableSplitPane`.
    * Add Web Push notifications API endpoint (`/api/push/subscribe`) for gala acceptance, squad updates, and schedule alterations. Production build passing.
-3. [x] **Club Staff Specialization (`apps/myclub` - `@deckgala/myclub`):**
+3. [x] **Club Staff Specialization (`apps/myclub` - `@aquateamhub/myclub`):**
    * Refactor `apps/myclub` to strictly serve club staff (committee members, administrators, head coaches, assistant coaches, and meet officials).
    * Restrict access and gate routes via `getAccessibleUserClubs` and `isStaffRole` so non-staff users (parents/swimmers) are automatically redirected to `my.deckgala.com`.
    * Streamline administrative tools: squad rosters, training timetable editor (`/schedule` with `FoldableSplitPane`), meet creation, seeding management, Hy-Tek export, and financial renewal workflows. All 51 tests and Next.js build passing.
-4. [x] **Foldable-Aware & Dual-Screen Component Architecture (`@deckgala/controls`):**
-   * Extend `@deckgala/controls` with foldable-aware layout components: `FoldableSplitPane` and `TabletopContainer`.
+4. [x] **Foldable-Aware & Dual-Screen Component Architecture (`@aquateamhub/controls`):**
+   * Extend `@aquateamhub/controls` with foldable-aware layout components: `FoldableSplitPane` and `TabletopContainer`.
    * Implement CSS Viewport Segments API support (`horizontal-viewport-segments: 2`, `vertical-viewport-segments: 2`) and CSS hinge safe-margin tokens in `tokens.css` and `controls.css`. Unit tests passing in `packages/controls/src/index.test.tsx`.
    * Implement fold-aware layouts:
      * In `apps/my`: Master schedule/gala list on left pane, entry detail/PB progression on right pane (`/schedule` via `FoldableSplitPane`).
@@ -265,8 +265,8 @@ All DeckGala web portals and apps are fully responsive across mobile, tablet, an
      * In `apps/app`: `TabletopContainer` for splitting upper passive scoreboard timer from lower touch stop/split pad.
      * In `apps/results`: Responsive dual-segment layout for live stream and heat standings.
 5. [x] **Database & Shared API Types Update:**
-   * Update `@deckgala/database` Prisma schema with models for guardian-swimmer links (`ParentSwimmerLink`), training schedules (`TrainingSchedule`), Web Push subscriptions (`PushSubscription`), and staff role differentiation (`OFFICIAL`, `isStaffRole`). Applied migration `20261030080000_phase5_models` and regenerated Prisma client.
-   * Update `@deckgala/api-types` with Zod validation schemas for cross-subdomain auth tokens (`crossSubdomainSessionSchema`), intelligent redirection (`authRedirectTargetSchema`), PWA gala entries (`pwaGalaEntrySchema`), training schedule payloads (`trainingScheduleInputSchema`), and family links (`parentSwimmerLinkInputSchema`). Unit tests passing 9/9.
+   * Update `@aquateamhub/database` Prisma schema with models for guardian-swimmer links (`ParentSwimmerLink`), training schedules (`TrainingSchedule`), Web Push subscriptions (`PushSubscription`), and staff role differentiation (`OFFICIAL`, `isStaffRole`). Applied migration `20261030080000_phase5_models` and regenerated Prisma client.
+   * Update `@aquateamhub/api-types` with Zod validation schemas for cross-subdomain auth tokens (`crossSubdomainSessionSchema`), intelligent redirection (`authRedirectTargetSchema`), PWA gala entries (`pwaGalaEntrySchema`), training schedule payloads (`trainingScheduleInputSchema`), and family links (`parentSwimmerLinkInputSchema`). Unit tests passing 9/9.
 6. [x] **Root Monorepo & DNS Configuration:**
    * Update root `package.json` workspaces to include `apps/auth` and `apps/my` and added convenience development scripts.
    * Configure environment routing and DNS mappings for the six production domains (`auth`, `my`, `myclub`, `results`, `www`, `api`) in `.env.example`. All workspaces verified and linked via Bun.

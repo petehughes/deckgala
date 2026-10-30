@@ -5,7 +5,7 @@ import { setActiveSwimmerAction } from "./actions";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "DeckGala | Swimmer & Parent Portal",
+  title: "AquaTeamHub | Swimmer & Parent Portal",
   description: "Progressive Web App for swimming families: personal bests, training schedules, and gala meet entries.",
   manifest: "/manifest.json",
 };
@@ -33,7 +33,7 @@ export default async function RootLayout({
         <header className="topbar">
           <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
             <Link href="/" className="brand">
-              Deck<span>Gala</span> <small style={{ fontSize: "11px", color: "var(--accent-cyan)", fontWeight: 700 }}>FAMILY</small>
+              AquaTeam<span>Hub</span> <small style={{ fontSize: "11px", color: "var(--accent-cyan)", fontWeight: 700 }}>FAMILY</small>
             </Link>
 
             {linkedSwimmers.length > 0 && (
@@ -59,14 +59,14 @@ export default async function RootLayout({
 
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <Link
-              href="https://auth.deckgala.com/link-swimmer"
+              href="https://auth.aquateamhub.com/link-swimmer"
               className="btn-secondary"
               style={{ fontSize: "11px", padding: "6px 10px" }}
             >
               + Link Child
             </Link>
             <a
-              href="https://auth.deckgala.com/sign-in"
+              href="https://auth.aquateamhub.com/sign-in"
               className="muted"
               style={{ fontSize: "12px", textDecoration: "none" }}
             >

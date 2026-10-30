@@ -1,4 +1,4 @@
-# `@deckgala/database`
+# `@aquateamhub/database`
 
 PostgreSQL schema and generated Prisma client for clubs, users and memberships,
 swimmers and personal bests, galas and events, and offline deck-session results.
@@ -8,8 +8,8 @@ database credentials. To apply the checked-in migrations to that database and
 generate the client:
 
 ```powershell
-bun run --filter @deckgala/database db:migrate:deploy
-bun run --filter @deckgala/database db:generate
+bun run --filter @aquateamhub/database db:migrate:deploy
+bun run --filter @aquateamhub/database db:generate
 ```
 
 The checked-in migrations include the initial schema, Phase 3 membership

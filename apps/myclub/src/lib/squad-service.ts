@@ -1,4 +1,4 @@
-import type { Gender, PoolCourse, SwimStroke } from "@deckgala/database";
+import type { Gender, PoolCourse, SwimStroke } from "@aquateamhub/database";
 import { calculateCompetitionAge } from "./age-calculator";
 import {
   DEFAULT_QUALIFYING_STANDARDS,

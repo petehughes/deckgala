@@ -5,12 +5,12 @@ import { prisma } from "./prisma";
 
 const cookieDomain =
   process.env.COOKIE_DOMAIN ||
-  (process.env.NODE_ENV === "production" ? ".deckgala.com" : undefined);
+  (process.env.NODE_ENV === "production" ? ".aquateamhub.com" : undefined);
 
 export const auth = betterAuth({
-  appName: "DeckGala My",
-  baseURL: process.env.BETTER_AUTH_URL || "https://my.deckgala.com",
-  secret: process.env.BETTER_AUTH_SECRET || "deckgala-central-auth-secret-key-32-chars-min",
+  appName: "AquaTeamHub My",
+  baseURL: process.env.BETTER_AUTH_URL || "https://my.aquateamhub.com",
+  secret: process.env.BETTER_AUTH_SECRET || "aquateamhub-central-auth-secret-key-32-chars-min",
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   emailAndPassword: {
     enabled: true,

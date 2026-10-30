@@ -190,10 +190,10 @@ export function HamburgerMenu({
         <div className="drawer-header">
           <div className="drawer-brand">
             <div className="brand-logo" aria-hidden="true">
-              <img src={logoUrl} alt="DeckGala" className="brand-logo-img" width="28" height="28" />
+              <img src={logoUrl} alt="AquaTeamHub" className="brand-logo-img" width="28" height="28" />
             </div>
             <div className="drawer-brand-text">
-              <span className="drawer-brand-title">DeckGala</span>
+              <span className="drawer-brand-title">AquaTeamHub</span>
               <span className="drawer-brand-sub">Offline Deck Timing</span>
             </div>
           </div>
@@ -365,9 +365,9 @@ export function HamburgerMenu({
             <span>Peer-to-Peer Mesh: Offline Standalone</span>
           </div>
           <div className="drawer-version-tag">
-            <span>DeckGala v2.0.0</span>
+            <span>AquaTeamHub v2.0.0</span>
             <span>·</span>
-            <span>deckgala.com</span>
+            <span>aquateamhub.com</span>
           </div>
         </div>
       </div>

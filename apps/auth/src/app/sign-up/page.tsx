@@ -13,8 +13,8 @@ export default async function SignUpPage({
   return (
     <main className="auth-shell">
       <div className="auth-header">
-        <Link href="https://www.deckgala.com" className="auth-brand">
-          Deck<span>Gala</span>
+        <Link href="https://www.aquateamhub.com" className="auth-brand">
+          AquaTeam<span>Hub</span>
         </Link>
         <p className="muted" style={{ fontSize: "12px", margin: 0 }}>
           Central Identity &amp; Cross-Subdomain Authentication
@@ -24,7 +24,7 @@ export default async function SignUpPage({
       <div className="auth-card">
         <h1 className="auth-title">Create Account</h1>
         <p className="auth-subtitle">
-          Join DeckGala to manage your swimmer, enter meets, or administer your club.
+          Join AquaTeamHub to manage your swimmer, enter meets, or administer your club.
         </p>
 
         {error && (

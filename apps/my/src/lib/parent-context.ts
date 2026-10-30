@@ -40,8 +40,8 @@ export interface ParentContextResult {
   } | null;
 }
 
-const ACTIVE_SWIMMER_COOKIE = "deckgala_active_swimmer";
-const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL || "https://auth.deckgala.com";
+const ACTIVE_SWIMMER_COOKIE = "aquateamhub_active_swimmer";
+const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL || "https://auth.aquateamhub.com";
 
 export async function getParentContext(): Promise<ParentContextResult> {
   const session = await auth.api.getSession({
@@ -49,7 +49,7 @@ export async function getParentContext(): Promise<ParentContextResult> {
   });
 
   if (!session || !session.user) {
-    redirect(`${AUTH_URL}/sign-in?callbackUrl=https://my.deckgala.com`);
+    redirect(`${AUTH_URL}/sign-in?callbackUrl=https://my.aquateamhub.com`);
   }
 
   // Fetch all swimmers linked to this parent account via ParentSwimmerLink

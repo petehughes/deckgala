@@ -1,4 +1,4 @@
-import type { PoolCourse, SwimStroke } from "@deckgala/database";
+import type { PoolCourse, SwimStroke } from "@aquateamhub/database";
 import { formatSwimTime } from "./qualifying-standards";
 
 export interface SeedingSwimmer {

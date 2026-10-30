@@ -5,7 +5,7 @@ import { prisma } from "../../../../lib/prisma";
 
 async function saveSubscription(subscription: Stripe.Subscription): Promise<void> {
   const userId = subscription.metadata.userId;
-  if (!userId) throw new Error("Stripe subscription is missing its DeckGala user ID");
+  if (!userId) throw new Error("Stripe subscription is missing its AquaTeamHub user ID");
   const customerId = typeof subscription.customer === "string"
     ? subscription.customer
     : subscription.customer.id;

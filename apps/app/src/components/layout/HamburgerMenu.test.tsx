@@ -29,7 +29,7 @@ describe('HamburgerMenu component', () => {
 
     // Header and brand
     expect(view.getByLabelText('Navigation Menu')).toBeDefined();
-    expect(view.getByText('DeckGala')).toBeDefined();
+    expect(view.getByText('AquaTeamHub')).toBeDefined();
 
     // Active session card
     expect(view.getByText('ACTIVE SESSION')).toBeDefined();

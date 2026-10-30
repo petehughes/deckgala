@@ -1,5 +1,5 @@
 {
-  "name": "deckgala-monorepo",
+  "name": "aquateamhub-monorepo",
   "version": "0.1.0",
   "private": true,
   "workspaces": [
@@ -7,16 +7,16 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "bun run --filter @deckgala/app dev",
-    "build": "bun run --filter @deckgala/app build",
-    "typecheck": "bun run --filter @deckgala/app typecheck",
-    "test": "bun run --filter @deckgala/app test",
-    "dev:auth": "bun run --filter @deckgala/auth dev",
-    "dev:my": "bun run --filter @deckgala/my dev",
-    "dev:myclub": "bun run --filter @deckgala/myclub dev",
+    "dev": "bun run --filter @aquateamhub/app dev",
+    "build": "bun run --filter @aquateamhub/app build",
+    "typecheck": "bun run --filter @aquateamhub/app typecheck",
+    "test": "bun run --filter @aquateamhub/app test",
+    "dev:auth": "bun run --filter @aquateamhub/auth dev",
+    "dev:my": "bun run --filter @aquateamhub/my dev",
+    "dev:myclub": "bun run --filter @aquateamhub/myclub dev",
     "lint": "eslint apps/api/src apps/myclub/src apps/results/src apps/www/src --ext .ts,.tsx",
-    "sync": "bun run --filter @deckgala/app sync",
-    "android": "bun run --filter @deckgala/app android"
+    "sync": "bun run --filter @aquateamhub/app sync",
+    "android": "bun run --filter @aquateamhub/app android"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.7",

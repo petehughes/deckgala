@@ -1,4 +1,4 @@
-import type { Gender, PoolCourse, SwimStroke } from "@deckgala/database";
+import type { Gender, PoolCourse, SwimStroke } from "@aquateamhub/database";
 
 export interface SwimEnglandRankedTime {
   stroke: SwimStroke;
@@ -58,7 +58,7 @@ function getMockSwimEnglandDetails(governingBodyId: string): SwimEnglandMemberDe
     gender: isFemale ? "FEMALE" : "MALE",
     category: isCategory1 ? "Category 1: Club Train" : "Category 2: Club Compete",
     status: isExpired ? "EXPIRED" : "ACTIVE",
-    primaryClub: "DeckGala Swimming Club",
+    primaryClub: "AquaTeamHub Swimming Club",
     rankedTimes: [
       {
         stroke: "FREESTYLE",

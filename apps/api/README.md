@@ -1,16 +1,16 @@
-# `@deckgala/api`
+# `@aquateamhub/api`
 
 Bun HTTP and WebSocket service for offline deck-session sync and gala event
-relays. It uses the shared runtime schemas in `@deckgala/api-types` and persists
-sync uploads with `@deckgala/database`.
+relays. It uses the shared runtime schemas in `@aquateamhub/api-types` and persists
+sync uploads with `@aquateamhub/database`.
 
 Configure `DATABASE_URL` and `API_BEARER_TOKEN`, then run database migrations
 and generate the Prisma client:
 
 ```powershell
-bun run --filter @deckgala/database db:migrate:deploy
-bun run --filter @deckgala/database db:generate
-bun run --filter @deckgala/api dev
+bun run --filter @aquateamhub/database db:migrate:deploy
+bun run --filter @aquateamhub/database db:generate
+bun run --filter @aquateamhub/api dev
 ```
 
 The service listens on port `3001` by default; override it with `PORT`.

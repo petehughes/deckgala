@@ -1,4 +1,4 @@
-@import "@deckgala/controls/tokens.css";
+@import "@aquateamhub/controls/tokens.css";
 
 :root { color-scheme: dark; background: var(--color-deep-abyss); color: var(--color-frost-white); font-family: var(--deck-font-sans); font-synthesis: none; text-rendering: optimizeLegibility; }
 * { box-sizing: border-box; }

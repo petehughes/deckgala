@@ -17,8 +17,8 @@ describe('SplashScreen component', () => {
     );
 
     // Initial render displays title and tagline
-    expect(view.getByLabelText('DeckGala Splash Screen')).toBeDefined();
-    expect(view.getByText('DeckGala')).toBeDefined();
+    expect(view.getByLabelText('AquaTeamHub Splash Screen')).toBeDefined();
+    expect(view.getByText('AquaTeamHub')).toBeDefined();
     expect(view.getByText('Offline deck timing. Seamless meet management.')).toBeDefined();
 
     // Fast-forward past duration

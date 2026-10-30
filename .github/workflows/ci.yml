@@ -38,38 +38,38 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Generate Prisma client
-        run: bun run --filter @deckgala/database db:generate
+        run: bun run --filter @aquateamhub/database db:generate
 
       - name: Validate database package
-        run: bun run --filter @deckgala/database typecheck
+        run: bun run --filter @aquateamhub/database typecheck
 
       - name: Lint
         run: bun run lint
 
       - name: Typecheck backend and web portals
         run: |
-          bun run --filter @deckgala/api typecheck
-          bun run --filter @deckgala/myclub typecheck
-          bun run --filter @deckgala/results typecheck
-          bun run --filter @deckgala/www typecheck
+          bun run --filter @aquateamhub/api typecheck
+          bun run --filter @aquateamhub/myclub typecheck
+          bun run --filter @aquateamhub/results typecheck
+          bun run --filter @aquateamhub/www typecheck
 
       - name: Test backend, portals, and shared packages
         run: |
-          bun run --filter @deckgala/api test
-          bun run --filter @deckgala/myclub test
-          bun run --filter @deckgala/results test
-          bun run --filter @deckgala/api-types test
-          bun run --filter @deckgala/controls test
-          bun run --filter @deckgala/app test
+          bun run --filter @aquateamhub/api test
+          bun run --filter @aquateamhub/myclub test
+          bun run --filter @aquateamhub/results test
+          bun run --filter @aquateamhub/api-types test
+          bun run --filter @aquateamhub/controls test
+          bun run --filter @aquateamhub/app test
 
       - name: Build public and club websites
         run: |
-          bun run --filter @deckgala/www build
-          bun run --filter @deckgala/myclub build
-          bun run --filter @deckgala/results build
+          bun run --filter @aquateamhub/www build
+          bun run --filter @aquateamhub/myclub build
+          bun run --filter @aquateamhub/results build
 
       - name: Build and sync Capacitor app
-        run: bun run --filter @deckgala/app sync
+        run: bun run --filter @aquateamhub/app sync
 
       - name: Assemble Android debug app
         working-directory: apps/app/android
@@ -100,7 +100,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Build and sync Capacitor app
-        run: bun run --filter @deckgala/app sync
+        run: bun run --filter @aquateamhub/app sync
 
       - name: Build iOS simulator app
         run: |
@@ -138,7 +138,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Build and sync Capacitor app
-        run: bun run --filter @deckgala/app sync
+        run: bun run --filter @aquateamhub/app sync
 
       - name: Validate App Store signing credentials
         shell: bash
@@ -301,7 +301,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Build and sync Capacitor app
-        run: bun run --filter @deckgala/app sync
+        run: bun run --filter @aquateamhub/app sync
 
       - name: Prepare release signing key
         shell: bash

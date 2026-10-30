@@ -1,4 +1,4 @@
-import type { Gender, PoolCourse, SwimStroke } from "@deckgala/database";
+import type { Gender, PoolCourse, SwimStroke } from "@aquateamhub/database";
 
 export type StandardLevel = "COUNTY" | "REGIONAL" | "NATIONAL";
 

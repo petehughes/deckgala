@@ -1,5 +1,5 @@
 {
-  "name": "@deckgala/results",
+  "name": "@aquateamhub/results",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,8 +10,8 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@deckgala/api-types": "workspace:*",
-    "@deckgala/controls": "workspace:*",
+    "@aquateamhub/api-types": "workspace:*",
+    "@aquateamhub/controls": "workspace:*",
     "next": "^15.5.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

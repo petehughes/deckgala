@@ -1,11 +1,11 @@
-# DeckGala MyClub (`@deckgala/myclub`) — Site Architecture & Technical Design Specification
+# DeckGala MyClub (`@aquateamhub/myclub`) — Site Architecture & Technical Design Specification
 
 **Document Version:** 1.0.0  
 **Target Application:** `apps/myclub`  
-**Package Name:** `@deckgala/myclub`  
+**Package Name:** `@aquateamhub/myclub`  
 **Monorepo:** `deckgala` (Bun workspaces)  
 **Primary Framework:** Next.js 15+ (App Router), React 19, TypeScript, Tailwind CSS v4, Prisma ORM, Better Auth, Stripe  
-**Design Reference:** `deckgala_brand_guidelines.md` & `@deckgala/controls`  
+**Design Reference:** `deckgala_brand_guidelines.md` & `@aquateamhub/controls`  
 
 ---
 
@@ -40,18 +40,18 @@
 * **Framework:** Next.js 15+ with App Router (`apps/myclub/src/app`)
 * **React Engine:** React 19 (Server Components by default; client components strictly for interactive state)
 * **Type System:** TypeScript 5.8+ with strict type checking (`tsconfig.json`)
-* **Styling & Tokens:** Tailwind CSS v4 consuming `@deckgala/controls` CSS design tokens (`@import "@deckgala/controls/tokens.css";`)
-* **Database & ORM:** PostgreSQL accessed via Prisma Client (`@deckgala/database`)
+* **Styling & Tokens:** Tailwind CSS v4 consuming `@aquateamhub/controls` CSS design tokens (`@import "@aquateamhub/controls/tokens.css";`)
+* **Database & ORM:** PostgreSQL accessed via Prisma Client (`@aquateamhub/database`)
 * **Authentication:** Better Auth (`better-auth`) supporting email/password and optional OAuth (Google, Apple)
 * **Payments & Billing:** Stripe Node SDK (`stripe`) with Stripe Checkout and Customer Portal integration
-* **Validation:** Zod schemas shared across Server Actions and form controls (`@deckgala/api-types` & `zod`)
+* **Validation:** Zod schemas shared across Server Actions and form controls (`@aquateamhub/api-types` & `zod`)
 
 ### 2.2 Monorepo Package Dependencies
 ```text
-@deckgala/myclub
-├── @deckgala/database      (Prisma client, data models, schema migrations)
-├── @deckgala/controls      (Design tokens, LaneCard, StopButton, TimerDisplay, Tailwind variables)
-└── @deckgala/api-types     (Shared Zod schemas, sync contracts, type definitions)
+@aquateamhub/myclub
+├── @aquateamhub/database      (Prisma client, data models, schema migrations)
+├── @aquateamhub/controls      (Design tokens, LaneCard, StopButton, TimerDisplay, Tailwind variables)
+└── @aquateamhub/api-types     (Shared Zod schemas, sync contracts, type definitions)
 ```
 
 ### 2.3 Tenancy & Session Isolation Model
@@ -250,7 +250,7 @@ The swimmer profile is designed with a responsive poolside layout adhering to De
 2. **Cell Interactive Modal / Drawer:**
    * Tapping/clicking any stroke/distance cell opens a slide-over drawer displaying:
      * Full historic progression of times for that event over time.
-     * Intermediate 50m/100m split breakdowns recorded by poolside touchpads or the `@deckgala/app` mobile timer.
+     * Intermediate 50m/100m split breakdowns recorded by poolside touchpads or the `@aquateamhub/app` mobile timer.
      * Meet venue, pool course (25m vs 50m), and official certification link.
      * Manual PB Override (restricted to `ADMIN` and `COACH` roles with audit note).
 
@@ -447,7 +447,7 @@ A streamlined 4-step wizard for family entries:
 
 ### 4.5 Race Results & Deck Sync Adjudication (`/galas/[id]/results`)
 * **Deck Session Ingestion:**
-  * When mobile pool phones (`apps/app`) run timing for a meet, the session syncs via `@deckgala/api` into `DeckSession` and `RaceResult` records.
+  * When mobile pool phones (`apps/app`) run timing for a meet, the session syncs via `@aquateamhub/api` into `DeckSession` and `RaceResult` records.
   * Results view surfaces synced runs marked as `UNOFFICIAL`.
 * **Adjudication Workspace:**
   * Filter by Event and Heat.
@@ -578,7 +578,7 @@ Designed specifically for Head Coaches to evaluate training block efficacy and c
 
 ## 5. UI Ergonomics & DeckGala Brand Compliance
 
-All pages must adhere strictly to `deckgala_brand_guidelines.md` and reuse `@deckgala/controls`:
+All pages must adhere strictly to `deckgala_brand_guidelines.md` and reuse `@aquateamhub/controls`:
 
 ### 5.1 Color Tokens
 ```css
@@ -759,7 +759,7 @@ To enable parallel execution by autonomous coding agents, the work is partitione
 
 ## 8. Definition of Done & Quality Standards
 
-1. **Zero Monorepo Drift:** Uses Bun workspace linking and `@deckgala/*` packages cleanly.
+1. **Zero Monorepo Drift:** Uses Bun workspace linking and `@aquateamhub/*` packages cleanly.
 2. **Strict Multi-Tenancy:** Every database query filters by `clubId`; parent role restrictions verified with automated tests.
 3. **Brand Token Integrity:** Strict adherence to Deep Abyss, Electric Cyan, Start Coral, and JetBrains Mono tabular digits.
 4. **Type Safety:** 100% clean `bun run typecheck` (`tsc --noEmit`) with no `any` types.
@@ -820,7 +820,7 @@ To enable parallel execution by autonomous coding agents, the work is partitione
 2. **Age Group Calculation Rules:**
    * *Assumption:* Competition age for County and Regional championships is calculated as age as of December 31st of the meet year (`galaYear - birthYear`). For open invitational galas where "Age on the Day" is specified, age is computed as calendar years elapsed on `gala.startsAt`.
 3. **Database Schema Continuity:**
-   * *Assumption:* The existing Prisma schema in `@deckgala/database` contains `Swimmer` (with `dateOfBirth`, `gender`, `squad`, `governingBodyId`), `PersonalBest`, `RaceResult`, and `RaceSplit`. New business logic builds cleanly on top of these verified schema entities.
+   * *Assumption:* The existing Prisma schema in `@aquateamhub/database` contains `Swimmer` (with `dateOfBirth`, `gender`, `squad`, `governingBodyId`), `PersonalBest`, `RaceResult`, and `RaceSplit`. New business logic builds cleanly on top of these verified schema entities.
 4. **Parent-Child Linkage:**
    * *Assumption:* A parent user (`User` with role `PARENT`) links to swimmers via `Member.userId` or a family membership record, allowing a single parent to view and book galas for multiple children.
 5. **First-Class Squad Model & Relational Assignments:**
@@ -835,7 +835,7 @@ To enable parallel execution by autonomous coding agents, the work is partitione
 ### 9.3 Issues & Resolutions Log
 * **Issue 1: Test Runner Typings (`bun:test` vs `node:test`):**
   * *Symptom:* TypeScript compile failed with `error TS2307: Cannot find module 'bun:test'`.
-  * *Root Cause:* `@deckgala/myclub`'s `tsconfig.json` specifies `"types": ["node"]` rather than Bun runtime types.
+  * *Root Cause:* `@aquateamhub/myclub`'s `tsconfig.json` specifies `"types": ["node"]` rather than Bun runtime types.
   * *Resolution:* Standardized test files on Node's native test runner (`import { describe, it } from "node:test"` and `import assert from "node:assert/strict"`), which runs cleanly under both `bun test` and standard Node/TypeScript type checking.
 * **Issue 2: Member Form Schema Synchronization:**
   * *Symptom:* Form validation needed to accept new optional swimmer fields (`dateOfBirth`, `gender`, `squad`, `isSwimmer`) without breaking existing member creation.

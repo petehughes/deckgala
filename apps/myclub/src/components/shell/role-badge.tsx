@@ -1,4 +1,4 @@
-import type { ClubRole } from "@deckgala/database";
+import type { ClubRole } from "@aquateamhub/database";
 
 export function RoleBadge({ role }: { role: ClubRole }) {
   const roleStyles: Record<ClubRole, { label: string; className: string }> = {

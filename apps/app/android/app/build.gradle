@@ -7,10 +7,10 @@ def releaseSigningConfigured = releaseSigningPath &&
         System.getenv('ANDROID_KEY_PASSWORD')
 
 android {
-    namespace = "com.deckgala.app"
+    namespace = "com.aquateamhub.app"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.deckgala.app"
+        applicationId "com.aquateamhub.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode (System.getenv('ANDROID_VERSION_CODE') ?: '1').toInteger()

@@ -50,7 +50,7 @@ export default async function MyClubPage() {
       <div className="page-shell">
         <section className="panel onboarding-panel">
           <p className="eyebrow">One portal. Every club.</p>
-          <h1>Welcome to DeckGala.</h1>
+          <h1>Welcome to AquaTeamHub.</h1>
           <p className="muted">Create a club workspace or accept an invitation from a club administrator.</p>
           <form action={createClub} className="create-club-form">
             <label>Club name<input name="name" required minLength={2} maxLength={120} /></label>
@@ -78,7 +78,7 @@ export default async function MyClubPage() {
   }
 
   const cookieStore = await cookies();
-  const selectedId = cookieStore.get("deckgala_active_club")?.value;
+  const selectedId = cookieStore.get("aquateamhub_active_club")?.value;
   const membership = accessible.find(({ clubId }) => clubId === selectedId) ?? accessible[0];
   if (!membership) notFound();
   const clubId = membership.clubId;

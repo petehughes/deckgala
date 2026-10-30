@@ -60,7 +60,7 @@ export function SwimmerPBModal({ isOpen, onClose, swimmer }: SwimmerPBModalProps
             return {
               ...p,
               ...updates,
-              timeMs: parsedMs || undefined
+              timeMs: parsedMs || 0
             };
           }
           return p;
@@ -74,9 +74,9 @@ export function SwimmerPBModal({ isOpen, onClose, swimmer }: SwimmerPBModalProps
         id: uid('pb'),
         stroke,
         distance,
-        course: updates.course || 'SCM',
+        course: updates.course || '25m',
         time: updates.time,
-        timeMs: parsedMs || undefined,
+        timeMs: parsedMs || 0,
         date: updates.date || new Date().toISOString().slice(0, 10),
         meetName: updates.meetName || ''
       };
@@ -215,8 +215,9 @@ export function SwimmerPBModal({ isOpen, onClose, swimmer }: SwimmerPBModalProps
                           }
                           aria-label="Course length"
                         >
-                          <option value="SCM">SCM (25m)</option>
-                          <option value="LCM">LCM (50m)</option>
+                          <option value="25m">25m (Short Course)</option>
+                          <option value="50m">50m (Long Course)</option>
+                          <option value="25y">25y (Short Course Yards)</option>
                         </select>
                       </div>
                     </div>

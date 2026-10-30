@@ -23,7 +23,7 @@ const socialProviders = {
 };
 
 export const auth = betterAuth({
-  appName: "DeckGala",
+  appName: "AquaTeamHub",
   baseURL: process.env.BETTER_AUTH_URL,
   secret: process.env.BETTER_AUTH_SECRET,
   database: prismaAdapter(prisma, { provider: "postgresql" }),

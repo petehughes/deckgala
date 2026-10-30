@@ -19,8 +19,8 @@ export function AnnualTargetModal({ isOpen, onClose, editingTarget = null }: Ann
   const [year, setYear] = useState<number>(new Date().getFullYear());
   const [stroke, setStroke] = useState<SwimStroke>('Freestyle');
   const [distance, setDistance] = useState<number>(100);
-  const [course, setCourse] = useState<PoolCourse>('SCM');
-  const [gender, setGender] = useState<'open' | 'female' | 'male'>('open');
+  const [course, setCourse] = useState<PoolCourse>('25m');
+  const [gender, setGender] = useState<'Open' | 'F' | 'M'>('Open');
   const [minAge, setMinAge] = useState<string>('');
   const [maxAge, setMaxAge] = useState<string>('');
   const [qualifyingTime, setQualifyingTime] = useState('');
@@ -35,8 +35,8 @@ export function AnnualTargetModal({ isOpen, onClose, editingTarget = null }: Ann
       setYear(editingTarget.year || new Date().getFullYear());
       setStroke(editingTarget.stroke || 'Freestyle');
       setDistance(editingTarget.distance || 100);
-      setCourse(editingTarget.course || 'SCM');
-      setGender(editingTarget.gender || 'open');
+      setCourse(editingTarget.course || '25m');
+      setGender(editingTarget.gender || 'Open');
       setMinAge(editingTarget.minAge !== undefined ? String(editingTarget.minAge) : '');
       setMaxAge(editingTarget.maxAge !== undefined ? String(editingTarget.maxAge) : '');
       setQualifyingTime(editingTarget.qualifyingTime || '');
@@ -48,8 +48,8 @@ export function AnnualTargetModal({ isOpen, onClose, editingTarget = null }: Ann
       setYear(new Date().getFullYear());
       setStroke('Freestyle');
       setDistance(100);
-      setCourse('SCM');
-      setGender('open');
+      setCourse('25m');
+      setGender('Open');
       setMinAge('');
       setMaxAge('');
       setQualifyingTime('');
@@ -191,8 +191,9 @@ export function AnnualTargetModal({ isOpen, onClose, editingTarget = null }: Ann
               value={course}
               onChange={e => setCourse(e.target.value as PoolCourse)}
             >
-              <option value="SCM">SCM (Short Course 25m)</option>
-              <option value="LCM">LCM (Long Course 50m)</option>
+              <option value="25m">25m (Short Course)</option>
+              <option value="50m">50m (Long Course)</option>
+              <option value="25y">25y (Short Course Yards)</option>
             </select>
           </div>
         </div>
@@ -203,11 +204,11 @@ export function AnnualTargetModal({ isOpen, onClose, editingTarget = null }: Ann
             <select
               id="targetGender"
               value={gender}
-              onChange={e => setGender(e.target.value as 'open' | 'female' | 'male')}
+              onChange={e => setGender(e.target.value as 'Open' | 'F' | 'M')}
             >
-              <option value="open">Open / Mixed</option>
-              <option value="female">Female</option>
-              <option value="male">Male</option>
+              <option value="Open">Open / Mixed</option>
+              <option value="F">Female (F)</option>
+              <option value="M">Male (M)</option>
             </select>
           </div>
 

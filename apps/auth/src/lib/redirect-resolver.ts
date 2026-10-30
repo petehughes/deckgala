@@ -1,4 +1,4 @@
-import { isStaffRole, type ClubRole } from "@deckgala/database";
+import { isStaffRole, type ClubRole } from "@aquateamhub/database";
 
 export interface RedirectResolverOptions {
   user: {
@@ -25,11 +25,11 @@ export interface ResolvedRedirect {
   reason: string;
 }
 
-const DEFAULT_MYCLUB_URL = process.env.MYCLUB_URL || "https://myclub.deckgala.com";
-const DEFAULT_MY_URL = process.env.MY_URL || "https://my.deckgala.com";
+const DEFAULT_MYCLUB_URL = process.env.MYCLUB_URL || "https://myclub.aquateamhub.com";
+const DEFAULT_MY_URL = process.env.MY_URL || "https://my.aquateamhub.com";
 
 /**
- * Validates that a callback URL is safe (either a local path or an approved DeckGala domain)
+ * Validates that a callback URL is safe (either a local path or an approved AquaTeamHub domain)
  * to protect against open redirect vulnerabilities.
  */
 export function isSafeCallbackUrl(url: string | null | undefined): boolean {
@@ -47,8 +47,8 @@ export function isSafeCallbackUrl(url: string | null | undefined): boolean {
 
     // Allow official production domains or local development ports
     if (
-      hostname === "deckgala.com" ||
-      hostname.endsWith(".deckgala.com") ||
+      hostname === "aquateamhub.com" ||
+      hostname.endsWith(".aquateamhub.com") ||
       hostname === "localhost" ||
       hostname === "127.0.0.1"
     ) {
@@ -63,8 +63,8 @@ export function isSafeCallbackUrl(url: string | null | undefined): boolean {
 
 /**
  * Resolves intelligent role-based redirection post-login:
- * - Verified Staff (Admin, Coach, Timekeeper, Official) -> myclub.deckgala.com
- * - Parents & Swimmers -> my.deckgala.com
+ * - Verified Staff (Admin, Coach, Timekeeper, Official) -> myclub.aquateamhub.com
+ * - Parents & Swimmers -> my.aquateamhub.com
  * - Safe explicit callback URLs are respected when provided
  */
 export function resolveAuthRedirect(options: RedirectResolverOptions): ResolvedRedirect {

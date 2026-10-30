@@ -148,7 +148,7 @@ export function SportsysEntryUploader({ galaId }: SportsysEntryUploaderProps) {
       </div>
 
       <p className="muted" style={{ marginBottom: "20px" }}>
-        Ingest official SPORTSYSTEMS Meet Organisation & Entry Manager files (<code>.sef</code>, <code>.set</code>, <code>.sed</code>, or delimited CSV/text). DeckGala automatically maps events, matches club swimmers by Swim England number, locks seed times, and creates verified entries.
+        Ingest official SPORTSYSTEMS Meet Organisation & Entry Manager files (<code>.sef</code>, <code>.set</code>, <code>.sed</code>, or delimited CSV/text). AquaTeamHub automatically maps events, matches club swimmers by Swim England number, locks seed times, and creates verified entries.
       </p>
 
       {feedback && (

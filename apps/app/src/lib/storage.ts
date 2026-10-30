@@ -176,12 +176,12 @@ export function loadPersistedState(): PersistedState {
         : DEFAULT_ANNUAL_TARGETS;
 
       club = {
-        clubName: data.club.clubName || 'DeckGala Swim Club',
+        clubName: data.club.clubName || 'AquaTeamHub Swim Club',
         shortName: typeof data.club.shortName === 'string' ? data.club.shortName : 'DGSC',
         code: typeof data.club.code === 'string' ? data.club.code : 'DGSC',
         city: typeof data.club.city === 'string' ? data.club.city : 'Manchester',
         country: typeof data.club.country === 'string' ? data.club.country : 'United Kingdom',
-        contactEmail: typeof data.club.contactEmail === 'string' ? data.club.contactEmail : 'info@deckgala.com',
+        contactEmail: typeof data.club.contactEmail === 'string' ? data.club.contactEmail : 'info@aquateamhub.com',
         contactPhone: typeof data.club.contactPhone === 'string' ? data.club.contactPhone : '+44 7700 900123',
         headCoachName: typeof data.club.headCoachName === 'string' ? data.club.headCoachName : 'Coach Sarah Jenkins',
         establishedYear: typeof data.club.establishedYear === 'string' ? data.club.establishedYear : '2012',

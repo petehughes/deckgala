@@ -19,7 +19,7 @@ export default async function MySwimmersPage() {
         </div>
 
         <Link
-          href="https://auth.deckgala.com/link-swimmer"
+          href="https://auth.aquateamhub.com/link-swimmer"
           className="btn-primary"
         >
           + Link Another Child
@@ -31,7 +31,7 @@ export default async function MySwimmersPage() {
           <p className="muted" style={{ marginBottom: "16px" }}>
             No swimmer profiles linked yet. Connect your child using their Swim England number.
           </p>
-          <Link href="https://auth.deckgala.com/link-swimmer" className="btn-primary" style={{ display: "inline-flex" }}>
+          <Link href="https://auth.aquateamhub.com/link-swimmer" className="btn-primary" style={{ display: "inline-flex" }}>
             🔗 Link Swimmer Now →
           </Link>
         </div>

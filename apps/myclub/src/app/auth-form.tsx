@@ -61,7 +61,7 @@ export function AuthForm({ mode, callbackURL, googleEnabled, appleEnabled }: Aut
   return (
     <section className="panel auth-panel">
       <p className="eyebrow">{mode === "sign-up" ? "Create your account" : "Welcome back"}</p>
-      <h1>{mode === "sign-up" ? "Start with your club." : "Sign in to DeckGala."}</h1>
+      <h1>{mode === "sign-up" ? "Start with your club." : "Sign in to AquaTeamHub."}</h1>
       <p className="muted">One secure account for every club you manage.</p>
       {googleEnabled && <button className="button-secondary auth-provider" disabled={pending} onClick={() => socialSignIn("google")}>Continue with Google</button>}
       {appleEnabled && <button className="button-secondary auth-provider" disabled={pending} onClick={() => socialSignIn("apple")}>Continue with Apple</button>}
@@ -74,7 +74,7 @@ export function AuthForm({ mode, callbackURL, googleEnabled, appleEnabled }: Aut
       </form>
       {error && <p className="notice-error" role="alert">{error}</p>}
       <p className="auth-switch">
-        {mode === "sign-up" ? "Already have an account?" : "New to DeckGala?"}{" "}
+        {mode === "sign-up" ? "Already have an account?" : "New to AquaTeamHub?"}{" "}
         <a href={`/${mode === "sign-up" ? "sign-in" : "sign-up"}?callbackURL=${encodeURIComponent(callbackURL)}`}>
           {mode === "sign-up" ? "Sign in" : "Create an account"}
         </a>
