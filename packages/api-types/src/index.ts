@@ -83,6 +83,97 @@ export function createApiResponseSchema<T extends z.ZodType>(dataSchema: T) {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Phase 5: Centralized Auth, PWA, Training & Family Schemas
+// ---------------------------------------------------------------------------
+
+export const authRoleSchema = z.enum([
+  "ADMIN",
+  "COACH",
+  "TIMEKEEPER",
+  "OFFICIAL",
+  "PARENT",
+  "SWIMMER",
+  "SPECTATOR",
+]);
+
+export const crossSubdomainSessionSchema = z.object({
+  token: identifierSchema,
+  userId: identifierSchema,
+  email: z.string().email(),
+  name: z.string().trim().min(1).max(200),
+  activeClubId: identifierSchema.optional(),
+  roles: z.array(authRoleSchema),
+  isStaff: z.boolean(),
+  expiresAt: isoTimestampSchema,
+});
+
+export const authRedirectTargetSchema = z.object({
+  targetUrl: z.string().url(),
+  portal: z.enum(["MYCLUB", "MY", "RESULTS", "WWW"]),
+  reason: z.string().optional(),
+});
+
+export const guardianRelationshipSchema = z.enum([
+  "MOTHER",
+  "FATHER",
+  "GUARDIAN",
+  "OTHER",
+]);
+
+export const parentSwimmerLinkInputSchema = z.object({
+  swimmerId: identifierSchema,
+  relationship: guardianRelationshipSchema.default("GUARDIAN"),
+  isPrimaryContact: z.boolean().default(true),
+  canEnterGalas: z.boolean().default(true),
+  emergencyContact: z.boolean().default(false),
+});
+
+export const dayOfWeekSchema = z.enum([
+  "MONDAY",
+  "TUESDAY",
+  "WEDNESDAY",
+  "THURSDAY",
+  "FRIDAY",
+  "SATURDAY",
+  "SUNDAY",
+]);
+
+export const trainingScheduleInputSchema = z.object({
+  clubId: identifierSchema,
+  squadId: identifierSchema.optional(),
+  dayOfWeek: dayOfWeekSchema,
+  startTime: z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/),
+  endTime: z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/),
+  venueId: identifierSchema.optional(),
+  venueName: z.string().trim().max(200).optional(),
+  laneAllocation: z.string().trim().max(100).optional(),
+  coachName: z.string().trim().max(100).optional(),
+  drills: z.string().trim().max(1000).optional(),
+  notes: z.string().trim().max(1000).optional(),
+});
+
+export const pwaEventSelectionSchema = z.object({
+  eventId: identifierSchema,
+  seedTimeMs: z.number().int().nonnegative().optional(),
+  allowNoTime: z.boolean().default(true),
+});
+
+export const pwaGalaEntrySchema = z.object({
+  galaId: identifierSchema,
+  swimmerId: identifierSchema,
+  events: z.array(pwaEventSelectionSchema).min(1),
+  notes: z.string().trim().max(500).optional(),
+  paymentMethod: z.enum(["ONLINE", "POOL_DESK", "INVOICE"]).default("POOL_DESK"),
+});
+
+export const pushSubscriptionInputSchema = z.object({
+  endpoint: z.string().url(),
+  p256dh: z.string().min(1),
+  auth: z.string().min(1),
+  userAgent: z.string().optional(),
+});
+
 export type SyncPayload = z.infer<typeof syncPayloadSchema>;
 export type SyncSession = z.infer<typeof syncSessionSchema>;
 export type SyncResult = z.infer<typeof syncResultSchema>;
@@ -91,3 +182,13 @@ export type LaneTouchEvent = z.infer<typeof laneTouchEventSchema>;
 export type DisqualificationEvent = z.infer<typeof disqualificationEventSchema>;
 export type WebSocketEvent = z.infer<typeof webSocketEventSchema>;
 export type Pagination = z.infer<typeof paginationSchema>;
+export type AuthRole = z.infer<typeof authRoleSchema>;
+export type CrossSubdomainSession = z.infer<typeof crossSubdomainSessionSchema>;
+export type AuthRedirectTarget = z.infer<typeof authRedirectTargetSchema>;
+export type GuardianRelationship = z.infer<typeof guardianRelationshipSchema>;
+export type ParentSwimmerLinkInput = z.infer<typeof parentSwimmerLinkInputSchema>;
+export type DayOfWeek = z.infer<typeof dayOfWeekSchema>;
+export type TrainingScheduleInput = z.infer<typeof trainingScheduleInputSchema>;
+export type PwaEventSelection = z.infer<typeof pwaEventSelectionSchema>;
+export type PwaGalaEntry = z.infer<typeof pwaGalaEntrySchema>;
+export type PushSubscriptionInput = z.infer<typeof pushSubscriptionInputSchema>;

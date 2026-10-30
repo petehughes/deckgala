@@ -1,9 +1,15 @@
 import { describe, expect, test } from "bun:test";
 import {
+  authRedirectTargetSchema,
+  crossSubdomainSessionSchema,
   disqualificationEventSchema,
   laneTouchEventSchema,
+  parentSwimmerLinkInputSchema,
+  pushSubscriptionInputSchema,
+  pwaGalaEntrySchema,
   startGunEventSchema,
   syncPayloadSchema,
+  trainingScheduleInputSchema,
   webSocketEventSchema,
 } from "./index";
 
@@ -88,5 +94,97 @@ describe("webSocketEventSchema", () => {
       ...eventBase,
       type: "unknown_event",
     }).success).toBe(false);
+  });
+});
+
+describe("Phase 5: Centralized Auth & Redirection Schemas", () => {
+  test("validates cross-subdomain session claims", () => {
+    const validSession = {
+      token: "sess_abc123",
+      userId: "user_456",
+      email: "headcoach@aquatics.org",
+      name: "Coach Sarah",
+      activeClubId: "club_xyz",
+      roles: ["COACH", "ADMIN"],
+      isStaff: true,
+      expiresAt: "2026-10-31T12:00:00.000Z",
+    };
+    expect(crossSubdomainSessionSchema.safeParse(validSession).success).toBe(true);
+
+    const invalidSession = {
+      ...validSession,
+      email: "invalid-email",
+    };
+    expect(crossSubdomainSessionSchema.safeParse(invalidSession).success).toBe(false);
+  });
+
+  test("validates auth redirection target", () => {
+    const validTarget = {
+      targetUrl: "https://myclub.deckgala.com/dashboard",
+      portal: "MYCLUB",
+      reason: "Verified Staff Session",
+    };
+    expect(authRedirectTargetSchema.safeParse(validTarget).success).toBe(true);
+  });
+});
+
+describe("Phase 5: Family & Training Schemas", () => {
+  test("validates parent-swimmer link payload with defaults", () => {
+    const parsed = parentSwimmerLinkInputSchema.parse({
+      swimmerId: "swimmer_1",
+    });
+    expect(parsed.relationship).toBe("GUARDIAN");
+    expect(parsed.isPrimaryContact).toBe(true);
+    expect(parsed.canEnterGalas).toBe(true);
+  });
+
+  test("validates training schedule payload", () => {
+    const validSchedule = {
+      clubId: "club_1",
+      dayOfWeek: "TUESDAY",
+      startTime: "18:00",
+      endTime: "19:30",
+      venueName: "Olympic Aquatics Centre",
+      laneAllocation: "Lanes 1 to 4",
+      coachName: "Head Coach David",
+      drills: "Aerobic threshold + kick sets",
+    };
+    expect(trainingScheduleInputSchema.safeParse(validSchedule).success).toBe(true);
+
+    // Invalid time format
+    expect(trainingScheduleInputSchema.safeParse({
+      ...validSchedule,
+      startTime: "6pm",
+    }).success).toBe(false);
+  });
+
+  test("validates PWA gala entry submissions", () => {
+    const validEntry = {
+      galaId: "gala_1",
+      swimmerId: "swimmer_1",
+      events: [
+        { eventId: "ev_1", seedTimeMs: 28450, allowNoTime: false },
+        { eventId: "ev_2", allowNoTime: true },
+      ],
+      paymentMethod: "POOL_DESK",
+      notes: "First gala of the season",
+    };
+    expect(pwaGalaEntrySchema.safeParse(validEntry).success).toBe(true);
+
+    // Must have at least 1 event
+    expect(pwaGalaEntrySchema.safeParse({
+      ...validEntry,
+      events: [],
+    }).success).toBe(false);
+  });
+
+  test("validates Web Push subscription payload", () => {
+    const validSub = {
+      endpoint: "https://fcm.googleapis.com/fcm/send/sample-token",
+      p256dh: "BM6h_key_abc",
+      auth: "auth_token_xyz",
+      userAgent: "Mozilla/5.0 PWA",
+    };
+    expect(pushSubscriptionInputSchema.safeParse(validSub).success).toBe(true);
   });
 });

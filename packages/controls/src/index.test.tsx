@@ -1,6 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
-import { LaneCard, StopButton, formatTimer } from "./index";
+import {
+  FoldableSplitPane,
+  LaneCard,
+  StopButton,
+  TabletopContainer,
+  formatTimer,
+} from "./index";
 
 describe("formatTimer", () => {
   test("formats hundredth precision and rolls over to hours", () => {
@@ -31,5 +37,36 @@ describe("controls", () => {
     expect(html).toContain('type="button"');
     expect(html).toContain("disabled");
     expect(html).toContain("Stop heat");
+  });
+
+  test("renders FoldableSplitPane with dual pane children and default ratio", () => {
+    const html = renderToStaticMarkup(
+      <FoldableSplitPane
+        left={<div id="master-view">Master Schedule</div>}
+        right={<div id="detail-view">Entry Details</div>}
+        defaultRatio="40/60"
+      />,
+    );
+
+    expect(html).toContain("deckgala-foldable-split-pane");
+    expect(html).toContain("deckgala-foldable-split-pane__left");
+    expect(html).toContain("deckgala-foldable-split-pane__right");
+    expect(html).toContain("Master Schedule");
+    expect(html).toContain("Entry Details");
+  });
+
+  test("renders TabletopContainer with upper display and lower controls", () => {
+    const html = renderToStaticMarkup(
+      <TabletopContainer
+        display={<div id="scoreboard">Heat 1 Timer 01:23.45</div>}
+        controls={<button id="pad">Lane 1 Touch</button>}
+      />,
+    );
+
+    expect(html).toContain("deckgala-tabletop-container");
+    expect(html).toContain("deckgala-tabletop-container__display");
+    expect(html).toContain("deckgala-tabletop-container__controls");
+    expect(html).toContain("Heat 1 Timer");
+    expect(html).toContain("Lane 1 Touch");
   });
 });

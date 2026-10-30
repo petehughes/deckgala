@@ -48,6 +48,46 @@
         "typescript": "^7.0.2",
       },
     },
+    "apps/auth": {
+      "name": "@deckgala/auth",
+      "version": "0.1.0",
+      "dependencies": {
+        "@deckgala/api-types": "workspace:*",
+        "@deckgala/controls": "workspace:*",
+        "@deckgala/database": "workspace:*",
+        "better-auth": "^1.7.14",
+        "next": "^15.5.0",
+        "react": "^19.2.4",
+        "react-dom": "^19.2.4",
+        "zod": "^3.25.0",
+      },
+      "devDependencies": {
+        "@types/node": "^22.0.0",
+        "@types/react": "^19.3.0",
+        "@types/react-dom": "^19.3.0",
+        "typescript": "^6.0.0",
+      },
+    },
+    "apps/my": {
+      "name": "@deckgala/my",
+      "version": "0.1.0",
+      "dependencies": {
+        "@deckgala/api-types": "workspace:*",
+        "@deckgala/controls": "workspace:*",
+        "@deckgala/database": "workspace:*",
+        "better-auth": "^1.7.14",
+        "next": "^15.5.0",
+        "react": "^19.2.4",
+        "react-dom": "^19.2.4",
+        "zod": "^3.25.0",
+      },
+      "devDependencies": {
+        "@types/node": "^22.0.0",
+        "@types/react": "^19.3.0",
+        "@types/react-dom": "^19.3.0",
+        "typescript": "^6.0.0",
+      },
+    },
     "apps/myclub": {
       "name": "@deckgala/myclub",
       "version": "0.1.0",
@@ -176,9 +216,13 @@
 
     "@deckgala/app": ["@deckgala/app@workspace:apps/app"],
 
+    "@deckgala/auth": ["@deckgala/auth@workspace:apps/auth"],
+
     "@deckgala/controls": ["@deckgala/controls@workspace:packages/controls"],
 
     "@deckgala/database": ["@deckgala/database@workspace:packages/database"],
+
+    "@deckgala/my": ["@deckgala/my@workspace:apps/my"],
 
     "@deckgala/myclub": ["@deckgala/myclub@workspace:apps/myclub"],
 

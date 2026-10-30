@@ -1,0 +1,22 @@
+{
+  "name": "DeckGala Swimmer & Parent Portal",
+  "short_name": "DeckGala",
+  "description": "Progressive Web App for swimming families: personal bests, training schedules, and gala meet entries.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B1528",
+  "theme_color": "#0B1528",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+

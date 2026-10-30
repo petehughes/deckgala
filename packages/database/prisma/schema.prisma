@@ -11,7 +11,25 @@ enum ClubRole {
   ADMIN
   COACH
   TIMEKEEPER
+  OFFICIAL
   PARENT
+}
+
+enum GuardianRelationship {
+  MOTHER
+  FATHER
+  GUARDIAN
+  OTHER
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
 }
 
 enum PoolCourse {
@@ -60,6 +78,7 @@ model Club {
   venues           Venue[]
   galas            Gala[]
   deckSessions     DeckSession[]
+  trainingSchedules TrainingSchedule[]
 }
 
 model User {
@@ -76,6 +95,8 @@ model User {
   accounts              Account[]
   createdClubInvitations ClubInvitation[] @relation("ClubInvitationCreator")
   billingAccount        BillingAccount?
+  parentSwimmerLinks    ParentSwimmerLink[]
+  pushSubscriptions     PushSubscription[]
 }
 
 model Session {
@@ -201,6 +222,7 @@ model Squad {
   updatedAt   DateTime  @updatedAt
   club        Club      @relation(fields: [clubId], references: [id], onDelete: Cascade)
   swimmers    Swimmer[]
+  trainingSchedules TrainingSchedule[]
 
   @@unique([clubId, name])
   @@index([clubId])
@@ -225,6 +247,7 @@ model Swimmer {
   personalBests   PersonalBest[]
   raceResults     RaceResult[]
   galaEntries     GalaEntry[]
+  parentLinks     ParentSwimmerLink[]
 
   @@unique([clubId, governingBodyId])
   @@index([clubId, lastName, firstName])
@@ -247,6 +270,7 @@ model Venue {
   updatedAt    DateTime @updatedAt
   club         Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
   galas        Gala[]
+  trainingSchedules TrainingSchedule[]
 
   @@unique([clubId, name])
   @@index([clubId])
@@ -423,3 +447,60 @@ model RaceSplit {
 
   @@unique([raceResultId, splitNumber])
 }
+
+model ParentSwimmerLink {
+  id               String               @id @default(cuid())
+  userId           String
+  swimmerId        String
+  relationship     GuardianRelationship @default(GUARDIAN)
+  isPrimaryContact Boolean              @default(true)
+  canEnterGalas    Boolean              @default(true)
+  emergencyContact Boolean              @default(false)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  user             User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  swimmer          Swimmer              @relation(fields: [swimmerId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, swimmerId])
+  @@index([userId])
+  @@index([swimmerId])
+}
+
+model TrainingSchedule {
+  id             String    @id @default(cuid())
+  clubId         String
+  squadId        String?
+  dayOfWeek      DayOfWeek
+  startTime      String
+  endTime        String
+  venueId        String?
+  venueName      String?
+  laneAllocation String?
+  coachName      String?
+  drills         String?
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  club           Club      @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  squad          Squad?    @relation(fields: [squadId], references: [id], onDelete: SetNull)
+  venueRef       Venue?    @relation(fields: [venueId], references: [id], onDelete: SetNull)
+
+  @@index([clubId, dayOfWeek])
+  @@index([squadId])
+  @@index([venueId])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+

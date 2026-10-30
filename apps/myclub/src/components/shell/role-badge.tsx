@@ -5,6 +5,7 @@ export function RoleBadge({ role }: { role: ClubRole }) {
     ADMIN: { label: "Admin", className: "role-badge-admin" },
     COACH: { label: "Coach", className: "role-badge-coach" },
     TIMEKEEPER: { label: "Timekeeper", className: "role-badge-timekeeper" },
+    OFFICIAL: { label: "Official", className: "role-badge-timekeeper" },
     PARENT: { label: "Parent", className: "role-badge-parent" },
   };
 

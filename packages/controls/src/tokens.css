@@ -44,4 +44,30 @@
   --deck-font-mono: 'JetBrains Mono', 'Roboto Mono', monospace;
   --font-sans: var(--deck-font-sans);
   --font-mono: var(--deck-font-mono);
+
+  /* Foldable & Dual-Screen Hinge Environment Safe Tokens */
+  --hinge-safe-margin-x: 0px;
+  --hinge-safe-margin-y: 0px;
+  --viewport-segment-left-width: 50%;
+  --viewport-segment-right-width: 50%;
+  --viewport-segment-top-height: 50%;
+  --viewport-segment-bottom-height: 50%;
+}
+
+/* Foldable Dual-Landscape / Book Posture */
+@media (horizontal-viewport-segments: 2) {
+  :root {
+    --hinge-safe-margin-x: calc(env(viewport-segment-left 1 0) - env(viewport-segment-right 0 0));
+    --viewport-segment-left-width: env(viewport-segment-width 0 0);
+    --viewport-segment-right-width: env(viewport-segment-width 1 0);
+  }
+}
+
+/* Foldable Half-Folded / Tabletop Posture */
+@media (vertical-viewport-segments: 2) {
+  :root {
+    --hinge-safe-margin-y: calc(env(viewport-segment-top 0 1) - env(viewport-segment-bottom 0 0));
+    --viewport-segment-top-height: env(viewport-segment-height 0 0);
+    --viewport-segment-bottom-height: env(viewport-segment-height 0 1);
+  }
 }

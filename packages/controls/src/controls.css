@@ -88,3 +88,42 @@
   cursor: not-allowed;
   opacity: 0.55;
 }
+
+/* Foldable Layouts */
+.deckgala-foldable-split-pane {
+  position: relative;
+  box-sizing: border-box;
+}
+
+@media (horizontal-viewport-segments: 2) {
+  .deckgala-foldable-split-pane {
+    display: flex !important;
+    flex-direction: row !important;
+  }
+  .deckgala-foldable-split-pane__left {
+    width: var(--viewport-segment-left-width) !important;
+    padding-right: calc(var(--hinge-safe-margin-x) / 2);
+  }
+  .deckgala-foldable-split-pane__right {
+    width: var(--viewport-segment-right-width) !important;
+    padding-left: calc(var(--hinge-safe-margin-x) / 2);
+  }
+}
+
+.deckgala-tabletop-container {
+  box-sizing: border-box;
+}
+
+@media (vertical-viewport-segments: 2) {
+  .deckgala-tabletop-container {
+    height: 100vh;
+  }
+  .deckgala-tabletop-container__display {
+    height: var(--viewport-segment-top-height) !important;
+    padding-bottom: calc(var(--hinge-safe-margin-y) / 2);
+  }
+  .deckgala-tabletop-container__controls {
+    height: var(--viewport-segment-bottom-height) !important;
+    padding-top: calc(var(--hinge-safe-margin-y) / 2);
+  }
+}

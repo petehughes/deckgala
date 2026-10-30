@@ -1,0 +1,228 @@
+@import "@deckgala/controls/tokens.css";
+@import "@deckgala/controls/styles.css";
+
+:root {
+  color-scheme: dark;
+  background: var(--color-deep-abyss);
+  color: var(--color-frost-white);
+  font-family: var(--deck-font-sans);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 70% 0, #142643 0%, var(--color-deep-abyss) 60%);
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-shell {
+  width: 100%;
+  max-width: 440px;
+  margin: auto;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.auth-header {
+  text-align: center;
+}
+
+.auth-brand {
+  display: inline-block;
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: var(--text-primary);
+  text-decoration: none;
+  margin-bottom: 8px;
+}
+
+.auth-brand span {
+  color: var(--accent-cyan);
+}
+
+.auth-card {
+  padding: 32px;
+  background: rgba(22, 35, 59, 0.85);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.auth-title {
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.auth-subtitle {
+  margin: 0 0 24px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+input, select {
+  width: 100%;
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid rgba(140, 160, 186, 0.25);
+  border-radius: 8px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font: 13px var(--deck-font-sans);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+input:focus, select:focus {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.15);
+}
+
+.btn-primary {
+  width: 100%;
+  height: 44px;
+  background: var(--accent-cyan);
+  color: var(--color-deep-abyss);
+  border: none;
+  border-radius: 8px;
+  font: 800 13px var(--deck-font-sans);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: filter 0.15s;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.1);
+}
+
+.btn-secondary {
+  width: 100%;
+  height: 42px;
+  background: var(--color-slate-elevated);
+  color: var(--text-primary);
+  border: 1px solid rgba(140, 160, 186, 0.2);
+  border-radius: 8px;
+  font: 700 12px var(--deck-font-sans);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.btn-secondary:hover {
+  background: rgba(30, 49, 82, 0.9);
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  margin: 18px 0;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(140, 160, 186, 0.15);
+}
+
+.auth-divider span {
+  padding: 0 12px;
+}
+
+.auth-footer {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.auth-footer a {
+  color: var(--accent-cyan);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.auth-footer a:hover {
+  text-decoration: underline;
+}
+
+.error-banner {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(255, 90, 54, 0.12);
+  border: 1px solid rgba(255, 90, 54, 0.3);
+  color: #ff8a70;
+  font-size: 12px;
+}
+
+.success-banner {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(0, 230, 118, 0.12);
+  border: 1px solid rgba(0, 230, 118, 0.3);
+  color: #69f0ae;
+  font-size: 12px;
+}
+
+.portal-pills {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.portal-pill {
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-decoration: none;
+  border: 1px solid rgba(140, 160, 186, 0.15);
+}
+
+.portal-pill:hover {
+  color: var(--accent-cyan);
+  border-color: rgba(0, 229, 255, 0.3);
+}
+

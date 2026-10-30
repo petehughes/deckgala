@@ -11,6 +11,9 @@
     "build": "bun run --filter @deckgala/app build",
     "typecheck": "bun run --filter @deckgala/app typecheck",
     "test": "bun run --filter @deckgala/app test",
+    "dev:auth": "bun run --filter @deckgala/auth dev",
+    "dev:my": "bun run --filter @deckgala/my dev",
+    "dev:myclub": "bun run --filter @deckgala/myclub dev",
     "lint": "eslint apps/api/src apps/myclub/src apps/results/src apps/www/src --ext .ts,.tsx",
     "sync": "bun run --filter @deckgala/app sync",
     "android": "bun run --filter @deckgala/app android"

@@ -1832,3 +1832,87 @@ export async function importSportsysGalaEntries(formData: FormData): Promise<{
     message: `Successfully processed Sportsystems file: ${entriesImported} entries imported across ${eventsImported} new events and ${swimmersImported} new swimmers matched.`,
   };
 }
+
+export async function createTrainingSchedule(formData: FormData): Promise<void> {
+  const active = await requireClubRole(["ADMIN", "COACH"]);
+  const squadId = formString(formData, "squadId") || null;
+  const dayOfWeek = formString(formData, "dayOfWeek") as "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
+  const startTime = formString(formData, "startTime");
+  const endTime = formString(formData, "endTime");
+  const venueId = formString(formData, "venueId") || null;
+  const venueName = formString(formData, "venueName") || null;
+  const laneAllocation = formString(formData, "laneAllocation") || null;
+  const coachName = formString(formData, "coachName") || null;
+  const drills = formString(formData, "drills") || null;
+  const notes = formString(formData, "notes") || null;
+
+  if (!dayOfWeek || !startTime || !endTime) {
+    throw new Error("Day of week, start time, and end time are required");
+  }
+
+  await prisma.trainingSchedule.create({
+    data: {
+      clubId: active.clubId,
+      squadId,
+      dayOfWeek,
+      startTime,
+      endTime,
+      venueId,
+      venueName,
+      laneAllocation,
+      coachName,
+      drills,
+      notes,
+    },
+  });
+
+  revalidatePath("/schedule");
+  revalidatePath("/squads");
+}
+
+export async function updateTrainingSchedule(formData: FormData): Promise<void> {
+  const active = await requireClubRole(["ADMIN", "COACH"]);
+  const scheduleId = formString(formData, "scheduleId");
+  const squadId = formString(formData, "squadId") || null;
+  const dayOfWeek = formString(formData, "dayOfWeek") as "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
+  const startTime = formString(formData, "startTime");
+  const endTime = formString(formData, "endTime");
+  const venueId = formString(formData, "venueId") || null;
+  const venueName = formString(formData, "venueName") || null;
+  const laneAllocation = formString(formData, "laneAllocation") || null;
+  const coachName = formString(formData, "coachName") || null;
+  const drills = formString(formData, "drills") || null;
+  const notes = formString(formData, "notes") || null;
+
+  await prisma.trainingSchedule.update({
+    where: { id: scheduleId, clubId: active.clubId },
+    data: {
+      squadId,
+      dayOfWeek,
+      startTime,
+      endTime,
+      venueId,
+      venueName,
+      laneAllocation,
+      coachName,
+      drills,
+      notes,
+    },
+  });
+
+  revalidatePath("/schedule");
+  revalidatePath("/squads");
+}
+
+export async function deleteTrainingSchedule(formData: FormData): Promise<void> {
+  const active = await requireClubRole(["ADMIN", "COACH"]);
+  const scheduleId = formString(formData, "scheduleId");
+
+  await prisma.trainingSchedule.deleteMany({
+    where: { id: scheduleId, clubId: active.clubId },
+  });
+
+  revalidatePath("/schedule");
+  revalidatePath("/squads");
+}
+

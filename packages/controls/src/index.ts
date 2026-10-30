@@ -4,3 +4,7 @@ export { StopButton } from "./StopButton";
 export type { StopButtonProps } from "./StopButton";
 export { formatTimer, TimerDisplay } from "./TimerDisplay";
 export type { TimerDisplayProps } from "./TimerDisplay";
+export { FoldableSplitPane } from "./FoldableSplitPane";
+export type { FoldableSplitPaneProps } from "./FoldableSplitPane";
+export { TabletopContainer } from "./TabletopContainer";
+export type { TabletopContainerProps } from "./TabletopContainer";

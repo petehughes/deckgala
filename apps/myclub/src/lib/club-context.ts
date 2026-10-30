@@ -1,9 +1,11 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import type { ClubRole } from "@deckgala/database";
+import { isStaffRole, type ClubRole } from "@deckgala/database";
 import { getFreeClubLimit, isSubscriptionActive } from "./billing";
 import { requireSession } from "./session";
 import { prisma } from "./prisma";
+
+const MY_URL = process.env.MY_URL || "https://my.deckgala.com";
 
 export async function listUserClubs(userId: string) {
   return prisma.clubMembership.findMany({
@@ -15,6 +17,13 @@ export async function listUserClubs(userId: string) {
 
 export async function getAccessibleUserClubs(userId: string) {
   const memberships = await listUserClubs(userId);
+
+  // If user only has non-staff (e.g. PARENT) roles, gate and redirect to swimmer/parent PWA
+  const staffMemberships = memberships.filter(({ role }) => isStaffRole(role));
+  if (memberships.length > 0 && staffMemberships.length === 0) {
+    redirect(MY_URL);
+  }
+
   const [freeClubLimit, billing] = await Promise.all([
     getFreeClubLimit(),
     prisma.billingAccount.findUnique({

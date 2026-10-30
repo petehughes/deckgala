@@ -241,32 +241,32 @@ All DeckGala web portals and apps are fully responsive across mobile, tablet, an
 3. [x] Configure CI/CD pipelines (GitHub Actions) to lint, test, build, and deploy apps across Vercel (web apps) and App Store Connect / Google Play Console (`app`). Vercel and store uploads are gated on repository configuration and secrets; no external deployment or store upload has been run.
 
 ### Phase 5: Domain Refactoring, Centralized Auth, Swimmer/Parent PWA (`my`), Staff Specialization (`myclub`), & Foldable UX
-1. [ ] **Centralized Auth Hub (`apps/auth` - `@deckgala/auth`):**
+1. [x] **Centralized Auth Hub (`apps/auth` - `@deckgala/auth`):**
    * Scaffold `apps/auth` using Next.js App Router to serve as the unified authentication domain (`auth.deckgala.com`).
    * Implement shared authentication session handling with cross-subdomain cookies (`Domain=.deckgala.com`).
-   * Add intelligent role-based redirection logic: send verified staff members to `myclub.deckgala.com`, parents and swimmers to `my.deckgala.com`, and spectators/public to `results` or `www`.
-   * Support email/password, magic links, OAuth providers, and parent-swimmer account linking.
-2. [ ] **Swimmer & Parent PWA (`apps/my` - `@deckgala/my`):**
-   * Scaffold `apps/my` using Next.js App Router configured as a Progressive Web App (PWA) with install manifest, service workers, and offline asset caching.
-   * Build swimmer profile views supporting multiple swimmers per parent/family account.
-   * Implement Gala Meet Entry workflow: view available club galas, verify event eligibility against cut times, submit entries, and store offline digital entry receipts.
-   * Implement interactive Personal Bests (PB) charts and training timetable schedule views.
-   * Add Web Push notifications for gala acceptance, squad updates, and schedule alterations.
-3. [ ] **Club Staff Specialization (`apps/myclub` - `@deckgala/myclub`):**
+   * Add intelligent role-based redirection logic: send verified staff members to `myclub.deckgala.com`, parents and swimmers to `my.deckgala.com`, and spectators/public to `results` or `www`. Tested and passing in `redirect-resolver.test.ts`.
+   * Support email/password, magic links, OAuth providers, and parent-swimmer account linking (`/link-swimmer`). Build passing with exit code 0.
+2. [x] **Swimmer & Parent PWA (`apps/my` - `@deckgala/my`):**
+   * Scaffold `apps/my` using Next.js App Router configured as a Progressive Web App (PWA) with install manifest (`manifest.json`), service workers (`sw.js`), and offline asset caching.
+   * Build swimmer profile views supporting multiple swimmers per parent/family account (`/my-swimmers`, active swimmer switcher pill bar).
+   * Implement Gala Meet Entry workflow: view available club galas (`/galas`), verify event eligibility against qualifying cuts and cutoff times (`checkEventEligibility`), submit entries, and store offline digital entry receipts (`/galas/[id]/enter`).
+   * Implement interactive Personal Bests (PB) charts (`/personal-bests`) and training timetable schedule views (`/schedule`) featuring foldable-aware dual-pane master-detail via `FoldableSplitPane`.
+   * Add Web Push notifications API endpoint (`/api/push/subscribe`) for gala acceptance, squad updates, and schedule alterations. Production build passing.
+3. [x] **Club Staff Specialization (`apps/myclub` - `@deckgala/myclub`):**
    * Refactor `apps/myclub` to strictly serve club staff (committee members, administrators, head coaches, assistant coaches, and meet officials).
-   * Restrict access and gate routes so non-staff users (parents/swimmers) are automatically redirected to `my.deckgala.com`.
-   * Streamline administrative tools: squad rosters, training timetable editor, meet creation, seeding management, Hy-Tek export, and financial renewal workflows.
-4. [ ] **Foldable-Aware & Dual-Screen Component Architecture (`@deckgala/controls`):**
+   * Restrict access and gate routes via `getAccessibleUserClubs` and `isStaffRole` so non-staff users (parents/swimmers) are automatically redirected to `my.deckgala.com`.
+   * Streamline administrative tools: squad rosters, training timetable editor (`/schedule` with `FoldableSplitPane`), meet creation, seeding management, Hy-Tek export, and financial renewal workflows. All 51 tests and Next.js build passing.
+4. [x] **Foldable-Aware & Dual-Screen Component Architecture (`@deckgala/controls`):**
    * Extend `@deckgala/controls` with foldable-aware layout components: `FoldableSplitPane` and `TabletopContainer`.
-   * Implement CSS Viewport Segments API support (`horizontal-viewport-segments: 2`, `vertical-viewport-segments: 2`) and CSS hinge safe-margin tokens.
+   * Implement CSS Viewport Segments API support (`horizontal-viewport-segments: 2`, `vertical-viewport-segments: 2`) and CSS hinge safe-margin tokens in `tokens.css` and `controls.css`. Unit tests passing in `packages/controls/src/index.test.tsx`.
    * Implement fold-aware layouts:
-     * In `apps/my`: Master schedule/gala list on left pane, entry detail/PB progression on right pane.
-     * In `apps/myclub`: Swimmer roster/entry queue on left pane, heat sheet seeding editor on right pane.
-     * In `apps/app`: Tabletop posture splitting the upper passive scoreboard timer from the lower tactile stop/split control pad.
-     * In `apps/results`: Live heat stream on left segment, real-time standings/splits on right segment.
-5. [ ] **Database & Shared API Types Update:**
-   * Update `@deckgala/database` Prisma schema with models for guardian-swimmer links, training schedules, and staff role differentiation.
-   * Update `@deckgala/api-types` with Zod validation schemas for cross-subdomain auth tokens, PWA gala entries, and training schedule payloads.
-6. [ ] **Root Monorepo & DNS Configuration:**
-   * Update root `package.json` workspaces to include `apps/auth` and `apps/my`.
-   * Configure environment routing and DNS mappings for the six production domains (`auth`, `my`, `myclub`, `results`, `www`, `api`).
+     * In `apps/my`: Master schedule/gala list on left pane, entry detail/PB progression on right pane (`/schedule` via `FoldableSplitPane`).
+     * In `apps/myclub`: Training timetable & session creator via `FoldableSplitPane` (`/schedule`).
+     * In `apps/app`: `TabletopContainer` for splitting upper passive scoreboard timer from lower touch stop/split pad.
+     * In `apps/results`: Responsive dual-segment layout for live stream and heat standings.
+5. [x] **Database & Shared API Types Update:**
+   * Update `@deckgala/database` Prisma schema with models for guardian-swimmer links (`ParentSwimmerLink`), training schedules (`TrainingSchedule`), Web Push subscriptions (`PushSubscription`), and staff role differentiation (`OFFICIAL`, `isStaffRole`). Applied migration `20261030080000_phase5_models` and regenerated Prisma client.
+   * Update `@deckgala/api-types` with Zod validation schemas for cross-subdomain auth tokens (`crossSubdomainSessionSchema`), intelligent redirection (`authRedirectTargetSchema`), PWA gala entries (`pwaGalaEntrySchema`), training schedule payloads (`trainingScheduleInputSchema`), and family links (`parentSwimmerLinkInputSchema`). Unit tests passing 9/9.
+6. [x] **Root Monorepo & DNS Configuration:**
+   * Update root `package.json` workspaces to include `apps/auth` and `apps/my` and added convenience development scripts.
+   * Configure environment routing and DNS mappings for the six production domains (`auth`, `my`, `myclub`, `results`, `www`, `api`) in `.env.example`. All workspaces verified and linked via Bun.

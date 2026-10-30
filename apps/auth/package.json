@@ -1,0 +1,29 @@
+{
+  "name": "@deckgala/auth",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3001",
+    "build": "next build",
+    "start": "next start --port 3001",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@deckgala/api-types": "workspace:*",
+    "@deckgala/controls": "workspace:*",
+    "@deckgala/database": "workspace:*",
+    "better-auth": "^1.7.14",
+    "next": "^15.5.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^6.0.0"
+  }
+}
+
