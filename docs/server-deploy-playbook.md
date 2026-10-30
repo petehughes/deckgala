@@ -325,7 +325,7 @@ echo "Holding page ON"
 # On failure the holding page stays up on purpose (the half-built apps should not be served)
 trap 'echo "Deploy FAILED - holding page left ON. Fix, rerun, or remove it: rm $FLAG" >&2' ERR
 
-git checkout "${1:-main}"
+git checkout "${1:-master}"
 git pull --ff-only
 
 bun install --frozen-lockfile
