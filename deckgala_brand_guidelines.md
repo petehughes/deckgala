@@ -1,7 +1,8 @@
 # DeckGala — Brand Guidelines & Design System
-**Version:** 1.0.0  
-**Domain:** `deckgala.com`  
-**Target Environment:** Cross-platform web applications, native mobile apps (iOS & Android via Capacitor), responsive web portals, and ambient poolside display scoreboards.
+**Version:** 1.2.0  
+**Primary Domain:** `deckgala.com`  
+**Ecosystem Subdomains:** `auth.deckgala.com`, `my.deckgala.com`, `myclub.deckgala.com`, `results.deckgala.com`, `www.deckgala.com`, `api.deckgala.com`  
+**Target Environment:** Cross-platform responsive web applications, swimmer & parent PWA (`my`), dedicated club staff management (`myclub`), centralized authentication gateway (`auth`), native mobile apps (iOS & Android via Capacitor), ambient poolside scoreboards, and foldable/dual-screen mobile hardware.
 
 ---
 
@@ -15,15 +16,21 @@
 * **Poolside-Resilient**: Designed deliberately for severe ambient conditions—water splashes, wet fingers, harsh overhead fluorescent lights, high-glare outdoor solar reflections, and distance viewing (3–10 meters).
 * **Instrument-Grade Precision**: Feels as dependable, authoritative, and split-second accurate as Olympic timing suites (e.g., Colorado Time Systems, Omega Timing).
 * **Uncluttered & High-Impact**: Zero unnecessary decorative ornaments on active timing screens. Every pixel prioritizes immediate contrast, legibility, and unmistakable state confirmation.
+* **Ergonomically Adaptive**: Fluidly responsive across all form factors, featuring deep hardware-awareness for foldable devices (hinge-safe margins, dual-pane productivity, and tabletop poolside postures).
 
 ---
 
 ## 2. Core Brand Identity & Copy Guidelines
 
-### Naming Conventions
+### Naming Conventions & Subdomain Architecture
 * **Brand Name**: `DeckGala` (CamelCase, no space between "Deck" and "Gala").
-* **Domain / URL**: `deckgala.com` (All lowercase).
-* **Package / Bundle ID**: `com.deckgala.app` (iOS / Android).
+* **Root Domain / Public Site**: `www.deckgala.com` (Marketing, product tours, apps showcase).
+* **Authentication Hub**: `auth.deckgala.com` (Universal login, registration, passwordless auth, MFA, SSO session broker across all subdomains).
+* **Swimmer & Parent PWA**: `my.deckgala.com` (Progressive Web App for swimmers and parents to view profiles, track personal bests, enter galas, review training schedules, and receive notifications).
+* **Club Staff Portal**: `myclub.deckgala.com` (Dedicated administration console strictly for club staff: committee, coaches, gala organizers, team managers, and financial admins).
+* **Spectator Portal**: `results.deckgala.com` (Real-time live heat viewer, lane splits, and published meet results).
+* **Backend Gateway**: `api.deckgala.com` (REST, WebSocket, and offline sync server).
+* **Native Pool Deck Bundle ID**: `com.deckgala.app` (Poolside timing client on iOS / Android).
 
 ### Taglines
 * **Primary Tagline**: *"Offline deck timing. Seamless meet management."*
@@ -143,6 +150,25 @@ The app header must always display an unmistakable **Peer-to-Peer Mesh Pill**:
 * 🟡 **Yellow (`#FFB300`)**: *Resyncing (1 Device reconnecting)*.
 * 🔴 **Red (`#FF5A36`)**: *Offline Standalone Mode (Local storage only)*.
 
+### 5. Foldable & Dual-Screen Device Ergonomics (Fold-Aware UX)
+DeckGala interfaces must be **foldable-aware** across devices like the Samsung Galaxy Z Fold series, Google Pixel Fold, Microsoft Surface Duo, and foldable tablets. Layouts must adapt gracefully between folded (single-screen phone) and unfolded (dual-screen/tablet) postures:
+
+* **Hinge Safety & Crease Avoidance**:
+  * Critical interactive controls (e.g. `TAP TO STOP`, start horns, primary inputs, modal action buttons) must **never** intersect or sit across the device hinge/crease boundary.
+  * Use the CSS Viewport Segments API (`horizontal-viewport-segments`, `vertical-viewport-segments`) and environment variables (`env(viewport-segment-width ...)`, `env(viewport-segment-left ...)`) to introduce safe hinge padding.
+* **Posture-Specific Layout Behaviors**:
+  * **Dual-Landscape / Book Posture (`horizontal-viewport-segments: 2`)**:
+    * **`my` (Parent/Swimmer PWA)**: Left segment displays the swimmer profile, training calendar, or upcoming meet schedule; Right segment displays gala entry details, PB progression graphs, or event checkout.
+    * **`myclub` (Staff Admin)**: Left segment displays the gala/session roster or entries tree; Right segment displays heat sheet builder, seeding editor, or staff admin controls.
+    * **`app` (Poolside Timer)**: Left segment displays active lane timers (Lanes 1–4/5); Right segment displays remaining lanes (Lanes 5–8/10) or overall heat summary.
+    * **`results` (Live Meet Portal)**: Left segment displays the live heat stream; Right segment displays official event results, lane splits, and medal standings.
+  * **Tabletop / Half-Fold Posture (`vertical-viewport-segments: 2`)**:
+    * Used poolside or on coaching benches where the device sits upright on a flat surface like a laptop.
+    * Top segment acts as a high-visibility passive display (running race clock, lane positions, heat status).
+    * Bottom segment becomes the tactile control deck (oversized stop/split buttons, timekeeper inputs, starter buttons).
+* **Responsive Fluidity**:
+  * Ensure instantaneous state preservation (no form reset, no timing interruption, no lost state) when folding or unfolding the device mid-session.
+
 ---
 
 ## 7. CSS & Tailwind Design Tokens
@@ -203,6 +229,40 @@ body {
 .deck-timer {
   font-family: 'JetBrains Mono', monospace;
   font-variant-numeric: tabular-nums;
+}
+
+/* Foldable & Dual-Screen Spanning Utilities */
+@media (horizontal-viewport-segments: 2) {
+  .fold-split-container {
+    display: flex;
+    flex-direction: row;
+    width: 100vw;
+  }
+  .fold-pane-left {
+    width: env(viewport-segment-width 0 0);
+    padding-right: 1rem;
+  }
+  .fold-pane-right {
+    width: env(viewport-segment-width 1 0);
+    padding-left: 1rem;
+  }
+  .fold-crease-spacer {
+    width: calc(env(viewport-segment-left 1 0) - env(viewport-segment-right 0 0));
+  }
+}
+
+@media (vertical-viewport-segments: 2) {
+  .fold-tabletop-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+  .fold-pane-top {
+    height: env(viewport-segment-height 0 0);
+  }
+  .fold-pane-bottom {
+    height: env(viewport-segment-height 0 1);
+  }
 }
 ```
 

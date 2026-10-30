@@ -1,6 +1,6 @@
 # DeckGala Monorepo Migration Plan
 
-This architectural blueprint outlines the migration of **DeckGala** from a standalone mobile-wrapper app into a scalable, high-performance monorepo ecosystem. The platform powers offline pool-deck timing (`app`), club administration (`myclub`), public marketing (`www`), live spectator heat results (`results`), and core backend services (`api`), supported by shared UI control systems, database migrations, and end-to-end API type definitions.
+This architectural blueprint outlines the migration of **DeckGala** from a standalone mobile-wrapper app into a scalable, high-performance monorepo ecosystem. The platform powers offline pool-deck timing (`app`), dedicated club staff operations (`myclub`), swimmer and parent management via PWA (`my`), centralized authentication (`auth`), public marketing (`www`), live spectator heat results (`results`), and core backend services (`api`), supported by shared UI control systems, database migrations, end-to-end API type definitions, and foldable-aware responsive design.
 
 ---
 
@@ -8,10 +8,23 @@ This architectural blueprint outlines the migration of **DeckGala** from a stand
 
 ### 1.1 Tooling & Package Management
 * **Monorepo Manager:** **Bun Workspaces** (utilizing Bun's ultra-fast workspace linking, dependency installation, and script runner).
-* **Frontend Framework:** **Next.js 15+ (App Router)** for server-side rendered portals (`www`, `myclub`, `results`), and **React 19 / Vite** for the native/PWA pool-deck timing app (`app`).
-* **Styling & Design System:** **Tailwind CSS v4** implementing the **DeckGala Brand Guidance** (Deep Abyss Navy `#0B1528`, Electric Cyan `#00E5FF`, Start Horn Coral `#FF5A36`).
+* **Frontend Framework:** **Next.js 15+ (App Router)** for server-side rendered portals and web apps (`www`, `auth`, `myclub`, `results`, `my`), and **React 19 / Vite** for the native/PWA pool-deck timing client (`app`).
+* **Swimmer & Parent Client:** **PWA (Progressive Web App)** on `my.deckgala.com` with offline caching for schedules, personal bests, entry confirmations, and web push notifications.
+* **Styling & Design System:** **Tailwind CSS v4** implementing the **DeckGala Brand Guidance** (Deep Abyss Navy `#0B1528`, Electric Cyan `#00E5FF`, Start Horn Coral `#FF5A36`), enhanced with **Foldable Device Awareness** (CSS Viewport Segments API, hinge-safe layouts, dual-pane book and tabletop postures).
 * **Database & ORM:** **PostgreSQL** with **Prisma ORM** (or Drizzle) for type-safe database queries and migration management.
-* **API Protocol:** **tRPC** or **OpenAPI / REST with Zod validation** to guarantee end-to-end type safety between `api` and client applications.
+* **API Protocol & Auth:** **tRPC** / **OpenAPI with Zod validation** guaranteeing end-to-end type safety between `api` and client applications; centralized authentication authority (`auth`) managing shared cookies/tokens across all subdomains.
+
+### 1.2 Domain & Subdomain Matrix
+
+| Subdomain | App Workspace | Target Audience | Primary Functionality |
+| :--- | :--- | :--- | :--- |
+| **`auth.deckgala.com`** | `apps/auth` | All Users | Universal auth, OAuth/SSO, session cookies, MFA, role routing. |
+| **`my.deckgala.com`** | `apps/my` | Parents & Swimmers | PWA: swimmer profiles, PB tracking, gala entries, training schedule. |
+| **`myclub.deckgala.com`** | `apps/myclub` | Club Staff Only | Administration: squad planning, meet creation, Hy-Tek export, dues. |
+| **`results.deckgala.com`** | `apps/results` | Public / Spectators | Real-time live heat streams, split times, published gala standings. |
+| **`www.deckgala.com`** | `apps/www` | Public / Prospective Clubs | Marketing showcase, brand assets, product tours, downloads. |
+| **`api.deckgala.com`** | `apps/api` | All Apps & Deck Clients | REST endpoints, WebSocket relay hub, poolside offline sync gateway. |
+| *(Native Bundle)* | `apps/app` | Coaches & Timekeepers | Capacitor native iOS/Android offline deck timer & P2P local mesh. |
 
 ---
 
@@ -20,8 +33,10 @@ This architectural blueprint outlines the migration of **DeckGala** from a stand
 ```text
 deckgala/
 ├── apps/
+│   ├── auth/               # Centralized authentication hub (SSO & session broker)
+│   ├── my/                 # Swimmer & parent PWA (profiles, gala entry, schedule, PBs)
+│   ├── myclub/             # Club staff portal (strictly for coaches, admins & committee)
 │   ├── www/                # Public marketing landing page & brand showcase
-│   ├── myclub/             # Club member portal, renewals, and gala entry management
 │   ├── results/            # Public live spectator heat streams & unofficial standings
 │   ├── api/                # Core backend service (REST/WebSocket server & sync gateway)
 │   └── app/                # Offline-first pool deck timing & multi-phone P2P client (Capacitor)
@@ -33,11 +48,12 @@ deckgala/
 │       ├── package.json
 │       └── tsconfig.json
 ├── packages/
-│   ├── controls/           # Shared UI and Tailwind design tokens
+│   ├── controls/           # Shared UI, design tokens, and fold-aware layout components
 │   │   └── src/
 │   │       ├── tokens.css
-│   │       └── tailwind.css
-│   ├── database/           # Prisma/Drizzle schema definitions, seeders, and migration scripts
+│   │       ├── tailwind.css
+│   │       └── foldable/   # CSS Viewport Segment wrappers & hinge-safe containers
+│   ├── database/           # Prisma schema definitions, seeders, and migration scripts
 │   └── api-types/          # Shared TypeScript interfaces, Zod validation schemas, and types
 ├── package.json            # Private root workspace manifest (Bun workspaces)
 ├── bun.lock                # Bun lockfile (generated by `bun install`)
@@ -50,34 +66,66 @@ deckgala/
 
 ### 3.1 Apps
 
-#### 1. `www` (Marketing & Landing Page)
+#### 1. `auth` (Centralized Identity & Authentication Authority)
+* **Domain:** `auth.deckgala.com`
+* **Purpose:** Single source of truth for identity, authentication, credential validation, and cross-subdomain session management.
+* **Tech Stack:** Next.js (App Router) with cross-subdomain session cookie architecture (`.deckgala.com`).
+* **Key Features:**
+  * Universal sign-in/sign-up flows: Email/password, passwordless magic links, OAuth (Google, Apple), and Multi-Factor Authentication (MFA).
+  * Centralized session issuance via secure, HTTP-only wild-card cookies (`Domain=.deckgala.com`).
+  * Intelligent role-based redirection post-login:
+    * Parents & Swimmers $\rightarrow$ redirected to `my.deckgala.com`
+    * Club Staff (Committee, Coaches, Officials) $\rightarrow$ redirected to `myclub.deckgala.com`
+    * Deck Timekeepers & Officials $\rightarrow$ authorized for `app` mobile client
+  * Account recovery, password reset, parent-to-swimmer profile linking, and invitation acceptance flows.
+
+#### 2. `my` (Swimmer & Parent PWA)
+* **Domain:** `my.deckgala.com`
+* **Purpose:** Dedicated Progressive Web App tailored specifically for swimmers and parents to manage their swimming journey.
+* **Tech Stack:** Next.js (App Router) + PWA Manifest & Service Workers (via Serwist/Workbox).
+* **Key Features:**
+  * **Multi-Swimmer Family Profiles:** Parents can link, switch between, and manage multiple swimmer profiles under one account.
+  * **Gala & Meet Entry Workflow:** Browse open club galas, view qualifying times, submit event entries with seed times, and receive entry status/confirmation receipts.
+  * **Personal Bests (PBs) & History:** Interactive time progression graphs for 25m Short Course (SC) and 50m Long Course (LC) events.
+  * **Training Schedule & Timetables:** View weekly squad training times, lane allocations, venue changes, and coach notes.
+  * **PWA Offline Capabilities:** Cached access to upcoming meet passes, training timetables, and personal best records when poolside or traveling without cellular data.
+  * **Web Push Notifications:** Real-time push alerts for gala entry approvals, training session cancellations, and heat sheet postings.
+  * **Foldable-Aware Dual-Pane Views:** Unfolds to dual-pane master-detail (e.g., training calendar on left pane, session details/drills on right pane).
+
+#### 3. `myclub` (Club Staff Administration Portal)
+* **Domain:** `myclub.deckgala.com`
+* **Purpose:** Web dashboard strictly for club staff (secretaries, head coaches, assistant coaches, gala coordinators, committee chairs, and treasurers).
+* **Tech Stack:** Next.js (App Router with Server Actions).
+* **Key Features:**
+  * **Strict Role Gating:** Exclusively accessible to authorized club staff roles; non-staff accounts are guided to `my.deckgala.com`.
+  * **Member & Squad Management:** Swimmer rosters, squad assignments, coach assignments, Swim England / national governing body ID tracking.
+  * **Gala & Meet Builder:** Course setup (25m/50m), event scheduling, multi-club entries review, automated seeding, and heat sheet generation.
+  * **Governing Body & Hy-Tek Exports:** One-click Hy-Tek `.hy3` export, results collation, and meet entry file parsing.
+  * **Club Operations & Dues:** Squad fee structures, membership renewals, gala payment reconciliation, and Stripe billing.
+  * **Foldable-Aware Admin Workspace:** On foldable screens, split-screen posture places the event roster on the left segment and the drag-and-drop heat seeder on the right segment.
+
+#### 4. `www` (Marketing & Landing Page)
+* **Domain:** `www.deckgala.com`
 * **Purpose:** Public-facing website highlighting DeckGala's features, pricing, testimonials, and documentation.
 * **Tech Stack:** Next.js (Static Site Generation / Incremental Static Regeneration).
 * **Key Features:** Hero section featuring the vector logo mark, feature comparison table against legacy competitors, contact forms, and links to download iOS/Android apps or log into club accounts.
 
-#### 2. `myclub` (Club Administration & Portal)
-* **Purpose:** Web dashboard for club secretaries, coaches, and parents.
-* **Tech Stack:** Next.js (App Router with Server Actions).
-* **Key Features:**
-  * Member database management (Swim England numbers, emergency contacts).
-  * Gala & meet entry creator (Short/Long course setup, seeding, and heat sheet generation).
-  * Membership dues and renewal tracking.
-  * Coach export tools (Hy-Tek `.hy3` export and CSV reports).
-
-#### 3. `results` (Live Fan & Spectator Portal)
+#### 5. `results` (Live Fan & Spectator Portal)
+* **Domain:** `results.deckgala.com`
 * **Purpose:** Real-time public portal for spectators in the stands or at home.
 * **Tech Stack:** Next.js with Client-side WebSocket / Server-Sent Events (SSE).
-* **Key Features:** Live heat progress (`deckgala.com/club-name/live`), lane-by-lane split updates, unofficial results, and historical club record boards.
+* **Key Features:** Live heat progress (`results.deckgala.com/club-name/live`), lane-by-lane split updates, unofficial results, historical club record boards, and foldable dual-screen heat streaming + standings.
 
-#### 4. `api` (Backend & Cloud Gateway)
-* **Purpose:** Central backend handling cloud sync, authentication, and multi-device relay.
+#### 6. `api` (Backend & Cloud Gateway)
+* **Domain:** `api.deckgala.com`
+* **Purpose:** Central backend handling cloud sync, authentication verification, and multi-device relay.
 * **Tech Stack:** Bun (`Bun.serve`) or Express/Fastify with WebSockets.
 * **Key Features:**
   * Offline-to-online sync endpoint (`/api/v1/sync`) for uploading SQLite caches recorded on the pool deck.
   * WebSocket relay hub for streaming live meet data from the Lead Phone to the cloud.
   * Governing body export format generators.
 
-#### 5. `app` (Poolside Deck Timer & Mobile P2P Client)
+#### 7. `app` (Poolside Deck Timer & Mobile P2P Client)
 * **Purpose:** The offline-first native iOS/Android application used on the pool deck.
 * **Tech Stack:** React + Vite, packaged via **Capacitor**.
 * **Key Features:**
@@ -85,31 +133,51 @@ deckgala/
   * Web Audio API starter horn detection (`StarterHornDetector`).
   * Local SQLite / IndexedDB caching for 100% offline poolside reliability.
   * P2P local Wi-Fi WebSocket hub linking Starter, Judges, Timekeepers, and Display phones.
+  * Foldable tabletop posture support: Top half as big-digit spectator scoreboard, bottom half as timekeeper touch pads.
 
 ---
 
-### 3.2 Shared Packages
+### 3.2 Responsive & Foldable-Aware UX Architecture
+
+All DeckGala web portals and apps are fully responsive across mobile, tablet, and desktop screens, with deliberate architectural support for **foldable and dual-screen hardware** (e.g. Galaxy Z Fold, Pixel Fold, Surface Duo):
+
+* **CSS Viewport Segments Integration:** Employs `@media (horizontal-viewport-segments: 2)` and `@media (vertical-viewport-segments: 2)` alongside `env(viewport-segment-*)` CSS environment variables.
+* **Hinge-Safe Zones:** Guarantees critical interaction targets (`TAP TO STOP`, start horns, primary buttons, input fields) are never split or obscured by physical screen hinges or display creases.
+* **Postures Supported:**
+  * **Book Posture (Dual-Landscape):** Automatically divides screen real estate into Master (navigation/schedule/roster) and Detail (form/entry/results).
+  * **Tabletop Posture (Half-Folded):** Top display panel remains angled for ambient visibility (heat clock or session timer); bottom panel provides a flat, spill-resistant poolside touch console.
+
+---
+
+### 3.3 Shared Packages
 
 #### 1. `@deckgala/controls` (`packages/controls/`)
-* **Purpose:** Reusable UI component library adhering strictly to the DeckGala design system.
+* **Purpose:** Reusable UI component library adhering strictly to the DeckGala design system and fold-aware UX patterns.
 * **Components:**
   * `LaneCard`: High-contrast slate card (`#16233B`) with cyan lane headers and monospaced tabular timers.
   * `StopButton`: High-visibility Coral (`#FF5A36`) tap target with haptic feedback.
   * `TimerDisplay`: Monospaced (`JetBrains Mono`) digital clock supporting split-second precision without number jitter.
   * `StatusBadge`: Connection status indicators (Green = Synced/Connected, Orange = Reconnecting).
+  * `FoldableSplitPane`: Responsive wrapper that automatically transitions between standard responsive stacks and hinge-padded dual-pane views when viewport segments $> 1$.
+  * `TabletopContainer`: Half-fold container allocating passive display to the upper segment and interaction controls to the lower segment.
 
 #### 2. `@deckgala/database` (`packages/database/`)
 * **Purpose:** Single source of truth for data models and migrations.
 * **Schema Entities:**
   * `Club`: Organization details, subscription tier, custom branding.
-  * `User` / `Member`: Authentication profiles, roles (Admin, Coach, Timekeeper, Parent).
+  * `User`: Authentication profile, role flags (`IS_STAFF`, `IS_PARENT`, `IS_SWIMMER`, `IS_COACH`).
+  * `ParentSwimmerLink`: Guardian-swimmer relationships, emergency contacts, permission slips.
   * `Swimmer`: Personal bests (PBs), squad associations, governing body IDs.
-  * `Gala` / `Event`: Competition metadata, course type (25m/50m), heat sheets.
+  * `TrainingSchedule`: Squad timetables, lane allocations, coach assignments.
+  * `Gala` / `Event`: Competition metadata, course type (25m/50m), heat sheets, entry fees.
+  * `GalaEntry`: Swimmer event entries, seed times, payment and approval status.
   * `RaceResult`: Splits, net times, disqualification (DQ) infraction codes.
 
 #### 3. `@deckgala/api-types` (`packages/api-types/`)
 * **Purpose:** Shared TypeScript contracts and runtime validation schemas.
 * **Contents:**
+  * Zod schemas for auth sessions, token claims, and cross-subdomain redirection payloads.
+  * Zod schemas for PWA gala entry submissions, personal best sync, and schedule queries.
   * Zod schemas for syncing offline deck sessions (`SyncPayloadSchema`).
   * WebSocket event message types (`StartGunEvent`, `LaneTouchEvent`, `DisqualificationEvent`).
   * API response wrappers and pagination types.
@@ -171,3 +239,34 @@ deckgala/
 1. [x] Build `apps/www` marketing landing page featuring the vector logo mark and brand guidelines. Implemented the responsive DeckGala brand site with poolside timing visuals, product features, and club-focused content.
 2. [x] Build `apps/results` live spectator portal for real-time meet viewing. Published galas are opt-in; the read-only portal shows event results and consumes live heat and lane updates over SSE.
 3. [x] Configure CI/CD pipelines (GitHub Actions) to lint, test, build, and deploy apps across Vercel (web apps) and App Store Connect / Google Play Console (`app`). Vercel and store uploads are gated on repository configuration and secrets; no external deployment or store upload has been run.
+
+### Phase 5: Domain Refactoring, Centralized Auth, Swimmer/Parent PWA (`my`), Staff Specialization (`myclub`), & Foldable UX
+1. [ ] **Centralized Auth Hub (`apps/auth` - `@deckgala/auth`):**
+   * Scaffold `apps/auth` using Next.js App Router to serve as the unified authentication domain (`auth.deckgala.com`).
+   * Implement shared authentication session handling with cross-subdomain cookies (`Domain=.deckgala.com`).
+   * Add intelligent role-based redirection logic: send verified staff members to `myclub.deckgala.com`, parents and swimmers to `my.deckgala.com`, and spectators/public to `results` or `www`.
+   * Support email/password, magic links, OAuth providers, and parent-swimmer account linking.
+2. [ ] **Swimmer & Parent PWA (`apps/my` - `@deckgala/my`):**
+   * Scaffold `apps/my` using Next.js App Router configured as a Progressive Web App (PWA) with install manifest, service workers, and offline asset caching.
+   * Build swimmer profile views supporting multiple swimmers per parent/family account.
+   * Implement Gala Meet Entry workflow: view available club galas, verify event eligibility against cut times, submit entries, and store offline digital entry receipts.
+   * Implement interactive Personal Bests (PB) charts and training timetable schedule views.
+   * Add Web Push notifications for gala acceptance, squad updates, and schedule alterations.
+3. [ ] **Club Staff Specialization (`apps/myclub` - `@deckgala/myclub`):**
+   * Refactor `apps/myclub` to strictly serve club staff (committee members, administrators, head coaches, assistant coaches, and meet officials).
+   * Restrict access and gate routes so non-staff users (parents/swimmers) are automatically redirected to `my.deckgala.com`.
+   * Streamline administrative tools: squad rosters, training timetable editor, meet creation, seeding management, Hy-Tek export, and financial renewal workflows.
+4. [ ] **Foldable-Aware & Dual-Screen Component Architecture (`@deckgala/controls`):**
+   * Extend `@deckgala/controls` with foldable-aware layout components: `FoldableSplitPane` and `TabletopContainer`.
+   * Implement CSS Viewport Segments API support (`horizontal-viewport-segments: 2`, `vertical-viewport-segments: 2`) and CSS hinge safe-margin tokens.
+   * Implement fold-aware layouts:
+     * In `apps/my`: Master schedule/gala list on left pane, entry detail/PB progression on right pane.
+     * In `apps/myclub`: Swimmer roster/entry queue on left pane, heat sheet seeding editor on right pane.
+     * In `apps/app`: Tabletop posture splitting the upper passive scoreboard timer from the lower tactile stop/split control pad.
+     * In `apps/results`: Live heat stream on left segment, real-time standings/splits on right segment.
+5. [ ] **Database & Shared API Types Update:**
+   * Update `@deckgala/database` Prisma schema with models for guardian-swimmer links, training schedules, and staff role differentiation.
+   * Update `@deckgala/api-types` with Zod validation schemas for cross-subdomain auth tokens, PWA gala entries, and training schedule payloads.
+6. [ ] **Root Monorepo & DNS Configuration:**
+   * Update root `package.json` workspaces to include `apps/auth` and `apps/my`.
+   * Configure environment routing and DNS mappings for the six production domains (`auth`, `my`, `myclub`, `results`, `www`, `api`).
