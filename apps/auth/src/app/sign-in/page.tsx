@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { handleSignIn } from "../actions";
+import { handleSignIn, handleSocialSignIn } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -85,18 +85,20 @@ export default async function SignInPage({
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-          <a
-            href="/api/auth/signin/google"
-            className="btn-secondary"
-          >
-            Google
-          </a>
-          <a
-            href="/api/auth/signin/apple"
-            className="btn-secondary"
-          >
-            Apple
-          </a>
+          <form action={handleSocialSignIn}>
+            <input type="hidden" name="provider" value="google" />
+            <input type="hidden" name="callbackUrl" value={effectiveCallback} />
+            <button type="submit" className="btn-secondary" style={{ width: "100%", cursor: "pointer" }}>
+              Google
+            </button>
+          </form>
+          <form action={handleSocialSignIn}>
+            <input type="hidden" name="provider" value="apple" />
+            <input type="hidden" name="callbackUrl" value={effectiveCallback} />
+            <button type="submit" className="btn-secondary" style={{ width: "100%", cursor: "pointer" }}>
+              Apple
+            </button>
+          </form>
         </div>
 
         <div className="auth-footer" style={{ marginTop: "24px" }}>

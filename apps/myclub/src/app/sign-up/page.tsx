@@ -1,21 +1,16 @@
 import { redirect } from "next/navigation";
-import { safeCallbackPath } from "../../lib/redirect-url";
 import { getSession } from "../../lib/session";
-import { AuthForm } from "../auth-form";
+
+const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL || process.env.AUTH_URL || "https://auth.aquateamhub.com";
+const MYCLUB_URL = process.env.MYCLUB_URL || "https://myclub.aquateamhub.com";
 
 interface SignUpPageProps {
-  searchParams: Promise<{ callbackURL?: string }>;
+  searchParams: Promise<{ callbackURL?: string; callbackUrl?: string }>;
 }
 
 export default async function SignUpPage({ searchParams }: SignUpPageProps) {
   if (await getSession()) redirect("/");
-  const { callbackURL } = await searchParams;
-  return (
-    <AuthForm
-      mode="sign-up"
-      callbackURL={safeCallbackPath(callbackURL)}
-      googleEnabled={Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET)}
-      appleEnabled={Boolean(process.env.APPLE_CLIENT_ID && process.env.APPLE_CLIENT_SECRET)}
-    />
-  );
+  const { callbackURL, callbackUrl } = await searchParams;
+  const target = callbackURL || callbackUrl || MYCLUB_URL;
+  redirect(`${AUTH_URL}/sign-up?callbackUrl=${encodeURIComponent(target)}`);
 }

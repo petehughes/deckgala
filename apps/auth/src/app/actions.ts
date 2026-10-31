@@ -13,6 +13,43 @@ function formString(formData: FormData, key: string): string {
 }
 
 /**
+ * Universal Server Action: Sign in with a social provider (Google, Apple, etc.)
+ */
+export async function handleSocialSignIn(formData: FormData): Promise<void> {
+  const provider = formString(formData, "provider") as "google" | "apple";
+  const callbackUrl = formString(formData, "callbackUrl");
+
+  if (!provider) {
+    redirect("/sign-in?error=Provider+not+specified");
+  }
+
+  try {
+    const res = await auth.api.signInSocial({
+      body: {
+        provider,
+        callbackURL: isSafeCallbackUrl(callbackUrl) ? callbackUrl : undefined,
+      },
+      headers: await headers(),
+    });
+
+    if (res?.url) {
+      redirect(res.url);
+    } else {
+      redirect(`/sign-in?error=${encodeURIComponent(`Failed to initiate ${provider} login`)}`);
+    }
+  } catch (error: unknown) {
+    if (typeof error === "object" && error !== null && "digest" in error) {
+      const digest = String((error as { digest?: string }).digest);
+      if (digest.startsWith("NEXT_REDIRECT")) {
+        throw error;
+      }
+    }
+    const errMsg = error instanceof Error ? error.message : `Failed to sign in with ${provider}`;
+    redirect(`/sign-in?error=${encodeURIComponent(errMsg)}`);
+  }
+}
+
+/**
  * Universal Server Action: Sign in with email and password,
  * automatically redirecting based on user role and permissions.
  */

@@ -5,6 +5,9 @@ import { acceptClubInvitation } from "../../actions";
 import { prisma } from "../../../lib/prisma";
 import { getSession } from "../../../lib/session";
 
+const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL || process.env.AUTH_URL || "https://auth.aquateamhub.com";
+const MYCLUB_URL = process.env.MYCLUB_URL || "https://myclub.aquateamhub.com";
+
 interface InvitationPageProps {
   params: Promise<{ token: string }>;
 }
@@ -19,6 +22,7 @@ export default async function InvitationPage({ params }: InvitationPageProps) {
   });
   if (!invitation || invitation.acceptedAt || invitation.expiresAt <= new Date()) notFound();
   const session = await getSession();
+  const callbackUrl = `${MYCLUB_URL}/invite/${token}`;
 
   return (
     <section className="panel invite-panel">
@@ -33,8 +37,8 @@ export default async function InvitationPage({ params }: InvitationPageProps) {
         <>
           <p className="muted">Sign in or create an account to accept this invitation.</p>
           <div className="invite-actions">
-            <Link href={`/sign-in?callbackURL=${encodeURIComponent(`/invite/${token}`)}`}>Sign in</Link>
-            <Link href={`/sign-up?callbackURL=${encodeURIComponent(`/invite/${token}`)}`}>Create account</Link>
+            <Link href={`${AUTH_URL}/sign-in?callbackUrl=${encodeURIComponent(callbackUrl)}`}>Sign in</Link>
+            <Link href={`${AUTH_URL}/sign-up?callbackUrl=${encodeURIComponent(callbackUrl)}`}>Create account</Link>
           </div>
         </>
       )}

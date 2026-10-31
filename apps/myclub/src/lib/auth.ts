@@ -3,6 +3,10 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { prisma } from "./prisma";
 
+const cookieDomain =
+  process.env.COOKIE_DOMAIN ||
+  (process.env.NODE_ENV === "production" ? ".aquateamhub.com" : undefined);
+
 const socialProviders = {
   ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
     ? {
@@ -31,5 +35,16 @@ export const auth = betterAuth({
     enabled: true,
   },
   socialProviders,
+  advanced: {
+    crossSubdomainCookies: {
+      enabled: true,
+      domain: cookieDomain,
+    },
+    defaultCookieAttributes: {
+      domain: cookieDomain,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    },
+  },
   plugins: [nextCookies()],
 });
