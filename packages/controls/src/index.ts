@@ -8,3 +8,7 @@ export { FoldableSplitPane } from "./FoldableSplitPane";
 export type { FoldableSplitPaneProps } from "./FoldableSplitPane";
 export { TabletopContainer } from "./TabletopContainer";
 export type { TabletopContainerProps } from "./TabletopContainer";
+export { BestTimeList } from "./BestTimeList";
+export type { BestTimeListProps, PersonalBestRecord, TimingLevel } from "./BestTimeList";
+export { convertPoolCourseTime, formatSwimTime } from "./swim-conversions";
+export type { PoolCourse, SwimStroke } from "./swim-conversions";

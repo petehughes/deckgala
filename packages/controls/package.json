@@ -11,16 +11,23 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "bun test"
+    "test": "bun test",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "peerDependencies": {
     "react": ">=18"
   },
   "devDependencies": {
+    "@storybook/react": "^10.6.5",
+    "@storybook/react-vite": "^10.6.5",
     "@types/bun": "^1.4.4",
     "@types/react": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
     "react": "^19.2.4",
+    "storybook": "^10.6.5",
     "tailwindcss": "^4.1.0",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5"
   }
 }

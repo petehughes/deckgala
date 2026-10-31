@@ -86,3 +86,4 @@ export function formatSwimTime(timeMs: number | null | undefined): string {
 
   return `${seconds}.${hundredthsStr}`;
 }
+
