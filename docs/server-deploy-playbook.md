@@ -122,10 +122,10 @@ Wants=postgresql.service
 Type=simple
 User=aquateamhub
 Group=aquateamhub
-WorkingDirectory=/srv/aquateamhub/repo/apps/%i
+WorkingDirectory=/srv/aquateamhub/current/apps/%i
 EnvironmentFile=/etc/aquateamhub/env
 EnvironmentFile=/etc/aquateamhub/%i.env
-ExecStart=/usr/bin/node /srv/aquateamhub/repo/node_modules/next/dist/bin/next start --port ${PORT} --hostname 127.0.0.1
+ExecStart=/usr/bin/node /srv/aquateamhub/current/node_modules/next/dist/bin/next start --port ${PORT} --hostname 127.0.0.1
 Restart=always
 RestartSec=3
 MemoryMax=700M
@@ -150,7 +150,7 @@ Wants=postgresql.service
 Type=simple
 User=aquateamhub
 Group=aquateamhub
-WorkingDirectory=/srv/aquateamhub/repo/apps/api
+WorkingDirectory=/srv/aquateamhub/current/apps/api
 EnvironmentFile=/etc/aquateamhub/env
 EnvironmentFile=/etc/aquateamhub/api.env
 ExecStart=/usr/local/bin/bun src/index.ts
@@ -166,8 +166,9 @@ ProtectHome=true
 WantedBy=multi-user.target
 EOF
 ```
-Enable and start:
+Enable and start (point `/srv/aquateamhub/current` to `/srv/aquateamhub/repo` for initial setup):
 ```bash
+sudo -u aquateamhub ln -sfn /srv/aquateamhub/repo /srv/aquateamhub/current
 sudo systemctl daemon-reload
 sudo systemctl enable --now aquateamhub-api
 for a in auth my myclub results www; do sudo systemctl enable --now aquateamhub-next@$a; done
@@ -179,7 +180,7 @@ for p in 3000 3001 3002 3003 3004 8080; do echo -n "$p: "; curl -s -o /dev/null 
 ```
 A `200`, `3xx` or `401` means the process is up. `000` means it is not listening, so check `journalctl -u aquateamhub-next@<app> -n 50`.
 
-If a Next app cannot find `next`, confirm the path: `ls /srv/aquateamhub/repo/node_modules/next/dist/bin/next` (Bun hoists to the repo root; if missing, it will be under `apps/<app>/node_modules`).
+If a Next app cannot find `next`, confirm the path: `ls /srv/aquateamhub/current/node_modules/next/dist/bin/next` (Bun hoists to the repo root; if missing, it will be under `apps/<app>/node_modules`).
 
 ## 6. Caddy reverse proxy
 Replace the placeholder Caddyfile (keep the global `email` block):
@@ -197,6 +198,11 @@ sudo tee /etc/caddy/Caddyfile >/dev/null <<'EOF'
     Referrer-Policy strict-origin-when-cross-origin
     -Server
   }
+}
+
+(proxy_buffered) {
+  lb_try_duration 10s
+  lb_try_interval 250ms
 }
 
 # Holding page: active while /var/www/maintenance/ACTIVE exists (checked per request, no reload needed)
@@ -229,37 +235,49 @@ aquateamhub.com {
 www.aquateamhub.com {
   import common
   import maintenance
-  reverse_proxy 127.0.0.1:3004
+  reverse_proxy 127.0.0.1:3004 {
+    import proxy_buffered
+  }
 }
 
 auth.aquateamhub.com {
   import common
   import maintenance
-  reverse_proxy 127.0.0.1:3001
+  reverse_proxy 127.0.0.1:3001 {
+    import proxy_buffered
+  }
 }
 
 my.aquateamhub.com {
   import common
   import maintenance
-  reverse_proxy 127.0.0.1:3002
+  reverse_proxy 127.0.0.1:3002 {
+    import proxy_buffered
+  }
 }
 
 myclub.aquateamhub.com {
   import common
   import maintenance
-  reverse_proxy 127.0.0.1:3000
+  reverse_proxy 127.0.0.1:3000 {
+    import proxy_buffered
+  }
 }
 
 results.aquateamhub.com {
   import common
   import maintenance
-  reverse_proxy 127.0.0.1:3003
+  reverse_proxy 127.0.0.1:3003 {
+    import proxy_buffered
+  }
 }
 
 api.aquateamhub.com {
   import common
   import maintenance_api
-  reverse_proxy 127.0.0.1:8080
+  reverse_proxy 127.0.0.1:8080 {
+    import proxy_buffered
+  }
 }
 EOF
 sudo caddy fmt --overwrite /etc/caddy/Caddyfile
@@ -306,70 +324,91 @@ curl -sI https://www.aquateamhub.com                  # back to normal
 
 **Verify:** `curl -I https://www.aquateamhub.com`, and the same for `auth`, `my`, `myclub`, `results` and `api`. Then sign in through the browser and confirm the session cookie (domain `.aquateamhub.com`) is shared across `my` and `myclub`.
 
-## 7. Deploy script (updates)
+## 7. Zero-Downtime Release Activation Script
+Create the releases directory structure and activation script on the server:
 ```bash
-sudo tee /srv/aquateamhub/deploy.sh >/dev/null <<'EOF'
+sudo mkdir -p /srv/aquateamhub/releases
+sudo chown -R aquateamhub:aquateamhub /srv/aquateamhub/releases
+
+sudo tee /srv/aquateamhub/activate-release.sh >/dev/null <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
-cd /srv/aquateamhub/repo
+
+RELEASE_ID="${1:-}"
+if [ -z "$RELEASE_ID" ]; then
+  echo "Usage: $0 <release-id>" >&2
+  exit 1
+fi
+
+RELEASE_DIR="/srv/aquateamhub/releases/$RELEASE_ID"
+
+if [ ! -d "$RELEASE_DIR" ]; then
+  echo "Release directory $RELEASE_DIR does not exist!" >&2
+  exit 1
+fi
+
+echo "Activating release: $RELEASE_ID"
+
+# 1. Run migrations inside the new release directory
+cd "$RELEASE_DIR"
 set -a; source /etc/aquateamhub/env; set +a
-source /srv/aquateamhub/build.env
-
-FLAG=/var/www/maintenance/ACTIVE
-
-# Fetch first, so a network or auth failure never takes the site down
-git fetch --prune origin
-
-touch "$FLAG"
-echo "Holding page ON"
-# On failure the holding page stays up on purpose (the half-built apps should not be served)
-trap 'echo "Deploy FAILED - holding page left ON. Fix, rerun, or remove it: rm $FLAG" >&2' ERR
-
-git checkout "${1:-master}"
-git pull --ff-only
-
-bun install --frozen-lockfile
-bun run --filter @aquateamhub/database db:generate
 bun run --filter @aquateamhub/database db:migrate:deploy
-for a in auth my myclub results www; do bun run --filter @aquateamhub/$a build; done
 
+# 2. Atomic symlink swap
+ln -sfn "$RELEASE_DIR" /srv/aquateamhub/current
+
+# 3. Restart services
 sudo /bin/systemctl restart aquateamhub-api 'aquateamhub-next@auth' 'aquateamhub-next@my' 'aquateamhub-next@myclub' 'aquateamhub-next@results' 'aquateamhub-next@www'
 
-# Wait until every app answers before lifting the holding page (max ~60s each)
+# 4. Verify processes are alive
 for p in 3000 3001 3002 3003 3004 8080; do
   ok=0
-  for i in $(seq 1 30); do
+  for i in $(seq 1 15); do
     code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$p/" || true)
     if [ "$code" != "000" ]; then ok=1; break; fi
-    sleep 2
+    sleep 1
   done
-  [ "$ok" = 1 ] || { echo "Port $p did not come up" >&2; false; }
+  [ "$ok" = 1 ] || { echo "Warning: Port $p did not immediately answer" >&2; }
 done
 
-rm -f "$FLAG"
-trap - ERR
-echo "Holding page OFF"
-echo "Deployed $(git rev-parse --short HEAD)"
+# 5. Clean up old releases, keep last 3
+cd /srv/aquateamhub/releases
+ls -dt */ 2>/dev/null | tail -n +4 | xargs -r rm -rf
+
+echo "Release $RELEASE_ID is LIVE!"
 EOF
-sudo chown aquateamhub:aquateamhub /srv/aquateamhub/deploy.sh && sudo chmod 750 /srv/aquateamhub/deploy.sh
+sudo chown aquateamhub:aquateamhub /srv/aquateamhub/activate-release.sh && sudo chmod 750 /srv/aquateamhub/activate-release.sh
 ```
-Allow only the restart command without a password:
+
+Allow the restart command without a password:
 ```bash
 sudo tee /etc/sudoers.d/91-aquateamhub-deploy >/dev/null <<'EOF'
 aquateamhub ALL=(root) NOPASSWD: /bin/systemctl restart aquateamhub-api aquateamhub-next@auth aquateamhub-next@my aquateamhub-next@myclub aquateamhub-next@results aquateamhub-next@www
 EOF
 sudo chmod 440 /etc/sudoers.d/91-aquateamhub-deploy && sudo visudo -c
 ```
-Because the service account has `nologin`, run it with: `sudo -u aquateamhub /srv/aquateamhub/deploy.sh`.
-While the script runs, every site shows the holding page (HTTP 503, auto-refreshing every 30s) and the API returns a 503 JSON response, so search engines and clients know it is temporary. The page is removed only after all six services respond. If the deploy fails, the holding page stays up deliberately; fix the problem and rerun, or lift it manually with `sudo -u aquateamhub rm /var/www/maintenance/ACTIVE`. To show the page manually at any time (e.g. for database maintenance), `touch` that file. Take a database dump before any deploy that includes a migration:
-`sudo -u postgres pg_dump -Fc aquateamhub > /var/backups/aquateamhub/pre-deploy-$(date +%F-%H%M).dump`
 
-## 8. Automating from GitHub Actions (optional)
-- Create a dedicated SSH key pair for CI. Put the private key in the repo secret `DEPLOY_SSH_KEY`, plus `DEPLOY_HOST` and `DEPLOY_USER=ph`.
-- Add the public key to `/home/ph/.ssh/authorized_keys`, ideally restricted: `command="sudo -u aquateamhub /srv/aquateamhub/deploy.sh",no-port-forwarding,no-agent-forwarding,no-pty ssh-ed25519 AAAA...`
-- The workflow runs tests, then `ssh ph@$DEPLOY_HOST`. Ask me to generate it.
+## 8. Automating Zero-Downtime Deployment via GitHub Actions
+Builds run automatically in GitHub Actions on push to `master` (configured in `.github/workflows/deploy.yml`). The workflow compiles all Next.js applications, builds a release bundle, transfers it to the server, and triggers `/srv/aquateamhub/activate-release.sh`.
 
-## 9. Operations cheat sheet
+### 8.1 SSH Key Setup
+1. Generate an SSH key pair dedicated to GitHub Actions:
+   ```bash
+   ssh-keygen -t ed25519 -N "" -f ~/.ssh/github_deploy -C "gh-actions-deploy"
+   ```
+2. Add the public key to `/home/ph/.ssh/authorized_keys` on the server:
+   ```bash
+   cat ~/.ssh/github_deploy.pub >> /home/ph/.ssh/authorized_keys
+   chmod 600 /home/ph/.ssh/authorized_keys
+   ```
+3. In GitHub Repository: `Settings` → `Secrets and variables` → `Actions` → `New repository secret`:
+   - `DEPLOY_HOST`: Your server IP or domain (e.g. `123.45.67.89`)
+   - `DEPLOY_USER`: `ph`
+   - `DEPLOY_SSH_KEY`: Content of `~/.ssh/github_deploy` (private key)
+
+Now every push to `master` triggers `.github/workflows/deploy.yml` and achieves zero downtime.
+
+## 9. Operations & Rollbacks cheat sheet
 ```bash
 journalctl -u aquateamhub-next@auth -f           # live logs for one app
 journalctl -u aquateamhub-api -n 100 --no-pager
@@ -377,14 +416,23 @@ sudo systemctl restart aquateamhub-next@myclub   # restart one app
 systemctl list-units 'aquateamhub-*'             # overview
 sudo systemctl reload caddy                      # after Caddyfile edits
 ```
-Rollback: `sudo -u aquateamhub bash -c 'cd /srv/aquateamhub/repo && git checkout <previous-sha>' && sudo -u aquateamhub /srv/aquateamhub/deploy.sh <previous-sha>`. Migrations are not reversed automatically, so restore the pre-deploy dump if a migration must be undone.
+
+**Instant Rollback to Previous Release:**
+```bash
+# List available release IDs
+ls -l /srv/aquateamhub/releases
+
+# Activate previous release immediately:
+sudo -u aquateamhub /srv/aquateamhub/activate-release.sh <PREVIOUS_COMMIT_SHA>
+```
 
 ## 10. Final checklist
 - [ ] All six services `active (running)` and survive `sudo reboot`
 - [ ] All six `https://` hostnames respond with valid certificates
+- [ ] Symlink `/srv/aquateamhub/current` points to the active release directory
 - [ ] Ports 3000-3004 and 8080 are not reachable from outside (`ss -ltn` shows them on `127.0.0.1` only for Next apps)
 - [ ] Sign-in works and the session is shared across `my` and `myclub`
 - [ ] `/etc/aquateamhub/*` are `640 root:aquateamhub`, with no secrets left in the repo
 - [ ] `CORS_ORIGIN` is not `*`
-- [ ] Deploy script runs end to end once
+- [ ] GitHub Actions workflow completed a successful zero-downtime deploy
 - [ ] VPS snapshot labelled "apps-deployed"
